@@ -1,0 +1,119 @@
+#!/usr/local/bin/python2.7
+# encoding: utf-8
+'''
+rna_prediction.main -- predict tertiary rna structure
+
+rna_prediction.main is a tool to predict tertiary rna structure based on secondary structure information and a set of constraints
+
+It defines classes_and_methods
+
+@author:     sra
+
+@copyright:  2014 SCC/MBS @ KIT. All rights reserved.
+
+@license:    license
+
+@contact:    sebastian.ratz@student.kit.edu
+'''
+
+import sys
+import os
+
+from argparse import ArgumentParser
+from argparse import RawDescriptionHelpFormatter
+
+from rna_prediction.simulation import RNAPrediction
+
+__all__ = []
+__version__ = 0.1
+__date__ = '2014-08-13'
+__updated__ = '2014-08-13'
+
+DEBUG = 1
+TESTRUN = 0
+PROFILE = 0
+
+
+class CLIError(Exception):
+    '''Generic exception to raise and log different fatal errors.'''
+    def __init__(self, msg):
+        super(CLIError).__init__(type(self))
+        self.msg = "E: %s" % msg
+    def __str__(self):
+        return self.msg
+    def __unicode__(self):
+        return self.msg
+
+def main(argv=None): # IGNORE:C0111
+    '''Command line options.'''
+
+    if argv is None:
+        argv = sys.argv
+    else:
+        sys.argv.extend(argv)
+
+    program_name = os.path.basename(sys.argv[0])
+    program_version = "v%s" % __version__
+    program_build_date = str(__updated__)
+    program_version_message = '%%(prog)s %s (%s)' % (program_version, program_build_date)
+    program_shortdesc = __doc__.split("\n")[1]
+    program_license = '''%s
+
+  Created by sra on %s.
+  Copyright 2014 organization_name. All rights reserved.
+
+  Distributed on an "AS IS" basis without warranties
+  or conditions of any kind, either express or implied.
+
+USAGE
+''' % (program_shortdesc, str(__date__))
+
+    # Setup argument parser
+    parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument("--prepare", dest="prepare", action="store_true", help="prepare stems and motifs [default: %(default)s]")
+    parser.add_argument("--create-helices", dest="create_helices", action="store_true", help="create ideal a-helices [default: %(default)s]")
+    parser.add_argument("--create-motifs", dest="create_motifs", action="store_true", help="create motifs [default: %(default)s]")
+    parser.add_argument("--assemble", dest="assemble", action="store_true", help="assemble [default: %(default)s]")
+    parser.add_argument('-V', '--version', action='version', version=program_version_message)
+    parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
+
+    # Process arguments
+    args = parser.parse_args()
+
+    for path in args.basepaths:
+        try:
+            os.chdir(path)
+        except:
+            sys.stderr.write(program_name + ": Invalid basepath: " + path + "\n")
+            continue
+
+        p = RNAPrediction()
+        p.printConfig()
+        if args.prepare:
+            p.prepare()
+        if args.create_helices:
+            p.create_helices()
+        if args.create_motifs:
+            p.create_motifs()
+        if args.assemble:
+            p.assemble()
+
+        p.saveConfig()
+        
+                
+    return 0
+    try:
+        pass
+    except KeyboardInterrupt:
+        ### handle keyboard interrupt ###
+        return 1
+    except Exception, e:
+        if DEBUG or TESTRUN:
+            raise(e)
+        indent = len(program_name) * " "
+        sys.stderr.write(program_name + ": " + repr(e) + "\n")
+        sys.stderr.write(indent + "  for help use --help")
+        return 2
+
+if __name__ == "__main__":
+    sys.exit(main())
