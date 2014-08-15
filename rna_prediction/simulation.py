@@ -12,7 +12,7 @@ import sys
 import errno
 import string
 import ConfigParser
-import json
+import pickle
 from os import system
 from os.path import exists, expanduser, abspath, dirname
 
@@ -58,7 +58,7 @@ class RNAPrediction(object):
     def loadConfig(self):
         if os.path.exists(RNAPrediction.CONFIG_FILE):
             c = open(RNAPrediction.CONFIG_FILE)
-            self.config = json.loads(c.read())
+            self.config = pickle.load(c)
             c.close()
         else:
             self.config = {}
@@ -66,7 +66,7 @@ class RNAPrediction(object):
     
     def saveConfig(self):
         c = open(RNAPrediction.CONFIG_FILE, "w")
-        json.dump(self.config, c, indent=4, sort_keys=True)
+        pickle.dump(self.config, c)
         c.close()
     
     def printConfig(self):
