@@ -610,13 +610,14 @@ class RNAPrediction(object):
             
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
     
+    # todo: implement nstruct cycles random seed commandline parameters
     def assemble(self, nstruct=4000, cycles=5000, constraints_file="constraints/default.cst", dry_run=False):
         command = ["rna_denovo",
                    "-fasta", self.config["fasta_file"],
                    "-in:file:silent_struct_type", "binary_rna",
                    "-cycles", "%d" % (cycles),
                    "-nstruct", "%d" % (nstruct),
-                   "-out:file:silent", "assembly/result.out",
+                   "-out:file:silent", "assembly/result.out", #todo: base output name on constraints and random seed
                    "-params_file", "stems_and_motifs/sequence.params",
                    "-cst_file", constraints_file,
                    "-close_loops",
