@@ -4,7 +4,6 @@ Created on Aug 13, 2014
 @author: sebastian
 '''
 
-import pprint
 import re
 import os
 import subprocess
@@ -13,8 +12,7 @@ import errno
 import string
 import ConfigParser
 import pickle
-from os import system
-from os.path import exists, expanduser, abspath, dirname
+from os.path import expanduser
 
 class RNAPrediction(object):
     '''
@@ -91,7 +89,6 @@ class RNAPrediction(object):
         self.makeDirectory("stems_and_motifs")
         self.makeDirectory("assembly")
         self.makeDirectory("constraints")
-        self.makeDirectory("output")
 
     def makeDirectory(self, directory):
         try:
@@ -137,9 +134,6 @@ class RNAPrediction(object):
         
         print
         print "Preparation:"
-        
-        # for pdbslice.py
-        tools_scripts_path = abspath( dirname( abspath( "" ) ) + '/../../../../rosetta_tools/rna_tools/bin/' )
         
         # Read in files
         lines = open( fasta_file ).readlines()
