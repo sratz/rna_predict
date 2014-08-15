@@ -600,33 +600,33 @@ class RNAPrediction(object):
                 for q in range( len( stem ) ):
                     stem_chunk_res.append( motif_res_map[ stem[ len(stem) - q - 1][1] ]+1 )
 
-            command += ["-in:file:silent_struct_type", "rna"
+            command += ["-in:file:silent_struct_type", "rna",
                         "-in:file:silent"]
             for n in which_stems:
-                command += ["tems_and_motifs/stem%d.out" % (n+1)]
+                command += ["stems_and_motifs/stem%d.out" % (n+1)]
 
             command += ["-chunk_res"]
             command += self.make_tag_with_dashes(stem_chunk_res)
             
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
     
-    def assemble(self, nstruct=4000, cycles=5000, constraints_file="constraints.cst", dry_run=False):
+    def assemble(self, nstruct=4000, cycles=5000, constraints_file="constraints/default.cst", dry_run=False):
         command = ["rna_denovo",
                    "-fasta", self.config["fasta_file"],
                    "-in:file:silent_struct_type", "binary_rna",
                    "-cycles", "%d" % (cycles),
                    "-nstruct", "%d" % (nstruct),
-                   "-out:file:silent", "assemble/result.out",
-                   "-params_file", self.config["params_file"],
+                   "-out:file:silent", "assembly/result.out",
+                   "-params_file", "stems_and_motifs/sequence.params",
                    "-cst_file", constraints_file,
                    "-close_loops",
                    "-in:file:silent"]
 
         for i in range(len(self.config["stems"])):
-            command += ["tems_and_motifs/stem%d.out" % (i+1)]
+            command += ["stems_and_motifs/stem%d.out" % (i+1)]
 
         for i in range(len(self.config["motifs"])):
-            command += ["tems_and_motifs/motif%d.out" % (i+1)]
+            command += ["stems_and_motifs/motif%d.out" % (i+1)]
 
         chunk_res = []
         for n in range( len(self.config["stems"])  ):
