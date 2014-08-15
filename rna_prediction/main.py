@@ -76,6 +76,7 @@ USAGE
     parser.add_argument("--assemble", dest="assemble", action="store_true", help="assemble [default: %(default)s]")
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
     parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
+    parser.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
 
     # Process arguments
     args = parser.parse_args()
@@ -90,7 +91,7 @@ USAGE
         p = RNAPrediction()
         p.printConfig()
         if args.prepare:
-            p.prepare()
+            p.prepare(native_pdb_file=args.native)
         if args.create_helices:
             p.create_helices()
         if args.create_motifs:
