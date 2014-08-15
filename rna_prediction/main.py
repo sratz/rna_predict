@@ -77,6 +77,7 @@ USAGE
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
     parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
     parser.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
+    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute anything, just print commands [default: %(default)s]")
 
     # Process arguments
     args = parser.parse_args()
@@ -93,11 +94,11 @@ USAGE
         if args.prepare:
             p.prepare(native_pdb_file=args.native)
         if args.create_helices:
-            p.create_helices()
+            p.create_helices(dry_run=args.dry_run)
         if args.create_motifs:
-            p.create_motifs()
+            p.create_motifs(dry_run=args.dry_run)
         if args.assemble:
-            p.assemble()
+            p.assemble(dry_run=args.dry_run)
 
         p.saveConfig()
         

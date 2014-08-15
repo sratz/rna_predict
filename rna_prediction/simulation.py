@@ -7,6 +7,7 @@ Created on Aug 13, 2014
 import pprint
 import re
 import os
+import subprocess
 import sys
 import errno
 import string
@@ -100,6 +101,14 @@ class RNAPrediction(object):
                 pass
             else:
                 raise
+        
+    def executeCommand(self, command, add_rosetta_suffix=False, dry_run=False, print_commands=True):
+        if add_rosetta_suffix:
+            command[0] = self.sysconfig["rosetta_exe_path"] + command[0] + self.sysconfig["rosetta_exe_suffix"]
+        if print_commands:
+            print " ".join(command)
+        if not dry_run:
+            subprocess.Popen(command).wait()
         
     def make_tag_with_dashes(self, int_vector ):
         tag = []
@@ -377,17 +386,17 @@ class RNAPrediction(object):
         
             # pdb_file
             if native_pdb_file != None:
-                command = 'python %s/pdbslice.py  %s -segment %d %d %d %d stem%d_' %( \
-                    tools_scripts_path,
-                    native_pdb_file,
-                    stem_res[0][0]+1,
-                    stem_res[-1][0]+1,
-                    stem_res[-1][-1]+1,
-                    stem_res[0][-1]+1,
-                    i+1 )
-                print command
-                system( command )
-        
+                command = ["pdbslice.py",
+                          native_pdb_file,
+                          "-segment",
+                          "%d" % (stem_res[0][0]+1),
+                          "%d" % (stem_res[-1][0]+1),
+                          "%d" % (stem_res[-1][-1]+1),
+                          "%d" % (stem_res[0][-1]+1),
+                          "stem%d_" % (i+1)]
+                self.executeCommand(command)
+                
+
         # Output motif jobs
         for i in range( len(self.config["motifs"]) ):
         
@@ -442,11 +451,13 @@ class RNAPrediction(object):
         
             # pdb_file
             if native_pdb_file != None:
-                command = 'python %s/pdbslice.py  %s -subset ' %  ( tools_scripts_path, native_pdb_file )
-                for k in range( motif_length ): command += ' %d' % (motif_res[k]+1)
-                command += ' motif%d_' % (i+1)
-                print command
-                system( command )
+                command = ["pdbslice.py",
+                           native_pdb_file,
+                           "-subset"]
+                for k in range( motif_length ):
+                    command += ["%d" % (motif_res[k]+1)]
+                command += ["motif%d_" % (i+1)]
+                self.executeCommand(command)
                 native_pdb_file_subset =  'motif%d_%s' % (i+1, native_pdb_file )
                 print 'Created: ', native_pdb_file_subset
         
@@ -544,14 +555,14 @@ class RNAPrediction(object):
         
         #########
     
-    def create_helices(self):
+    def create_helices(self, dry_run=False):
         for i in range(len(self.config["stems"])):
             command = ["rna_helix",
                        "-fasta", "stems_and_motifs/stem%d.fasta" % (i+1),
                        "-out:file:silent","stems_and_motifs/stem%d.out" % (i+1)]
-            print " ".join(command)
+            self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
     
-    def create_motifs(self, nstruct=100, cycles=5000):
+    def create_motifs(self, nstruct=100, cycles=5000, dry_run=False):
         for i in range(len(self.config["motifs"])):
             command = ["rna_denovo", 
                        "-fasta", "stems_and_motifs/motif%d.fasta" % (i+1),
@@ -603,9 +614,9 @@ class RNAPrediction(object):
             command += ["-chunk_res"]
             command += self.make_tag_with_dashes(stem_chunk_res)
             
-            print " ".join(command)
+            self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
     
-    def assemble(self, nstruct=4000, cycles=5000, constraints_file="constraints.cst"):
+    def assemble(self, nstruct=4000, cycles=5000, constraints_file="constraints.cst", dry_run=False):
         command = ["rna_denovo",
                    "-fasta", self.config["fasta_file"],
                    "-in:file:silent_struct_type", "binary_rna",
@@ -645,5 +656,4 @@ class RNAPrediction(object):
         if self.config["data_file"] != None:
             command += ["-data_file", self.config["data_file"]]
         
-        print " ".join(command)            
-    
+        self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
