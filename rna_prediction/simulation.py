@@ -620,7 +620,7 @@ class RNAPrediction(object):
                    "-in:file:silent_struct_type", "binary_rna",
                    "-cycles", "%d" % (cycles),
                    "-nstruct", "%d" % (nstruct),
-                   "-out:file:silent", "assembly/result.out", #todo: base output name on constraints and random seed
+                   "-out:file:silent", "assembly/result_%s_%d.out" % (m.group(1), seed),
                    "-params_file", "stems_and_motifs/sequence.params",
                    "-cst_file", constraints_file,
                    "-close_loops",
