@@ -556,7 +556,7 @@ class RNAPrediction(object):
                        "-out:file:silent","stems_and_motifs/stem%d.out" % (i+1)]
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
     
-    def create_motifs(self, nstruct=100, cycles=5000, dry_run=False):
+    def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1):
         for i in range(len(self.config["motifs"])):
             command = ["rna_denovo", 
                        "-fasta", "stems_and_motifs/motif%d.fasta" % (i+1),
@@ -608,10 +608,12 @@ class RNAPrediction(object):
             command += ["-chunk_res"]
             command += self.make_tag_with_dashes(stem_chunk_res)
             
+            if seed != -1:
+                command += ["-constant_seed", "-jran", "%d" % (seed)]
+
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
     
-    # todo: implement nstruct cycles random seed commandline parameters
-    def assemble(self, nstruct=4000, cycles=5000, constraints_file="constraints/default.cst", dry_run=False):
+    def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1):
         command = ["rna_denovo",
                    "-fasta", self.config["fasta_file"],
                    "-in:file:silent_struct_type", "binary_rna",
@@ -650,5 +652,8 @@ class RNAPrediction(object):
             command += ["-vall_torsions", self.config["torsions_file"]]
         if self.config["data_file"] != None:
             command += ["-data_file", self.config["data_file"]]
+
+        if seed != -1:
+            command += ["-constant_seed", "-jran", "%d" % (seed)]
         
         self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)

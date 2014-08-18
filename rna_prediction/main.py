@@ -77,6 +77,9 @@ USAGE
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
     parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
     parser.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
+    parser.add_argument("--cycles", dest="cycles", help="number of cycles [default: %(default)s]", default=20000, type=int)
+    parser.add_argument("--nstruct", dest="nstruct", help="number of structures to create [default: %(default)s]", default=50000, type=int)
+    parser.add_argument("--seed", dest="seed", help="random seed [default: %(default)s]", default=-1, type=int)
     parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute anything, just print commands [default: %(default)s]")
 
     # Process arguments
@@ -94,11 +97,11 @@ USAGE
         if args.prepare:
             p.prepare(native_pdb_file=args.native)
         if args.create_helices:
-            p.create_helices(dry_run=args.dry_run)
+            p.create_helices(dry_run=args.dry_run, seed=args.seed)
         if args.create_motifs:
-            p.create_motifs(dry_run=args.dry_run)
+            p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
         if args.assemble:
-            p.assemble(dry_run=args.dry_run)
+            p.assemble(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
 
         p.saveConfig()
         
