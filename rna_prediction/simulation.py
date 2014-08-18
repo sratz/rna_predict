@@ -615,6 +615,7 @@ class RNAPrediction(object):
     
     def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1):
         command = ["rna_denovo",
+                   "-minimize_rna",
                    "-fasta", self.config["fasta_file"],
                    "-in:file:silent_struct_type", "binary_rna",
                    "-cycles", "%d" % (cycles),
