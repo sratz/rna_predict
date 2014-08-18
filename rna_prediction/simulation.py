@@ -4,6 +4,7 @@ Created on Aug 13, 2014
 @author: sebastian
 '''
 
+import struct
 import re
 import os
 import subprocess
@@ -614,6 +615,12 @@ class RNAPrediction(object):
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
     
     def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1):
+        # In case the seed isn't specify, we do what rosetta does to get a random number, and seed it with that
+        # this way we know the number beforehand and can choose an appropriate output filename.
+        if seed == -1:
+            seed = struct.unpack("=i", os.urandom(4))[0]
+
+        m = re.match("^(?:.*/)*(.+)\.cst$",constraints_file)
         command = ["rna_denovo",
                    "-minimize_rna",
                    "-fasta", self.config["fasta_file"],
@@ -654,7 +661,6 @@ class RNAPrediction(object):
         if self.config["data_file"] != None:
             command += ["-data_file", self.config["data_file"]]
 
-        if seed != -1:
-            command += ["-constant_seed", "-jran", "%d" % (seed)]
-        
+        command += ["-constant_seed", "-jran", "%d" % (seed)]
+
         self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
