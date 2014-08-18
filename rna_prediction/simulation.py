@@ -4,6 +4,7 @@ Created on Aug 13, 2014
 @author: sebastian
 '''
 
+import glob
 import struct
 import re
 import os
@@ -663,3 +664,62 @@ class RNAPrediction(object):
         command += ["-constant_seed", "-jran", "%d" % (seed)]
 
         self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
+
+    def evaluate(self):
+        # delete old files
+        pdb_files = glob.glob("assembly/*.pdb")
+        for f in pdb_files:
+            print "deleting %s..." % (f)
+            os.remove(f);
+
+        # loop over all different constraint sets
+        for cst_file in sorted(glob.glob("constraints/*.cst")):
+            cst_name = splitext(basename(cst_file))[0]
+
+            # model counter
+            i = 0
+
+            # loop over all out files matching the constraint
+            for f in sorted(glob.glob("assembly/%s_*.out" % (cst_name))):
+                print ""
+                print "processing %s..." % (f)
+
+                # read out file and store a dict of the scores
+                scores = dict()
+                score_regex = re.compile("^SCORE:\s+[-0-9.]+\s.*(S_\d+)$")
+                with open(f, "r") as fd:
+                    for line in fd:
+                        m = score_regex.match(line)
+                        if m:
+                            scores[m.group(1)]=line
+
+                # delete any pdb files if existing
+                for f2 in glob.glob("S_*.pdb"):
+                    os.remove(f2)
+
+                # extract pdb files
+                command = ["rna_extract", "-in:file:silent", f, "-in:file:silent_struct_type", "rna"]
+                self.executeCommand(command, add_rosetta_suffix=True)
+
+                # open output file
+                description = splitext(basename(f))[0]
+                output_pdb = "assembly/%s.pdb" % (cst_name)
+                with open(output_pdb, "a") as output_pdb_fd:
+                    # loop over all extracted pdb files
+                    for fe in sorted(glob.glob("S_*.pdb")):
+                        i = i + 1
+                        output_pdb_fd.write("MODEL %d\n" % (i))
+                        output_pdb_fd.write("REMARK %s %s" % (description, scores[fe[:-4]]))
+
+                        # extract all P atoms from the pdb file
+                        with open(fe, "r") as single_pdb_fd:
+                            for line in single_pdb_fd:
+                                fields = line.split()
+                                if fields[0] == "ATOM" and "P" in fields[2]:
+                                    output_pdb_fd.write(line)
+
+                        output_pdb_fd.write("TER\nENDMDL\n")
+
+                # delete any pdb files
+                for f2 in glob.glob("S_*.pdb"):
+                    os.remove(f2)

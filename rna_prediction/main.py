@@ -74,6 +74,7 @@ USAGE
     parser.add_argument("--create-helices", dest="create_helices", action="store_true", help="create ideal a-helices [default: %(default)s]")
     parser.add_argument("--create-motifs", dest="create_motifs", action="store_true", help="create motifs [default: %(default)s]")
     parser.add_argument("--assemble", dest="assemble", action="store_true", help="assemble [default: %(default)s]")
+    parser.add_argument("--evaluate", dest="evaluate", action="store_true", help="evaluate [default: %(default)s]")
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
     parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
     parser.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
@@ -102,6 +103,8 @@ USAGE
             p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
         if args.assemble:
             p.assemble(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
+        if args.evaluate:
+            p.evaluate()
 
         p.saveConfig()
         
