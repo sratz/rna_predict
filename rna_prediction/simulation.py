@@ -626,7 +626,7 @@ class RNAPrediction(object):
                    "-in:file:silent_struct_type", "binary_rna",
                    "-cycles", "%d" % (cycles),
                    "-nstruct", "%d" % (nstruct),
-                   "-out:file:silent", "assembly/result_%s_%d.out" % (splitext(basename(constraints_file))[0], seed),
+                   "-out:file:silent", "assembly/%s_%d.out" % (splitext(basename(constraints_file))[0], seed),
                    "-params_file", "stems_and_motifs/sequence.params",
                    "-cst_file", constraints_file,
                    "-close_loops",
