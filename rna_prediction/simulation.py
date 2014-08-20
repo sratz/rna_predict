@@ -4,6 +4,9 @@ Created on Aug 13, 2014
 @author: sebastian
 '''
 
+import time
+import shutil
+import pprint
 import glob
 import struct
 import re
@@ -23,6 +26,7 @@ class RNAPrediction(object):
 
     SYSCONFIG_FILE = expanduser("~/.rna_predict")
     CONFIG_FILE = ".config"
+    CLUSTER_CUTOFF = 0.4
 
     def loadSysConfig(self):
         #defaults
@@ -675,26 +679,39 @@ class RNAPrediction(object):
             print "deleting %s..." % (f)
             os.remove(f);
 
+        pdb_files = glob.glob("output/*.pdb")
+        for f in pdb_files:
+            print "deleting %s..." % (f)
+            os.remove(f);
+
+        # clear old evaluation data
+        self.config["evaluate"] = {}
+
         # loop over all different constraint sets
         for cst_file in sorted(glob.glob("constraints/*.cst")):
             cst_name = splitext(basename(cst_file))[0]
 
+            self.config["evaluate"][cst_name] = {"models": {}, "clusters": {}}
+
             # model counter
-            i = 0
+            model = 0
+
+            # cluster counter
+            cluster = 0
 
             # loop over all out files matching the constraint
             for f in sorted(glob.glob("assembly/%s_*.out" % (cst_name))):
                 print ""
                 print "processing %s..." % (f)
 
-                # read out file and store a dict of the scores
+                # read out file and store a dict of the scores and the full score line
                 scores = dict()
-                score_regex = re.compile("^SCORE:\s+[-0-9.]+\s.*(S_\d+)$")
+                score_regex = re.compile("^SCORE:\s+([-0-9.]+)\s.*(S_\d+)$")
                 with open(f, "r") as fd:
                     for line in fd:
                         m = score_regex.match(line)
                         if m:
-                            scores[m.group(1)]=line
+                            scores[m.group(2)]={"line": line, "score": m.group(1)}
 
                 # delete any pdb files if existing
                 for f2 in glob.glob("S_*.pdb"):
@@ -710,19 +727,75 @@ class RNAPrediction(object):
                 with open(output_pdb, "a") as output_pdb_fd:
                     # loop over all extracted pdb files
                     for fe in sorted(glob.glob("S_*.pdb")):
-                        i = i + 1
-                        output_pdb_fd.write("MODEL %d\n" % (i))
-                        output_pdb_fd.write("REMARK %s %s" % (description, scores[fe[:-4]]))
+                        model = model + 1
+                        name = fe[:-4]
 
                         # extract all P atoms from the pdb file
+                        p_only = ""
                         with open(fe, "r") as single_pdb_fd:
                             for line in single_pdb_fd:
                                 fields = line.split()
                                 if fields[0] == "ATOM" and "P" in fields[2]:
-                                    output_pdb_fd.write(line)
+                                    p_only += line
+                            p_only += "TER\n"
 
-                        output_pdb_fd.write("TER\nENDMDL\n")
+                        # append pdb only model to trajectory
+                        output_pdb_fd.write("MODEL %d\n" % (model))
+                        output_pdb_fd.write("REMARK %s %s" % (description, scores[name]["line"]))
+                        output_pdb_fd.write(p_only)
+                        output_pdb_fd.write("ENDMDL\n")
+
+
+                        # create evaluation dict for model
+                        self.config["evaluate"][cst_name]["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
+
+
+                        # write p only model to temp file
+                        temp_filename = "__temp.pdb"
+                        with open(temp_filename, "w") as temp:
+                            temp.write(p_only)
+
+
+                        # check if the current structure matches a cluster
+                        matches_cluster = 0
+                        rmsd_to_cluster_primary = RNAPrediction.CLUSTER_CUTOFF
+                        for c in range(cluster):
+                            # calculate rmsd between cluster and pdb
+                            self.executeCommand(["g_rms", "-s", "output/%s_%d_p.pdb" % (cst_name, c + 1), "-f", temp_filename], stdin="1\n1\n")
+                            with open("rmsd.xvg", "r") as r:
+                                for line in r:
+                                    pass
+                                new_rmsd = float(line.split()[1])
+                                if new_rmsd < rmsd_to_cluster_primary:
+                                    rmsd_to_cluster_primary = new_rmsd
+                                    matches_cluster = c
+                            try:
+                                os.remove("rmsd.xvg")
+                            except:
+                                pass
+
+                        if matches_cluster == 0:
+                            cluster = cluster + 1
+                            shutil.copyfile(fe, "output/%s_%d.pdb" % (cst_name, cluster))
+                            shutil.copyfile(temp_filename, "output/%s_%d_p.pdb" % (cst_name, cluster))
+                            self.config["evaluate"][cst_name]["clusters"][cluster] = {"primary_model": model}
+                            self.config["evaluate"][cst_name]["models"][model]["cluster"] = cluster
+                            self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"] = 0
+                            # TODO: calculate native rmsd
+                        else:
+                            self.config["evaluate"][cst_name]["models"][model]["cluster"] = matches_cluster
+                            self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"] = rmsd_to_cluster_primary
+
+                        os.remove(temp_filename)
+
+
+
 
                 # delete any pdb files
                 for f2 in glob.glob("S_*.pdb"):
                     os.remove(f2)
+            pprint.pprint(self.config["evaluate"])
+
+    def evaluate2(self):
+        #sself.executeCommand(["g_rms", "-f", "assembly/default.pdb", "-s", "native_p.pdb"], stdin="1\n1\n")
+        pass
