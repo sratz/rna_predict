@@ -101,14 +101,17 @@ class RNAPrediction(object):
             else:
                 raise
         
-    def executeCommand(self, command, add_rosetta_suffix=False, dry_run=False, print_commands=True):
+    def executeCommand(self, command, add_rosetta_suffix=False, dry_run=False, print_commands=True, stdin=None):
         if add_rosetta_suffix:
             command[0] = self.sysconfig["rosetta_exe_path"] + command[0] + self.sysconfig["rosetta_exe_suffix"]
         if print_commands:
             print " ".join(command)
         if not dry_run:
-            subprocess.Popen(command).wait()
-        
+            p = subprocess.Popen(command, stdin=(subprocess.PIPE if stdin != None else None))
+            if stdin != None:
+                p.communicate(input=stdin)
+            p.wait()
+
     def make_tag_with_dashes(self, int_vector ):
         tag = []
     
