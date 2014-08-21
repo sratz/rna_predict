@@ -580,6 +580,12 @@ class RNAPrediction(object):
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
 
     def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1):
+        print "Assembly configuration:"
+        print "    cycles: %s" % (cycles)
+        print "    nstruct: %s" % (nstruct)
+        print "    dry_run: %s" % (dry_run)
+        print "    random_seed: %s" % (seed)
+
         for i in range(len(self.config["motifs"])):
             command = ["rna_denovo",
                        "-fasta", "stems_and_motifs/motif%d.fasta" % (i+1),
@@ -641,6 +647,13 @@ class RNAPrediction(object):
         # this way we know the number beforehand and can choose an appropriate output filename.
         if seed == -1:
             seed = struct.unpack("=i", os.urandom(4))[0]
+
+        print "Assembly configuration:"
+        print "    cycles: %s" % (cycles)
+        print "    nstruct: %s" % (nstruct)
+        print "    constraints: %s" % (constraints_file)
+        print "    dry_run: %s" % (dry_run)
+        print "    random_seed: %s" % (seed)
 
         command = ["rna_denovo",
                    "-minimize_rna",
@@ -787,6 +800,11 @@ class RNAPrediction(object):
     def evaluate(self, cluster_limit=10, cluster_cutoff=0.41):
 #        pprint.pprint(self.config["evaluate"])
 #        return
+
+        print "Evaluation configuration:"
+        print "    cluster_limit: %s" % (cluster_limit)
+        print "    cluster_cutoff: %s" % (cluster_cutoff)
+
 
         # loop over all different constraint sets
         for cst_file in sorted(glob.glob("constraints/*.cst")):
