@@ -103,19 +103,22 @@ USAGE
         p.printConfig()
         if args.prepare:
             p.prepare(native_pdb_file=args.native)
+            p.saveConfig()
         if args.create_helices:
             p.create_helices(dry_run=args.dry_run, seed=args.seed)
+            p.saveConfig()
         if args.create_motifs:
             p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
+            p.saveConfig()
         if args.assemble:
             p.assemble(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
+            p.saveConfig()
         if args.extract:
             p.extract()
+            p.saveConfig()
         if args.evaluate:
             p.evaluate()
-
-        p.saveConfig()
-
+            p.saveConfig()
 
     return 0
     try:
