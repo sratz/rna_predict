@@ -89,6 +89,10 @@ class RNAPrediction(object):
             else:
                 print "    %s: %s" %(key, value)
 
+    # TODO: support different data types?
+    def modifyConfig(self, key, value):
+        self.config[key] = value
+
     def __init__(self):
         '''
         Create or load a prediction simulation

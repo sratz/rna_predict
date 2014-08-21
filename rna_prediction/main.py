@@ -77,6 +77,7 @@ USAGE
     parser.add_argument("--extract", dest="extract", action="store_true", help="extract pdb data and scrore [default: %(default)s]")
     parser.add_argument("--evaluate", dest="evaluate", action="store_true", help="evaluate data (clusters) [default: %(default)s]")
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
+    parser.add_argument("--config", dest="config", help="modify config variable", metavar=("KEY", "VALUE"), nargs=2)
     parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
     parser.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
     parser.add_argument("--cycles", dest="cycles", help="number of cycles [default: %(default)s]", default=20000, type=int)
@@ -95,6 +96,10 @@ USAGE
             continue
 
         p = RNAPrediction()
+
+        if args.config:
+            p.modifyConfig(args.config[0], args.config[1])
+
         p.printConfig()
         if args.prepare:
             p.prepare(native_pdb_file=args.native)
