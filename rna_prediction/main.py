@@ -103,6 +103,7 @@ USAGE
 
         if args.config:
             p.modifyConfig(args.config[0], args.config[1])
+            p.saveConfig()
 
         name = args.name
         if name is None:
