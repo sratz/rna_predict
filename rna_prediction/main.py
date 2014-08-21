@@ -79,6 +79,7 @@ USAGE
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
     parser.add_argument("--config", dest="config", help="modify config variable", metavar=("KEY", "VALUE"), nargs=2)
     parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
+    parser.add_argument("--name", dest="name", help="simulation name (for example the analyzed pdb). basename of directory will be used if not given [default: %(default)s]")
     parser.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
     parser.add_argument("--cycles", dest="cycles", help="number of cycles [default: %(default)s]", default=20000, type=int)
     parser.add_argument("--nstruct", dest="nstruct", help="number of structures to create [default: %(default)s]", default=50000, type=int)
@@ -102,9 +103,13 @@ USAGE
         if args.config:
             p.modifyConfig(args.config[0], args.config[1])
 
+        name = args.name
+        if name is None:
+            name = os.path.basename(os.path.abspath(path))
+
         p.printConfig()
         if args.prepare:
-            p.prepare(native_pdb_file=args.native)
+            p.prepare(native_pdb_file=args.native, name=name)
             p.saveConfig()
         if args.create_helices:
             p.create_helices(dry_run=args.dry_run, seed=args.seed)

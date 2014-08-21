@@ -147,13 +147,14 @@ class RNAPrediction(object):
 
         return tag
 
-    def prepare(self, fasta_file="sequence.fasta", params_file="secstruct.txt", native_pdb_file=None, data_file=None, cst_file=None, torsions_file=None):
+    def prepare(self, fasta_file="sequence.fasta", params_file="secstruct.txt", native_pdb_file=None, data_file=None, cst_file=None, torsions_file=None, name=None):
         self.config["fasta_file"] = fasta_file
         self.config["params_file"] = params_file
         self.config["native_pdb_file"] = native_pdb_file
         self.config["data_file"] = data_file
         self.config["cst_file"] = cst_file
         self.config["torsions_file"] = torsions_file
+        self.config["name"] = name
 
         print
         print "Preparation:"
