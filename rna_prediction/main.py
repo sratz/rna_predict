@@ -77,6 +77,7 @@ USAGE
     parser.add_argument("--extract", dest="extract", action="store_true", help="extract pdb data and scrore [default: %(default)s]")
     parser.add_argument("--evaluate", dest="evaluate", action="store_true", help="evaluate data (clusters) [default: %(default)s]")
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
+    parser.add_argument('-q', "--quiet", dest="quiet", action="store_true", help="don't print config on start [default: %(default)s]")
     parser.add_argument("--config", dest="config", help="modify config variable", metavar=("KEY", "VALUE"), nargs=2)
     parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
     parser.add_argument("--name", dest="name", help="simulation name (for example the analyzed pdb). basename of directory will be used if not given [default: %(default)s]")
@@ -107,7 +108,9 @@ USAGE
         if name is None:
             name = os.path.basename(os.path.abspath(path))
 
-        p.printConfig()
+        if not args.quiet:
+            p.printConfig()
+
         if args.prepare:
             p.prepare(native_pdb_file=args.native, name=name)
             p.saveConfig()
