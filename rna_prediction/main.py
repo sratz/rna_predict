@@ -76,6 +76,7 @@ USAGE
     parser.add_argument("--assemble", dest="assemble", action="store_true", help="assemble [default: %(default)s]")
     parser.add_argument("--extract", dest="extract", action="store_true", help="extract pdb data and scrore [default: %(default)s]")
     parser.add_argument("--evaluate", dest="evaluate", action="store_true", help="evaluate data (clusters) [default: %(default)s]")
+    parser.add_argument("--compare", dest="compare", action="store_true", help="print comparison of prediction to native structure [default: %(default)s]")
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
     parser.add_argument('-q', "--quiet", dest="quiet", action="store_true", help="don't print config on start [default: %(default)s]")
     parser.add_argument("--config", dest="config", help="modify config variable", metavar=("KEY", "VALUE"), nargs=2)
@@ -130,6 +131,8 @@ USAGE
         if args.evaluate:
             p.evaluate(cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
             p.saveConfig()
+        if args.compare:
+            p.compare()
 
     return 0
     try:

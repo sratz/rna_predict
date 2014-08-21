@@ -906,3 +906,20 @@ class RNAPrediction(object):
         self.deleteGlob("temp/*.pdb")
 
 
+    def compare(self):
+        sys.stdout.write(self.config["name"])
+        # loop over all different constraint sets
+        for cst_file in sorted(glob.glob("constraints/*.cst")):
+            cst_name = splitext(basename(cst_file))[0]
+            sys.stdout.write("   " + cst_name)
+
+            for c in (1, 5, 10):
+                min_rmsd = 999
+                for c2 in range(1, c + 1):
+                    model = self.config["evaluate"][cst_name]["clusters"][c2]["primary_model"]
+                    rmsd = self.config["evaluate"][cst_name]["models"][model]["native_rmsd"]
+                    if rmsd < min_rmsd:
+                        min_rmsd = rmsd
+                sys.stdout.write(" %.2f" % (min_rmsd * 10))
+        sys.stdout.write("\n")
+
