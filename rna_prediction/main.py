@@ -83,6 +83,8 @@ USAGE
     parser.add_argument("--cycles", dest="cycles", help="number of cycles [default: %(default)s]", default=20000, type=int)
     parser.add_argument("--nstruct", dest="nstruct", help="number of structures to create [default: %(default)s]", default=50000, type=int)
     parser.add_argument("--seed", dest="seed", help="random seed [default: %(default)s]", default=-1, type=int)
+    parser.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in nm [default: %(default)s]", default=0.41, type=float)
+    parser.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute anything, just print commands [default: %(default)s]")
 
     # Process arguments
@@ -117,7 +119,7 @@ USAGE
             p.extract()
             p.saveConfig()
         if args.evaluate:
-            p.evaluate()
+            p.evaluate(cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
             p.saveConfig()
 
     return 0
