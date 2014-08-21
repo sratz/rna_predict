@@ -19,6 +19,12 @@ import ConfigParser
 import pickle
 from os.path import expanduser, splitext, basename
 
+
+def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(_nsre, s)]
+
+# TODO: add check for config file for all functions other than prepare()
+
 class RNAPrediction(object):
     '''
     Base class used for prediction simulation
@@ -26,7 +32,6 @@ class RNAPrediction(object):
 
     SYSCONFIG_FILE = expanduser("~/.rna_predict")
     CONFIG_FILE = ".config"
-    CLUSTER_CUTOFF = 0.4
 
     def loadSysConfig(self):
         #defaults
@@ -79,7 +84,7 @@ class RNAPrediction(object):
             print "    %s: %s" %(key, value)
         print "Simulation configuration:"
         for key, value in sorted(self.config.iteritems()):
-            if key == "motif_res_maps" or key == "motif_stem_sets" or key == "motifs" or key == "stems":
+            if key == "motif_res_maps" or key == "motif_stem_sets" or key == "motifs" or key == "stems" or key == "evaluate":
                 print "    %s: ..." % (key)
             else:
                 print "    %s: %s" %(key, value)
@@ -107,13 +112,16 @@ class RNAPrediction(object):
             else:
                 raise
 
-    def executeCommand(self, command, add_rosetta_suffix=False, dry_run=False, print_commands=True, stdin=None):
+    def executeCommand(self, command, add_rosetta_suffix=False, dry_run=False, print_commands=True, stdin=None, quiet=False):
         if add_rosetta_suffix:
             command[0] = self.sysconfig["rosetta_exe_path"] + command[0] + self.sysconfig["rosetta_exe_suffix"]
         if print_commands:
             print " ".join(command)
         if not dry_run:
-            p = subprocess.Popen(command, stdin=(subprocess.PIPE if stdin != None else None))
+            p = subprocess.Popen(command,
+                                 stdin=(subprocess.PIPE if stdin != None else None),
+                                 stdout=(subprocess.PIPE if quiet else None),
+                                 stderr=(subprocess.PIPE if quiet else None))
             if stdin != None:
                 p.communicate(input=stdin)
             p.wait()
@@ -684,32 +692,51 @@ class RNAPrediction(object):
             except:
                 pass
 
-    def evaluate(self, extract=False):
-        # clear old evaluation data
-        self.config["evaluate"] = {}
+    def extractPOnly(self, filename):
+        p_only = ""
+        with open(filename, "r") as fd:
+            for line in fd:
+                fields = line.split()
+                if fields[0] == "ATOM" and "P" in fields[2]:
+                    p_only += line
+            p_only += "TER\n"
+            return p_only
 
-        # delete old files
-        if extract:
-            self.deleteGlob("assembly/*.pdb")
-        self.deleteGlob("output/*.pdb")
+    def writePdb(self, filename, data, model=1, remark=None, append=False):
+        with open(filename, "a" if append else "w") as output_pdb_fd:
+            output_pdb_fd.write("MODEL %d\n" % (model))
+            output_pdb_fd.write("REMARK %s\n" % (remark))
+            output_pdb_fd.write(data)
+            output_pdb_fd.write("ENDMDL\n")
 
+    def extract(self):
+        print ""
         # loop over all different constraint sets
         for cst_file in sorted(glob.glob("constraints/*.cst")):
             cst_name = splitext(basename(cst_file))[0]
+            print "processing constraint: %s..." % (cst_name)
 
+            # create dict if needed
+            if not self.config.has_key("evaluate"):
+                self.config["evaluate"] = {}
+
+            # delete old files
+            self.deleteGlob("assembly/%s.pdb" % (cst_name))
+            self.deleteGlob("output/%s*.pdb" % (cst_name))
+            self.deleteGlob("output/%s.log" % (cst_name))
+
+            # clear old evaluation data
             self.config["evaluate"][cst_name] = {"models": {}, "clusters": {}}
 
             # model counter
             model = 0
 
             # cleanup
-            if extract:
-                self.deleteGlob("temp/*.pdb")
+            self.deleteGlob("temp/%s*.pdb" % (cst_name))
 
             # loop over all out files matching the constraint
-            for f in sorted(glob.glob("assembly/%s_*.out" % (cst_name))):
-                print ""
-                print "processing %s..." % (f)
+            for f in sorted(glob.glob("assembly/%s_*.out" % (cst_name)), key=natural_sort_key):
+                print "  processing rosetta silent file: %s..." % (f)
 
                 description = splitext(basename(f))[0]
 
@@ -720,82 +747,100 @@ class RNAPrediction(object):
                     for line in fd:
                         m = score_regex.match(line)
                         if m:
-                            scores[m.group(2)]={"line": line, "score": float(m.group(1))}
-                            # XXXXXXXXX
-                            model += 1
-                            self.config["evaluate"][cst_name]["models"][model] = {"score": scores[m.group(2)]["score"]}
-                            # XXXXXXXX
+                            scores[m.group(2)]={"line": line.rstrip(), "score": float(m.group(1))}
 
 
-                if extract:
-                    # delete any pdb files if existing
-                    self.deleteGlob("S_*.pdb")
+                # delete any pdb files if existing
+                self.deleteGlob("S_*.pdb")
 
-                    # extract pdb files
-                    command = ["rna_extract", "-in:file:silent", f, "-in:file:silent_struct_type", "rna"]
-                    self.executeCommand(command, add_rosetta_suffix=True)
+                # extract pdb files
+                command = ["rna_extract", "-in:file:silent", f, "-in:file:silent_struct_type", "rna"]
+                self.executeCommand(command, add_rosetta_suffix=True)
 
-                    # loop over all extracted pdb files
-                    for fe in sorted(glob.glob("S_*.pdb")):
-                        model += 1
-                        name = fe[:-4]
+                # loop over all extracted pdb files
+                for fe in sorted(glob.glob("S_*.pdb")):
+                    model += 1
+                    name = fe[:-4]
+                    remark = "%s %s" % (description, scores[name]["line"])
 
-                        # extract all P atoms from the pdb file
-                        p_only = ""
-                        with open(fe, "r") as single_pdb_fd:
-                            for line in single_pdb_fd:
-                                fields = line.split()
-                                if fields[0] == "ATOM" and "P" in fields[2]:
-                                    p_only += line
-                            p_only += "TER\n"
+                    # extract all P atoms from the pdb file
+                    p_only = self.extractPOnly(fe)
 
-                        # write p only model to temp file # TODO: do we need this for all of them?
-                        temp_filename = "temp/%09d_p.pdb" % (model)
-                        with open(temp_filename, "w") as temp:
-                            temp.write(p_only)
+                    # append p only model to trajectory
+                    self.writePdb("assembly/%s.pdb" % (cst_name), data=p_only, model=model, remark=remark, append=True)
 
-                        # move pdb to temp directory
-                        shutil.move(fe, "temp/%09d.pdb" % (model))
+                    # write p only model to temp file
+                    self.writePdb("temp/%s_%09d_p.pdb" % (cst_name, model), data=p_only, model=model, remark=remark)
+
+                    # move original pdb to temp directory
+                    shutil.move(fe, "temp/%s_%09d.pdb" % (cst_name, model))
+
+                    # create evaluation dict for model
+                    self.config["evaluate"][cst_name]["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
 
 
-                        # append pdb only model to trajectory
-                        with open("assembly/%s.pdb" % (cst_name), "a") as output_pdb_fd:
-                            output_pdb_fd.write("MODEL %d\n" % (model))
-                            output_pdb_fd.write("REMARK %s %s" % (description, scores[name]["line"]))
-                            output_pdb_fd.write(p_only)
-                            output_pdb_fd.write("ENDMDL\n")
+    # TODO: set the cutoff value back to 0.40? It was set to 0.41 because the old bash script used integer comparison and even 0.409 was treated as 0.40
+    def evaluate(self, cluster_limit=10, cluster_cutoff=0.41):
+#        pprint.pprint(self.config["evaluate"])
+#        return
 
-                        # create evaluation dict for model
-                        self.config["evaluate"][cst_name]["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
+        # loop over all different constraint sets
+        for cst_file in sorted(glob.glob("constraints/*.cst")):
+            cst_name = splitext(basename(cst_file))[0]
+            print "processing constraint: %s..." % (cst_name)
+
+            # check if extraction step was run before
+            try:
+                self.config["evaluate"][cst_name]["models"][1]["score"]
+            except:
+                sys.stderr.write("  No extracted data for constraint '%s' found. Did you run with --extract?\n" % (cst_name))
+                continue
 
 
-            # calculate all native rmsd values
-            # TODO: create native_p.pdb if needed
-            # TODO: only do this when native pdb is actually present
-            self.executeCommand(["g_rms", "-s", "native_p.pdb", "-f", "assembly/%s.pdb" % (cst_name)], stdin="1\n1\n")
-            with open("rmsd.xvg", "r") as r:
-                for line in r:
-                    if not re.match(r"^[\s\d-]", line):
-                        continue
-                    model, native_rmsd = line.split()
-                    self.config["evaluate"][cst_name]["models"][int(float(model))]["native_rmsd"] = native_rmsd
+            # clear old evaluation clusters
+            self.config["evaluate"][cst_name]["clusters"] = {}
+            for m in self.config["evaluate"][cst_name]["models"].iteritems():
+                print m
+                m[1].pop("native_rmsd", None)
+                m[1].pop("cluster", None)
+                m[1].pop("rmsd_to_primary", None)
+                print m
 
+
+            # calculate native rmsd values for all models if native pdb available
+            if self.config["native_pdb_file"] != None:
+                # create native_p.pdb if needed
+                native_p_only = "%s_p.pdb" % (self.config["native_pdb_file"][:-4])
+                if not os.path.exists(native_p_only):
+                    print "  creating p only native pdb file: %s" % (native_p_only)
+                    self.writePdb(native_p_only, data=self.extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
+                print "  caluculating rmsd values to native structure for all models..."
+                sys.stdout.write("    ")
+                self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "assembly/%s.pdb" % (cst_name)], stdin="1\n1\n", quiet=True)
+                with open("rmsd.xvg", "r") as r:
+                    for line in r:
+                        if not re.match(r"^[\s\d-]", line):
+                            continue
+                        model, native_rmsd = line.split()
+                        self.config["evaluate"][cst_name]["models"][int(float(model))]["native_rmsd"] = float(native_rmsd)
+                self.deleteGlob("rmsd.xvg", print_notice=False)
 
             # cluster counter
             cluster = 0
 
-            x = open("log.txt", "w")
+            log = open("output/%s.log" % (cst_name), "w")
+            print "  sorting models into clusters..."
             # loop over all models sorted by their score
             for model, data in sorted(self.config["evaluate"][cst_name]["models"].items(), key=lambda x: x[1]["score"]):
-                filename_pdb = "temp/%09d.pdb" % (model)
-                filename_pdb_p = "temp/%09d_p.pdb" % (model)
+                filename_pdb = "temp/%s_%09d.pdb" % (cst_name, model)
+                filename_pdb_p = "temp/%s_%09d_p.pdb" % (cst_name, model)
 
                 # check if the current structure matches a cluster
                 matches_cluster = 0
-                rmsd_to_cluster_primary = RNAPrediction.CLUSTER_CUTOFF
+                rmsd_to_cluster_primary = cluster_cutoff
                 for c in range(cluster):
                     # calculate rmsd between cluster and pdb
-                    self.executeCommand(["g_rms", "-s", "output/%s_%d_p.pdb" % (cst_name, c + 1), "-f", filename_pdb_p], stdin="1\n1\n")
+                    self.executeCommand(["g_rms", "-quiet", "-s", "output/%s_%d_p.pdb" % (cst_name, c + 1), "-f", filename_pdb_p], stdin="1\n1\n", quiet=True, print_commands=False)
                     with open("rmsd.xvg", "r") as r:
                         for line in r:
                             pass
@@ -803,7 +848,7 @@ class RNAPrediction(object):
                         if new_rmsd < rmsd_to_cluster_primary:
                             rmsd_to_cluster_primary = new_rmsd
                             matches_cluster = c + 1
-                    self.deleteGlob("rmsd.xvg")
+                    self.deleteGlob("rmsd.xvg", print_notice=False)
 
                 if matches_cluster == 0:
                     cluster = cluster + 1
@@ -812,23 +857,29 @@ class RNAPrediction(object):
                     self.config["evaluate"][cst_name]["clusters"][cluster] = {"primary_model": model}
                     self.config["evaluate"][cst_name]["models"][model]["cluster"] = cluster
                     self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"] = 0
-                    # TODO: calculate native rmsd
-                    x.write("Cluster %s %s %s %s\n" % (cluster, model, self.config["evaluate"][cst_name]["models"][model]["native_rmsd"], self.config["evaluate"][cst_name]["models"][model]["score"]))
+                    output = "new cluster: %02s, model: %05s, native_rmsd: %.7f, score: %.3f" % (cluster,
+                                                                                               model,
+                                                                                               self.config["evaluate"][cst_name]["models"][model]["native_rmsd"],
+                                                                                               self.config["evaluate"][cst_name]["models"][model]["score"])
+                    print "    %s" % (output)
+                    log.write(output + "\n")
                 else:
                     self.config["evaluate"][cst_name]["models"][model]["cluster"] = matches_cluster
                     self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"] = rmsd_to_cluster_primary
-                    x.write("Old %s %s %s\n" % (matches_cluster, self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"], model))
+                    output = "    cluster: %02s, model: %05s, native_rmsd: %.7f, score: %.3f, rmsd_to_cluster_primary: %.7f" % (matches_cluster,
+                                                                                                                            model,
+                                                                                                                            self.config["evaluate"][cst_name]["models"][model]["native_rmsd"],
+                                                                                                                            self.config["evaluate"][cst_name]["models"][model]["score"],
+                                                                                                                            self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"])
+                    print "    %s" % (output)
+                    log.write(output + "\n")
 
-                if cluster == 5:
+                if cluster == cluster_limit:
+                    print "    maximum number of clusters reached. stopping..."
                     break
 
-                self.deleteGlob("rmsd.xvg")
+    # TODO: make this constraint specific?
+    def cleanupExtracted(self):
+        self.deleteGlob("temp/*.pdb")
 
-#            self.deleteGlob("temp/*.pdb")
 
-
-#            pprint.pprint(self.config["evaluate"])
-
-    def evaluate2(self):
-        #sself.executeCommand(["g_rms", "-f", "assembly/default.pdb", "-s", "native_p.pdb"], stdin="1\n1\n")
-        pass
