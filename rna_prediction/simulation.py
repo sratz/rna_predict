@@ -610,7 +610,7 @@ class RNAPrediction(object):
                        "-out:file:silent","stems_and_motifs/stem%d.out" % (i+1)]
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
 
-    def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1):
+    def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1, use_native_information=False):
         self.checkConfig()
         print "Assembly configuration:"
         print "    cycles: %s" % (cycles)
@@ -630,7 +630,7 @@ class RNAPrediction(object):
                        "-close_loops_after_each_move",
                        "-minimize_rna"]
 
-            if self.config["native_pdb_file"] != None:
+            if self.config["native_pdb_file"] != None and use_native_information:
                 command += ["-native", "stems_and_motifs/motif%d_%s" % (i+1, self.config["native_pdb_file"])]
             if self.config["data_file"] != None:
                 command += ["-data_file", "stems_and_motifs/motif%d.data" % (i+1)]
@@ -674,7 +674,7 @@ class RNAPrediction(object):
 
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
 
-    def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1):
+    def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1, use_native_information=False):
         self.checkConfig()
         # In case the seed isn't specify, we do what rosetta does to get a random number, and seed it with that
         # this way we know the number beforehand and can choose an appropriate output filename.
@@ -719,7 +719,7 @@ class RNAPrediction(object):
         command += ["-chunk_res"]
         command += self.make_tag_with_dashes(chunk_res)
 
-        if self.config["native_pdb_file"] != None:
+        if self.config["native_pdb_file"] != None and use_native_information:
             command += ["-native", self.config["native_pdb_file"]]
 
 
