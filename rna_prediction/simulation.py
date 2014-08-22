@@ -39,7 +39,10 @@ class SysConfig(object):
 
     def loadSysConfig(self):
         #defaults
-        self.sysconfig = { "rosetta_exe_path": "", "rosetta_exe_suffix": ".linuxgccrelease" }
+        self.sysconfig = {"rosetta_exe_path": "",
+                          "rosetta_exe_suffix": ".linuxgccrelease",
+                          "gromacs_exe_path": "",
+                          "gromacs_exe_suffix": ""}
 
         config = ConfigParser.RawConfigParser()
         config.read(SysConfig.SYSCONFIG_FILE)
@@ -48,28 +51,44 @@ class SysConfig(object):
                 self.sysconfig["rosetta_exe_path"] = re.sub("/+$", "", config.get("rosetta", "exe_path")) + "/"
             if config.has_option("rosetta", "exe_suffix"):
                 self.sysconfig["rosetta_exe_suffix"] = config.get("rosetta", "exe_suffix")
+        if config.has_section("gromacs"):
+            if config.has_option("gromacs", "exe_path"):
+                self.sysconfig["gromacs_exe_path"] = re.sub("/+$", "", config.get("gromacs", "exe_path")) + "/"
+            if config.has_option("gromacs", "exe_suffix"):
+                self.sysconfig["gromacs_exe_suffix"] = config.get("gromacs", "exe_suffix")
 
-    def isSysConfigOk(self):
+    def checkSysConfig(self):
         def is_exe(fpath):
             return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-        prog = self.sysconfig["rosetta_exe_path"] + "rna_helix" + self.sysconfig["rosetta_exe_suffix"]
-        fpath, fname = os.path.split(prog)
-        if fpath:
-            if is_exe(prog):
-                return True
-        else:
-            for path in os.environ["PATH"].split(os.pathsep):
-                path = path.strip('"')
-                exe_file = os.path.join(path, prog)
-                if is_exe(exe_file):
-                    return True
+        progs = [self.sysconfig["rosetta_exe_path"] + "rna_helix" + self.sysconfig["rosetta_exe_suffix"],
+                 self.sysconfig["gromacs_exe_path"] + "g_rms" + self.sysconfig["gromacs_exe_suffix"]]
 
-        return False
+
+        def isOk(prog):
+            fpath, fname = os.path.split(prog)
+            if fpath:
+                if is_exe(prog):
+                    return True
+            else:
+                for path in os.environ["PATH"].split(os.pathsep):
+                    path = path.strip('"')
+                    exe_file = os.path.join(path, prog)
+                    if is_exe(exe_file):
+                        return True
+
+        fail = []
+        success = []
+        for prog in progs:
+            if isOk(prog):
+                success += [prog]
+            else:
+                fail += [prog]
+        return {    "fail": fail, "success": success}
 
     def printSysConfig(self):
         print "System configuration:"
-        for key, value in self.sysconfig.iteritems():
+        for key, value in sorted(self.sysconfig.iteritems()):
             print "    %s: %s" %(key, value)
 
 
@@ -129,9 +148,11 @@ class RNAPrediction(object):
             else:
                 raise
 
-    def executeCommand(self, command, add_rosetta_suffix=False, dry_run=False, print_commands=True, stdin=None, quiet=False):
-        if add_rosetta_suffix:
+    def executeCommand(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
+        if add_suffix == "rosetta":
             command[0] = self.sysconfig["rosetta_exe_path"] + command[0] + self.sysconfig["rosetta_exe_suffix"]
+        elif add_suffix == "gromacs":
+            command[0] = self.sysconfig["gromacs_exe_path"] + command[0] + self.sysconfig["gromacs_exe_suffix"]
         if print_commands:
             print " ".join(command)
         if not dry_run:
@@ -608,7 +629,7 @@ class RNAPrediction(object):
             command = ["rna_helix",
                        "-fasta", "stems_and_motifs/stem%d.fasta" % (i+1),
                        "-out:file:silent","stems_and_motifs/stem%d.out" % (i+1)]
-            self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
+            self.executeCommand(command, add_suffix="rosetta", dry_run=dry_run)
 
     def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1, use_native_information=False):
         self.checkConfig()
@@ -672,7 +693,7 @@ class RNAPrediction(object):
             if seed != -1:
                 command += ["-constant_seed", "-jran", "%d" % (seed)]
 
-            self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
+            self.executeCommand(command, add_suffix="rosetta", dry_run=dry_run)
 
     def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1, use_native_information=False):
         self.checkConfig()
@@ -730,7 +751,7 @@ class RNAPrediction(object):
 
         command += ["-constant_seed", "-jran", "%d" % (seed)]
 
-        self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
+        self.executeCommand(command, add_suffix="rosetta", dry_run=dry_run)
 
 
     def deleteGlob(self, pattern, print_notice=True):
@@ -806,7 +827,7 @@ class RNAPrediction(object):
 
                 # extract pdb files
                 command = ["rna_extract", "-in:file:silent", f, "-in:file:silent_struct_type", "rna"]
-                self.executeCommand(command, add_rosetta_suffix=True)
+                self.executeCommand(command, add_suffix="rosetta")
 
                 # loop over all extracted pdb files
                 for fe in sorted(glob.glob("S_*.pdb")):
@@ -869,7 +890,7 @@ class RNAPrediction(object):
                     self.writePdb(native_p_only, data=self.extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
                 print "  caluculating rmsd values to native structure for all models..."
                 sys.stdout.write("    ")
-                self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "assembly/%s.pdb" % (cst_name)], stdin="1\n1\n", quiet=True)
+                self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "assembly/%s.pdb" % (cst_name)], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
                 with open("rmsd.xvg", "r") as r:
                     for line in r:
                         if not re.match(r"^[\s\d-]", line):
@@ -893,7 +914,7 @@ class RNAPrediction(object):
                 rmsd_to_cluster_primary = cluster_cutoff
                 for c in range(cluster):
                     # calculate rmsd between cluster and pdb
-                    self.executeCommand(["g_rms", "-quiet", "-s", "output/%s_%d_p.pdb" % (cst_name, c + 1), "-f", filename_pdb_p], stdin="1\n1\n", quiet=True, print_commands=False)
+                    self.executeCommand(["g_rms", "-quiet", "-s", "output/%s_%d_p.pdb" % (cst_name, c + 1), "-f", filename_pdb_p], add_suffix="gromacs", stdin="1\n1\n", quiet=True, print_commands=False)
                     with open("rmsd.xvg", "r") as r:
                         for line in r:
                             pass

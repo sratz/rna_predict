@@ -89,11 +89,14 @@ USAGE
 
     # system configuration
     sysconfig = SysConfig()
-    if sysconfig.isSysConfigOk():
-        sysconfig.printSysConfig()
-    else:
-        printToStderr("Cannot access rosetta binaries. Check sconfig file!")
+    check = sysconfig.checkSysConfig()
+    failed = check["fail"]
+    if failed:
+        for f in failed:
+            printToStderr("Sysconfig error: Cannot access %s" % (f))
         return 1
+    else:
+        sysconfig.printSysConfig()
 
     # Process arguments
     args = parser.parse_args()
