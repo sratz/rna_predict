@@ -855,11 +855,9 @@ class RNAPrediction(object):
             # clear old evaluation clusters
             self.config["evaluate"][cst_name]["clusters"] = {}
             for m in self.config["evaluate"][cst_name]["models"].iteritems():
-                print m
                 m[1].pop("native_rmsd", None)
                 m[1].pop("cluster", None)
                 m[1].pop("rmsd_to_primary", None)
-                print m
 
 
             # calculate native rmsd values for all models if native pdb available
