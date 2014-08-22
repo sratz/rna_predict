@@ -135,13 +135,22 @@ class RNAPrediction(object):
         if print_commands:
             print " ".join(command)
         if not dry_run:
-            p = subprocess.Popen(command,
-                                 stdin=(subprocess.PIPE if stdin != None else None),
-                                 stdout=(subprocess.PIPE if quiet else None),
-                                 stderr=(subprocess.PIPE if quiet else None))
-            if stdin != None:
-                p.communicate(input=stdin)
-            p.wait()
+            stdout = None
+            if quiet:
+                stdout = open(os.devnull, "w")
+            stderr = stdout
+            try:
+                p = subprocess.Popen(command, stdin=(subprocess.PIPE if stdin != None else None), stdout=stdout, stderr=stderr)
+                if stdin != None:
+                    p.communicate(input=stdin)
+                p.wait()
+                if p.returncode > 0:
+                    raise SimulationException("Non-zero return code from executed command: %s" % " ".join(command))
+            except OSError, e:
+                raise SimulationException("Failed to execute command: %s, Reason: %s" % (" ".join(command), e))
+            finally:
+                if quiet:
+                    stdout.close()
 
     def make_tag_with_dashes(self, int_vector ):
         tag = []
