@@ -117,7 +117,7 @@ USAGE
             p.prepare(native_pdb_file=args.native, name=name)
             p.saveConfig()
         if args.create_helices:
-            p.create_helices(dry_run=args.dry_run, seed=args.seed)
+            p.create_helices(dry_run=args.dry_run)
             p.saveConfig()
         if args.create_motifs:
             p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
