@@ -23,6 +23,8 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 from rna_prediction.simulation import RNAPrediction
+from rna_prediction.simulation import SysConfig
+from rna_prediction.simulation import SimulationException
 
 __all__ = []
 __version__ = 0.1
@@ -34,17 +36,11 @@ TESTRUN = 0
 PROFILE = 0
 
 
-class CLIError(Exception):
-    '''Generic exception to raise and log different fatal errors.'''
-    def __init__(self, msg):
-        super(CLIError).__init__(type(self))
-        self.msg = "E: %s" % msg
-    def __str__(self):
-        return self.msg
-    def __unicode__(self):
-        return self.msg
-
 def main(argv=None): # IGNORE:C0111
+
+    def printToStderr(message, prefix="error"):
+        sys.stderr.write("%s: %s: %s\n" % (program_name, prefix, message))
+
     '''Command line options.'''
 
     if argv is None:
@@ -90,63 +86,79 @@ USAGE
     parser.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute anything, just print commands [default: %(default)s]")
 
+    # system configuration
+    sysconfig = SysConfig()
+    if sysconfig.isSysConfigOk():
+        sysconfig.printSysConfig()
+    else:
+        printToStderr("Cannot access rosetta binaries. Check sconfig file!")
+        return 1
+
     # Process arguments
     args = parser.parse_args()
 
+    # TODO: Is it really useful to allow more than one path argument? This makes error / exit code handling complicated.
+    # TODO: For now, at least try to make this work reliably if only one path is given.
+    exit_code = 0
     for path in args.basepaths:
         try:
             os.chdir(path)
         except:
-            sys.stderr.write(program_name + ": Invalid basepath: " + path + "\n")
+            printToStderr("Invalid basepath: " + path)
             continue
 
-        p = RNAPrediction()
+        try:
+            p = RNAPrediction(sysconfig)
 
-        if args.config:
-            p.modifyConfig(args.config[0], args.config[1])
-            p.saveConfig()
+            if args.config:
+                p.modifyConfig(args.config[0], args.config[1])
+                p.saveConfig()
 
-        name = args.name
-        if name is None:
-            name = os.path.basename(os.path.abspath(path))
+            name = args.name
+            if name is None:
+                name = os.path.basename(os.path.abspath(path))
 
-        if not args.quiet:
-            p.printConfig()
+            if not args.quiet:
+                p.printConfig()
 
-        if args.prepare:
-            p.prepare(native_pdb_file=args.native, name=name)
-            p.saveConfig()
-        if args.create_helices:
-            p.create_helices(dry_run=args.dry_run)
-            p.saveConfig()
-        if args.create_motifs:
-            p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
-            p.saveConfig()
-        if args.assemble:
-            p.assemble(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
-            p.saveConfig()
-        if args.extract:
-            p.extract()
-            p.saveConfig()
-        if args.evaluate:
-            p.evaluate(cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
-            p.saveConfig()
-        if args.compare:
-            p.compare()
+            if args.prepare:
+                p.prepare(native_pdb_file=args.native, name=name)
+                p.saveConfig()
+            if args.create_helices:
+                p.create_helices(dry_run=args.dry_run)
+                p.saveConfig()
+            if args.create_motifs:
+                p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
+                p.saveConfig()
+            if args.assemble:
+                p.assemble(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed)
+                p.saveConfig()
+            if args.extract:
+                p.extract()
+                p.saveConfig()
+            if args.evaluate:
+                p.evaluate(cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
+                p.saveConfig()
+            if args.compare:
+                p.compare()
+        except SimulationException, e:
+            printToStderr(e)
+            exit_code = 1
+            continue
+        except KeyboardInterrupt:
+            exit_code = 1
+            continue
+        except Exception, e:
+            if DEBUG or TESTRUN:
+                raise
+            else:
+                printToStderr(e)
+            # TODO: Save the config here, so we don't lose anything even in case of errors?
+            exit_code = 1
+            continue
 
-    return 0
-    try:
-        pass
-    except KeyboardInterrupt:
-        ### handle keyboard interrupt ###
-        return 1
-    except Exception, e:
-        if DEBUG or TESTRUN:
-            raise(e)
-        indent = len(program_name) * " "
-        sys.stderr.write(program_name + ": " + repr(e) + "\n")
-        sys.stderr.write(indent + "  for help use --help")
-        return 2
+
+    return exit_code
 
 if __name__ == "__main__":
     sys.exit(main())

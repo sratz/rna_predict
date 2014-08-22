@@ -23,29 +23,33 @@ from os.path import expanduser, splitext, basename
 def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(_nsre, s)]
 
-# TODO: add check for config file for all functions other than prepare()
 
-class RNAPrediction(object):
-    '''
-    Base class used for prediction simulation
-    '''
+class SimulationException(Exception):
+    pass
 
+
+class SysConfig(object):
     SYSCONFIG_FILE = expanduser("~/.rna_predict")
-    CONFIG_FILE = ".config"
+
+    def __init__(self):
+        '''
+        Load system configuration
+        '''
+        self.loadSysConfig()
 
     def loadSysConfig(self):
         #defaults
         self.sysconfig = { "rosetta_exe_path": "", "rosetta_exe_suffix": ".linuxgccrelease" }
 
         config = ConfigParser.RawConfigParser()
-        config.read(RNAPrediction.SYSCONFIG_FILE)
+        config.read(SysConfig.SYSCONFIG_FILE)
         if config.has_section("rosetta"):
             if config.has_option("rosetta", "exe_path"):
                 self.sysconfig["rosetta_exe_path"] = re.sub("/+$", "", config.get("rosetta", "exe_path")) + "/"
             if config.has_option("rosetta", "exe_suffix"):
                 self.sysconfig["rosetta_exe_suffix"] = config.get("rosetta", "exe_suffix")
 
-    def checkSysConfig(self):
+    def isSysConfigOk(self):
         def is_exe(fpath):
             return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -53,16 +57,28 @@ class RNAPrediction(object):
         fpath, fname = os.path.split(prog)
         if fpath:
             if is_exe(prog):
-                return
+                return True
         else:
             for path in os.environ["PATH"].split(os.pathsep):
                 path = path.strip('"')
                 exe_file = os.path.join(path, prog)
                 if is_exe(exe_file):
-                    return
+                    return True
 
-        sys.stderr.write("Cannot access rosetta binaries. Check sconfig file!\n")
-        sys.exit(1)
+        return False
+
+    def printSysConfig(self):
+        print "System configuration:"
+        for key, value in self.sysconfig.iteritems():
+            print "    %s: %s" %(key, value)
+
+
+class RNAPrediction(object):
+    '''
+    Base class used for prediction simulation
+    '''
+
+    CONFIG_FILE = ".config"
 
     def loadConfig(self):
         if os.path.exists(RNAPrediction.CONFIG_FILE):
@@ -71,7 +87,6 @@ class RNAPrediction(object):
             c.close()
         else:
             self.config = {}
-            sys.stderr.write("No configuration found.\n")
 
     def saveConfig(self):
         c = open(RNAPrediction.CONFIG_FILE, "w")
@@ -79,33 +94,31 @@ class RNAPrediction(object):
         c.close()
 
     def printConfig(self):
-        print "System configuration:"
-        for key, value in self.sysconfig.iteritems():
-            print "    %s: %s" %(key, value)
         print "Simulation configuration:"
-        for key, value in sorted(self.config.iteritems()):
-            if key == "motif_res_maps" or key == "motif_stem_sets" or key == "motifs" or key == "stems" or key == "evaluate":
-                print "    %s: ..." % (key)
-            else:
-                print "    %s: %s" %(key, value)
+        if self.config:
+            for key, value in sorted(self.config.iteritems()):
+                if key == "motif_res_maps" or key == "motif_stem_sets" or key == "motifs" or key == "stems" or key == "evaluate":
+                    print "    %s: ..." % (key)
+                else:
+                    print "    %s: %s" %(key, value)
+        else:
+            print "    No configuration found."
 
     # TODO: support different data types?
     def modifyConfig(self, key, value):
         self.config[key] = value
 
-    def __init__(self):
+
+    def checkConfig(self):
+        if not self.config:
+            raise SimulationException("No config file found. Please run --prepare first!")
+
+    def __init__(self, sysconfig):
         '''
         Create or load a prediction simulation
         '''
-        self.loadSysConfig()
-        self.checkSysConfig()
+        self.sysconfig = sysconfig.sysconfig
         self.loadConfig()
-        self.saveConfig()
-        self.makeDirectory("stems_and_motifs")
-        self.makeDirectory("assembly")
-        self.makeDirectory("constraints")
-        self.makeDirectory("output")
-        self.makeDirectory("temp")
 
     def makeDirectory(self, directory):
         try:
@@ -148,6 +161,11 @@ class RNAPrediction(object):
         return tag
 
     def prepare(self, fasta_file="sequence.fasta", params_file="secstruct.txt", native_pdb_file=None, data_file=None, cst_file=None, torsions_file=None, name=None):
+        self.makeDirectory("stems_and_motifs")
+        self.makeDirectory("assembly")
+        self.makeDirectory("constraints")
+        self.makeDirectory("output")
+        self.makeDirectory("temp")
         self.config["fasta_file"] = fasta_file
         self.config["params_file"] = params_file
         self.config["native_pdb_file"] = native_pdb_file
@@ -574,6 +592,7 @@ class RNAPrediction(object):
         #########
 
     def create_helices(self, dry_run=False):
+        self.checkConfig()
         for i in range(len(self.config["stems"])):
             command = ["rna_helix",
                        "-fasta", "stems_and_motifs/stem%d.fasta" % (i+1),
@@ -581,6 +600,7 @@ class RNAPrediction(object):
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
 
     def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1):
+        self.checkConfig()
         print "Assembly configuration:"
         print "    cycles: %s" % (cycles)
         print "    nstruct: %s" % (nstruct)
@@ -644,6 +664,7 @@ class RNAPrediction(object):
             self.executeCommand(command, add_rosetta_suffix=True, dry_run=dry_run)
 
     def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1):
+        self.checkConfig()
         # In case the seed isn't specify, we do what rosetta does to get a random number, and seed it with that
         # this way we know the number beforehand and can choose an appropriate output filename.
         if seed == -1:
@@ -728,6 +749,7 @@ class RNAPrediction(object):
             output_pdb_fd.write("ENDMDL\n")
 
     def extract(self):
+        self.checkConfig()
         print ""
         # loop over all different constraint sets
         for cst_file in sorted(glob.glob("constraints/*.cst")):
@@ -799,9 +821,7 @@ class RNAPrediction(object):
 
     # TODO: set the cutoff value back to 0.40? It was set to 0.41 because the old bash script used integer comparison and even 0.409 was treated as 0.40
     def evaluate(self, cluster_limit=10, cluster_cutoff=0.41):
-#        pprint.pprint(self.config["evaluate"])
-#        return
-
+        self.checkConfig()
         print "Evaluation configuration:"
         print "    cluster_limit: %s" % (cluster_limit)
         print "    cluster_cutoff: %s" % (cluster_cutoff)
@@ -816,6 +836,7 @@ class RNAPrediction(object):
             try:
                 self.config["evaluate"][cst_name]["models"][1]["score"]
             except:
+                # TODO: proper exception handling vs. loop over multiple constraints?
                 sys.stderr.write("  No extracted data for constraint '%s' found. Did you run with --extract?\n" % (cst_name))
                 continue
 
@@ -907,6 +928,7 @@ class RNAPrediction(object):
 
 
     def compare(self):
+        self.checkConfig()
         sys.stdout.write(self.config["name"])
         # loop over all different constraint sets
         for cst_file in sorted(glob.glob("constraints/*.cst")):
