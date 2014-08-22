@@ -438,8 +438,10 @@ class RNAPrediction(object):
                           "%d" % (stem_res[-1][0]+1),
                           "%d" % (stem_res[-1][-1]+1),
                           "%d" % (stem_res[0][-1]+1),
-                          "stem%d_" % (i+1)]
+                          "stems_and_motifs/stem%d_" % (i+1)]
                 self.executeCommand(command)
+                native_pdb_file_subset =  'stems_and_motifs/stem%d_%s' % (i+1, native_pdb_file )
+                print 'Created: ', native_pdb_file_subset
 
 
         # Output motif jobs
@@ -501,9 +503,9 @@ class RNAPrediction(object):
                            "-subset"]
                 for k in range( motif_length ):
                     command += ["%d" % (motif_res[k]+1)]
-                command += ["motif%d_" % (i+1)]
+                command += ["stems_and_motifs/motif%d_" % (i+1)]
                 self.executeCommand(command)
-                native_pdb_file_subset =  'motif%d_%s' % (i+1, native_pdb_file )
+                native_pdb_file_subset =  'stems_and_motifs/motif%d_%s' % (i+1, native_pdb_file )
                 print 'Created: ', native_pdb_file_subset
 
             if data_file != None:
@@ -629,7 +631,7 @@ class RNAPrediction(object):
                        "-minimize_rna"]
 
             if self.config["native_pdb_file"] != None:
-                command += ["-native", "motif%d_%s" % (i+1, self.config["native_pdb_file"])]
+                command += ["-native", "stems_and_motifs/motif%d_%s" % (i+1, self.config["native_pdb_file"])]
             if self.config["data_file"] != None:
                 command += ["-data_file", "stems_and_motifs/motif%d.data" % (i+1)]
             if self.config["cst_file"] != None:
