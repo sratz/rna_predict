@@ -106,7 +106,8 @@ USAGE
             printToStderr("Sysconfig error: Cannot access %s" % (f))
         return 1
     else:
-        sysconfig.printSysConfig()
+        if not args.quiet:
+            sysconfig.printSysConfig()
 
     # TODO: Is it really useful to allow more than one path argument? This makes error / exit code handling complicated.
     # TODO: For now, at least try to make this work reliably if only one path is given.
