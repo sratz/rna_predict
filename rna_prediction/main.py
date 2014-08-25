@@ -113,13 +113,7 @@ USAGE
     exit_code = 0
     for path in args.basepaths:
         try:
-            os.chdir(path)
-        except:
-            printToStderr("Invalid basepath: " + path)
-            continue
-
-        try:
-            p = RNAPrediction(sysconfig)
+            p = RNAPrediction(sysconfig, path)
 
             if args.config:
                 p.modifyConfig(args.config[0], args.config[1])

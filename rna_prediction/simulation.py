@@ -17,7 +17,7 @@ import errno
 import string
 import ConfigParser
 import pickle
-from os.path import expanduser, splitext, basename
+from os.path import expanduser, splitext, basename, abspath
 
 
 def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
@@ -114,6 +114,7 @@ class RNAPrediction(object):
 
     def printConfig(self):
         print "Simulation configuration:"
+        print "    path: %s" % (abspath(os.getcwd()))
         if self.config:
             for key, value in sorted(self.config.iteritems()):
                 if key == "motif_res_maps" or key == "motif_stem_sets" or key == "motifs" or key == "stems" or key == "evaluate":
@@ -136,10 +137,14 @@ class RNAPrediction(object):
         if not os.path.isfile(path):
             raise SimulationException("Cannot find file: %s" % path)
 
-    def __init__(self, sysconfig):
+    def __init__(self, sysconfig, path):
         '''
         Create or load a prediction simulation
         '''
+        try:
+            os.chdir(path)
+        except:
+            raise SimulationException("Invalid basepath: %s" % (path))
         self.sysconfig = sysconfig.sysconfig
         self.loadConfig()
 
