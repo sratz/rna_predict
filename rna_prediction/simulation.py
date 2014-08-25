@@ -611,7 +611,7 @@ class RNAPrediction(object):
         fid = open( assemble_cst_file,'w')
         fid.write('[ atompairs ]\n')
         for cutpoint in cutpoints:
-            fid.write( 'O3*  %d  P     %d  HARMONIC  1.619  2.0\n' % \
+            fid.write( "O3'  %d  P     %d  HARMONIC  1.619  2.0\n" % \
                            ( cutpoint+1, cutpoint+2 ) )
         if cst_file != None:
             for cst in cst_info:
