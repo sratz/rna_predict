@@ -83,6 +83,7 @@ USAGE
     parser.add_argument("--nstruct", dest="nstruct", help="number of structures to create [default: %(default)s]", default=50000, type=int)
     parser.add_argument("--seed", dest="seed", help="random seed [default: %(default)s]", default=-1, type=int)
     parser.add_argument("--use-native", dest="use_native", action="store_true", help="use native information for motif generation and assembly [default: %(default)s]")
+    parser.add_argument("--cst", dest="cst", help="constraint file to use in assembly, extraction or evaluation steps [default: %(default)s]", default="constraints/default.cst")
     parser.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in nm [default: %(default)s]", default=0.41, type=float)
     parser.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute anything, just print commands [default: %(default)s]")
@@ -135,13 +136,13 @@ USAGE
                 p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native)
                 p.saveConfig()
             if args.assemble:
-                p.assemble(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native)
+                p.assemble(dry_run=args.dry_run, constraints_file=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native)
                 p.saveConfig()
             if args.extract:
-                p.extract()
+                p.extract(constraints_file=args.cst)
                 p.saveConfig()
             if args.evaluate:
-                p.evaluate(cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
+                p.evaluate(constraints_file=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
                 p.saveConfig()
             if args.compare:
                 p.compare()
