@@ -94,6 +94,9 @@ USAGE
     group_other.add_argument("--config", dest="config", help="modify config variable", metavar=("KEY", "VALUE"), nargs=2)
     parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
 
+    # Process arguments
+    args = parser.parse_args()
+
     # system configuration
     sysconfig = SysConfig()
     check = sysconfig.checkSysConfig()
@@ -104,9 +107,6 @@ USAGE
         return 1
     else:
         sysconfig.printSysConfig()
-
-    # Process arguments
-    args = parser.parse_args()
 
     # TODO: Is it really useful to allow more than one path argument? This makes error / exit code handling complicated.
     # TODO: For now, at least try to make this work reliably if only one path is given.
