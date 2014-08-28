@@ -684,6 +684,39 @@ class RNAPrediction(object):
             commands.append(Command(command, add_suffix="rosetta", dry_run=dry_run))
         self.executeCommands(commands, threads=threads)
 
+
+    def mergeMotifs(self, target, sources):
+        n = 0
+        pattern_header = re.compile("^(?:SEQUENCE:|SCORE:\s+score).*")
+        pattern_normal = re.compile("^(.*)S_\d+$")
+        with open(target, "a+") as t:
+            for line in t:
+                pass
+            if 'line' in locals():
+                m = re.match(".*S_(\d+)$", line)
+                if m:
+                    n = int(m.group(1))
+            for source in glob.glob(sources):
+                print "merging %s into %s" % (source, target)
+                with open(source, "r") as s:
+                    for line in s:
+                        m = pattern_header.match(line)
+                        if m:
+                            # only write header if this is he first one
+                            if n == 0:
+                                t.write(line)
+                            continue
+                        m = pattern_normal.match(line)
+                        if m:
+                            if line.startswith("SCORE:"):
+                                n += 1
+                            t.write("%sS_%06d\n" % (m.group(1), n))
+                            continue
+                        t.write(line)
+        self.deleteGlob(sources, print_notice=True)
+        return n
+
+
     def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1, use_native_information=False, threads=1):
         self.checkConfig()
         print "Assembly configuration:"
@@ -693,13 +726,30 @@ class RNAPrediction(object):
         print "    random_seed: %s" % (seed)
         print "    threads: %s" % (threads)
 
+
+        # merge all motifs abd check what we have so far
+        n_motifs = len(self.config["motifs"])
+        completed = {}
+        for i in range(n_motifs):
+            completed[i] = self.mergeMotifs("stems_and_motifs/motif%d.out" % (i + 1), "stems_and_motifs/motif%d_*.out" % (i + 1))
+
         commands = list()
         for i in range(len(self.config["motifs"])):
+            # split the rest of the work in multiple jobs
+            structs_missing = nstruct - completed[i]
+            print "motif %d:  completed: %d  missing: %d" % (i + 1, completed[i], structs_missing)
+            if structs_missing <= 0:
+                continue
+
+            structs_threads = [0 for _ in range(threads)]
+            for j in range(threads):
+                structs_threads[j] = structs_missing / threads
+            for j in range(structs_missing % threads):
+                structs_threads[j] += 1
+
             command = ["rna_denovo",
                        "-fasta", "stems_and_motifs/motif%d.fasta" % (i+1),
                        "-params_file", "stems_and_motifs/motif%d.params" % (i+1),
-                       "-nstruct", "%d" % (nstruct),
-                       "-out:file:silent", "stems_and_motifs/motif%d.out" % (i+1),
                        "-cycles", "%d" % (cycles),
                        "-mute", "all",
                        "-close_loops",
@@ -748,8 +798,19 @@ class RNAPrediction(object):
             if seed != -1:
                 command += ["-constant_seed", "-jran", "%d" % (seed)]
 
-            commands.append(Command(command, add_suffix="rosetta", dry_run=dry_run))
+
+            for j in range(threads):
+                if structs_threads[j] == 0:
+                    continue
+                command_full = command + ["-out:file:silent", "stems_and_motifs/motif%d_%d.out" % (i + 1, j + 1),
+                                          "-nstruct", "%d" % (structs_threads[j])]
+                commands.append(Command(command_full, add_suffix="rosetta", dry_run=dry_run))
         self.executeCommands(commands, threads=threads)
+
+        # merge motifs
+        for i in range(n_motifs):
+            self.mergeMotifs("stems_and_motifs/motif%d.out" % (i + 1), "stems_and_motifs/motif%d_*.out" % (i + 1))
+
 
     def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1, use_native_information=False):
         self.checkConfig()
