@@ -92,6 +92,16 @@ class SysConfig(object):
             print "    %s: %s" %(key, value)
 
 
+class Command(object):
+    def __init__(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
+        self.command = command
+        self.add_suffix = add_suffix
+        self.dry_run = dry_run
+        self.print_commands = print_commands
+        self.stdin = stdin
+        self.quiet = quiet
+
+
 class RNAPrediction(object):
     '''
     Base class used for prediction simulation
@@ -158,29 +168,61 @@ class RNAPrediction(object):
                 raise
 
     def executeCommand(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
-        if add_suffix == "rosetta":
-            command[0] = self.sysconfig["rosetta_exe_path"] + command[0] + self.sysconfig["rosetta_exe_suffix"]
-        elif add_suffix == "gromacs":
-            command[0] = self.sysconfig["gromacs_exe_path"] + command[0] + self.sysconfig["gromacs_exe_suffix"]
-        if print_commands:
-            print " ".join(command)
-        if not dry_run:
-            stdout = None
-            if quiet:
-                stdout = open(os.devnull, "w")
-            stderr = stdout
-            try:
-                p = subprocess.Popen(command, stdin=(subprocess.PIPE if stdin != None else None), stdout=stdout, stderr=stderr)
-                if stdin != None:
-                    p.communicate(input=stdin)
-                p.wait()
-                if p.returncode > 0:
-                    raise SimulationException("Non-zero return code from executed command: %s" % " ".join(command))
-            except OSError, e:
-                raise SimulationException("Failed to execute command: %s, Reason: %s" % (" ".join(command), e))
-            finally:
-                if quiet:
-                    stdout.close()
+        self.executeCommands([Command(command, add_suffix, dry_run, print_commands, stdin, quiet)])
+
+    def executeCommands(self, commands, threads=1):
+        ':type commands: list'
+
+        processes = []
+        stdout = None
+        try:
+            while True:
+                while commands and len(processes) < threads:
+                    c = commands.pop(0)
+                    if c.add_suffix == "rosetta":
+                        c.command[0] = self.sysconfig["rosetta_exe_path"] + c.command[0] + self.sysconfig["rosetta_exe_suffix"]
+                    elif c.add_suffix == "gromacs":
+                        c.command[0] = self.sysconfig["gromacs_exe_path"] + c.command[0] + self.sysconfig["gromacs_exe_suffix"]
+                    if c.print_commands:
+                        print " ".join(c.command)
+                    if not c.dry_run:
+                        stdout = None
+                        if c.quiet and stdout is None:
+                            stdout = open(os.devnull, "w")
+                        stderr = stdout
+                        try:
+                            p = subprocess.Popen(c.command, stdin=(subprocess.PIPE if c.stdin != None else None), stdout=stdout, stderr=stderr)
+                            # store original command in process
+                            p.command = c.command
+                            processes.append(p)
+                            if c.stdin != None:
+                                p.stdin.write(input=c.stdin)
+                        except OSError, e:
+                            print "lol1"
+                            raise SimulationException("Failed to execute command: %s, Reason: %s" % (" ".join(c.command), e))
+
+                for p in processes:
+                    if p.poll() is not None:
+                        processes.remove(p)
+                        if p.returncode != 0:
+                            raise SimulationException("Non-zero return code from executed command: %s" % " ".join(p.command))
+
+                if not processes and not commands:
+                    break
+                else:
+                    time.sleep(0.1)
+
+        except:
+            # kill all other processes
+            for p in processes:
+                try:
+                    p.kill()
+                except:
+                    pass
+            raise
+        finally:
+            if stdout is not None:
+                stdout.close()
 
     def make_tag_with_dashes(self, int_vector ):
         tag = []
