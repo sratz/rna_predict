@@ -674,22 +674,26 @@ class RNAPrediction(object):
 
         #########
 
-    def create_helices(self, dry_run=False):
+    def create_helices(self, dry_run=False, threads=1):
         self.checkConfig()
+        commands = list()
         for i in range(len(self.config["stems"])):
             command = ["rna_helix",
                        "-fasta", "stems_and_motifs/stem%d.fasta" % (i+1),
                        "-out:file:silent","stems_and_motifs/stem%d.out" % (i+1)]
-            self.executeCommand(command, add_suffix="rosetta", dry_run=dry_run)
+            commands.append(Command(command, add_suffix="rosetta", dry_run=dry_run))
+        self.executeCommands(commands, threads=threads)
 
-    def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1, use_native_information=False):
+    def create_motifs(self, nstruct=20000, cycles=50000, dry_run=False, seed=-1, use_native_information=False, threads=1):
         self.checkConfig()
         print "Assembly configuration:"
         print "    cycles: %s" % (cycles)
         print "    nstruct: %s" % (nstruct)
         print "    dry_run: %s" % (dry_run)
         print "    random_seed: %s" % (seed)
+        print "    threads: %s" % (threads)
 
+        commands = list()
         for i in range(len(self.config["motifs"])):
             command = ["rna_denovo",
                        "-fasta", "stems_and_motifs/motif%d.fasta" % (i+1),
@@ -744,7 +748,8 @@ class RNAPrediction(object):
             if seed != -1:
                 command += ["-constant_seed", "-jran", "%d" % (seed)]
 
-            self.executeCommand(command, add_suffix="rosetta", dry_run=dry_run)
+            commands.append(Command(command, add_suffix="rosetta", dry_run=dry_run))
+        self.executeCommands(commands, threads=threads)
 
     def assemble(self, nstruct=20000, cycles=50000, constraints_file="constraints/default.cst", dry_run=False, seed=-1, use_native_information=False):
         self.checkConfig()
