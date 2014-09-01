@@ -196,7 +196,7 @@ class RNAPrediction(object):
                             p.command = c.command
                             processes.append(p)
                             if c.stdin != None:
-                                p.stdin.write(input=c.stdin)
+                                p.stdin.write(c.stdin)
                         except OSError, e:
                             print "lol1"
                             raise SimulationException("Failed to execute command: %s, Reason: %s" % (" ".join(c.command), e))
