@@ -1016,6 +1016,9 @@ class RNAPrediction(object):
 
         log = open("output/%s.log" % (cst_name), "w")
         print "  sorting models into clusters..."
+
+        # do we have native rmsd information?
+        use_native = self.config["native_pdb_file"] != None
         # loop over all models sorted by their score
         for model, data in sorted(self.config["evaluate"][cst_name]["models"].items(), key=lambda x: x[1]["score"]):
             filename_pdb = "temp/%s_%09d.pdb" % (cst_name, model)
@@ -1045,7 +1048,7 @@ class RNAPrediction(object):
                 self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"] = 0
                 output = "new cluster: %02s, model: %05s, native_rmsd: %.7f, score: %.3f" % (cluster,
                                                                                            model,
-                                                                                           self.config["evaluate"][cst_name]["models"][model]["native_rmsd"],
+                                                                                           self.config["evaluate"][cst_name]["models"][model]["native_rmsd"] if use_native else -1,
                                                                                            self.config["evaluate"][cst_name]["models"][model]["score"])
                 print "    %s" % (output)
                 log.write(output + "\n")
@@ -1054,7 +1057,7 @@ class RNAPrediction(object):
                 self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"] = rmsd_to_cluster_primary
                 output = "    cluster: %02s, model: %05s, native_rmsd: %.7f, score: %.3f, rmsd_to_cluster_primary: %.7f" % (matches_cluster,
                                                                                                                         model,
-                                                                                                                        self.config["evaluate"][cst_name]["models"][model]["native_rmsd"],
+                                                                                                                        self.config["evaluate"][cst_name]["models"][model]["native_rmsd"] if use_native else -1,
                                                                                                                         self.config["evaluate"][cst_name]["models"][model]["score"],
                                                                                                                         self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"])
                 print "    %s" % (output)
