@@ -1063,6 +1063,8 @@ class RNAPrediction(object):
                 print "    %s" % (output)
                 log.write(output + "\n")
 
+            log.flush()
+
             if cluster == cluster_limit:
                 print "    maximum number of clusters reached. stopping..."
                 break
