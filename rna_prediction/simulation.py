@@ -95,7 +95,7 @@ class SysConfig(object):
     def printSysConfig(self):
         print "System configuration:"
         for key, value in sorted(self.__dict__.items()):
-            print "    %s: %s" %(key, value)
+            print "    %s: %s" %(key, "-" if value is None else value)
 
 
 class Command(object):
@@ -142,7 +142,10 @@ class RNAPrediction(object):
 
     # TODO: support different data types?
     def modifyConfig(self, key, value):
-        self.config[key] = value
+        if self.config.has_key(key):
+            self.config[key] = None if value == "-" else value
+        else:
+            raise SimulationException("No such config entry: %s" % (key))
 
 
     def checkConfig(self):
