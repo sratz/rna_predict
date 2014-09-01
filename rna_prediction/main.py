@@ -125,15 +125,11 @@ USAGE
                 p.modifyConfig(args.config[0], args.config[1])
                 p.saveConfig()
 
-            name = args.name
-            if name is None:
-                name = os.path.basename(os.path.abspath(path))
-
             if not args.quiet:
                 p.printConfig()
 
             if args.prepare:
-                p.prepare(native_pdb_file=args.native, name=name)
+                p.prepare(native_pdb_file=args.native, name=args.name)
                 p.saveConfig()
             if args.create_helices:
                 p.create_helices(dry_run=args.dry_run, threads=args.threads)
