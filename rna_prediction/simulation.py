@@ -35,34 +35,34 @@ class SysConfig(object):
         '''
         Load system configuration
         '''
+        #defaults
+        self.rosetta_exe_path = ""
+        self.rosetta_exe_suffix = ".linuxgccrelease"
+        self.gromacs_exe_path = ""
+        self.gromacs_exe_suffix = ""
+
         self.loadSysConfig()
 
     def loadSysConfig(self):
-        #defaults
-        self.sysconfig = {"rosetta_exe_path": "",
-                          "rosetta_exe_suffix": ".linuxgccrelease",
-                          "gromacs_exe_path": "",
-                          "gromacs_exe_suffix": ""}
-
         config = ConfigParser.RawConfigParser()
         config.read(SysConfig.SYSCONFIG_FILE)
         if config.has_section("rosetta"):
             if config.has_option("rosetta", "exe_path"):
-                self.sysconfig["rosetta_exe_path"] = re.sub("/+$", "", config.get("rosetta", "exe_path")) + "/"
+                self.rosetta_exe_path = re.sub("/+$", "", config.get("rosetta", "exe_path")) + "/"
             if config.has_option("rosetta", "exe_suffix"):
-                self.sysconfig["rosetta_exe_suffix"] = config.get("rosetta", "exe_suffix")
+                self.rosetta_exe_suffix = config.get("rosetta", "exe_suffix")
         if config.has_section("gromacs"):
             if config.has_option("gromacs", "exe_path"):
-                self.sysconfig["gromacs_exe_path"] = re.sub("/+$", "", config.get("gromacs", "exe_path")) + "/"
+                self.gromacs_exe_path = re.sub("/+$", "", config.get("gromacs", "exe_path")) + "/"
             if config.has_option("gromacs", "exe_suffix"):
-                self.sysconfig["gromacs_exe_suffix"] = config.get("gromacs", "exe_suffix")
+                self.gromacs_exe_suffix = config.get("gromacs", "exe_suffix")
 
     def checkSysConfig(self):
         def is_exe(fpath):
             return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-        progs = [self.sysconfig["rosetta_exe_path"] + "rna_helix" + self.sysconfig["rosetta_exe_suffix"],
-                 self.sysconfig["gromacs_exe_path"] + "g_rms" + self.sysconfig["gromacs_exe_suffix"]]
+        progs = [self.rosetta_exe_path + "rna_helix" + self.rosetta_exe_suffix,
+                 self.gromacs_exe_path + "g_rms" + self.gromacs_exe_suffix]
 
 
         def isOk(prog):
@@ -88,7 +88,7 @@ class SysConfig(object):
 
     def printSysConfig(self):
         print "System configuration:"
-        for key, value in sorted(self.sysconfig.iteritems()):
+        for key, value in sorted(self.__dict__.items()):
             print "    %s: %s" %(key, value)
 
 
@@ -155,7 +155,7 @@ class RNAPrediction(object):
             os.chdir(path)
         except:
             raise SimulationException("Invalid basepath: %s" % (path))
-        self.sysconfig = sysconfig.sysconfig
+        self.sysconfig = sysconfig
         self.loadConfig()
 
     def makeDirectory(self, directory):
@@ -180,9 +180,9 @@ class RNAPrediction(object):
                 while commands and len(processes) < threads:
                     c = commands.pop(0)
                     if c.add_suffix == "rosetta":
-                        c.command[0] = self.sysconfig["rosetta_exe_path"] + c.command[0] + self.sysconfig["rosetta_exe_suffix"]
+                        c.command[0] = self.sysconfig.rosetta_exe_path + c.command[0] + self.sysconfig.rosetta_exe_suffix
                     elif c.add_suffix == "gromacs":
-                        c.command[0] = self.sysconfig["gromacs_exe_path"] + c.command[0] + self.sysconfig["gromacs_exe_suffix"]
+                        c.command[0] = self.sysconfig.gromacs_exe_path + c.command[0] + self.sysconfig.gromacs_exe_suffix
                     if c.print_commands:
                         print " ".join(c.command)
                     if not c.dry_run:
