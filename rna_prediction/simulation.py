@@ -1085,11 +1085,18 @@ class RNAPrediction(object):
     # TODO: change output formatting to something else?
     def compare(self):
         self.checkConfig()
+        if self.config["native_pdb_file"] is None:
+            raise SimulationException("Cannot compare without native information.")
         sys.stdout.write(self.config["name"])
         # loop over all different constraint sets
         for cst_file in sorted(glob.glob("constraints/*.cst")):
             cst_name = splitext(basename(cst_file))[0]
             sys.stdout.write("   " + cst_name)
+            try:
+                self.config["evaluate"][cst_name]["models"][1]["native_rmsd"]
+            except:
+                sys.stdout.write(" --not evaluated--")
+                continue
 
             for c in (1, 5, 10):
                 min_rmsd = 999
