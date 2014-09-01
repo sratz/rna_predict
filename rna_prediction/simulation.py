@@ -40,6 +40,7 @@ class SysConfig(object):
         self.rosetta_exe_suffix = ".linuxgccrelease"
         self.gromacs_exe_path = ""
         self.gromacs_exe_suffix = ""
+        self.subprocess_buffsize = None
 
         self.loadSysConfig()
 
@@ -56,6 +57,9 @@ class SysConfig(object):
                 self.gromacs_exe_path = re.sub("/+$", "", config.get("gromacs", "exe_path")) + "/"
             if config.has_option("gromacs", "exe_suffix"):
                 self.gromacs_exe_suffix = config.get("gromacs", "exe_suffix")
+        if config.has_section("rna_predict"):
+            if config.has_option("rna_predict", "subprocess_buffsize"):
+                self.subprocess_buffsize = config.get("rna_predict", "subprocess_buffsize")
 
     def checkSysConfig(self):
         def is_exe(fpath):
@@ -64,6 +68,8 @@ class SysConfig(object):
         progs = [self.rosetta_exe_path + "rna_helix" + self.rosetta_exe_suffix,
                  self.gromacs_exe_path + "g_rms" + self.gromacs_exe_suffix]
 
+        if self.subprocess_buffsize is not None:
+            progs += ["stdbuf"]
 
         def isOk(prog):
             fpath, fname = os.path.split(prog)
@@ -185,6 +191,8 @@ class RNAPrediction(object):
                         c.command[0] = self.sysconfig.gromacs_exe_path + c.command[0] + self.sysconfig.gromacs_exe_suffix
                     if c.print_commands:
                         print " ".join(c.command)
+                    if self.sysconfig.subprocess_buffsize is not None:
+                        c.command = ["stdbuf", "-o", self.sysconfig.subprocess_buffsize] + c.command
                     if not c.dry_run:
                         stdout = None
                         if c.quiet and stdout is None:
