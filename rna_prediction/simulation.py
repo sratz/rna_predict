@@ -1082,22 +1082,24 @@ class RNAPrediction(object):
                 print "    maximum number of clusters reached. stopping..."
                 break
 
-    # TODO: change output formatting to something else?
     def compare(self):
         self.checkConfig()
         if self.config["native_pdb_file"] is None:
             raise SimulationException("Cannot compare without native information.")
-        sys.stdout.write(self.config["name"])
+        print self.config["name"]
+
+        def printComparisonLine(cst_name, comparisons):
+            print "  %015s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2])
+
         # loop over all different constraint sets
         for cst_file in sorted(glob.glob("constraints/*.cst")):
             cst_name = splitext(basename(cst_file))[0]
-            sys.stdout.write("   " + cst_name)
             try:
                 self.config["evaluate"][cst_name]["models"][1]["native_rmsd"]
             except:
-                sys.stdout.write(" --not evaluated--")
+                printComparisonLine(cst_name, ["-", "-", "-"])
                 continue
-
+            comparisons = []
             for c in (1, 5, 10):
                 min_rmsd = 999
                 for c2 in range(1, c + 1):
@@ -1105,6 +1107,5 @@ class RNAPrediction(object):
                     rmsd = self.config["evaluate"][cst_name]["models"][model]["native_rmsd"]
                     if rmsd < min_rmsd:
                         min_rmsd = rmsd
-                sys.stdout.write(" %.2f" % (min_rmsd * 10))
-        sys.stdout.write("\n")
-
+                comparisons.append("%.2f" % (min_rmsd * 10))
+            printComparisonLine(cst_name, comparisons)
