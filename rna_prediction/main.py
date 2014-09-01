@@ -38,6 +38,10 @@ PROFILE = 0
 
 def main(argv=None): # IGNORE:C0111
 
+    # use line-buffered stdout and stderr
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
+
     def printToStderr(message, prefix="error"):
         sys.stderr.write("%s: %s: %s\n" % (program_name, prefix, message))
 
