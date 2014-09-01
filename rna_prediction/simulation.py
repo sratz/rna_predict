@@ -805,7 +805,7 @@ class RNAPrediction(object):
             for n in which_stems:
                 command += ["stems_and_motifs/stem%d.out" % (n+1)]
 
-            command += ["-chunk_res"]
+            command += ["-in:file:input_res"]
             command += self.make_tag_with_dashes(stem_chunk_res)
 
             if seed != -1:
@@ -868,7 +868,7 @@ class RNAPrediction(object):
             motif_res = self.config["motifs"][n]
             for m in motif_res: chunk_res.append(m+1)
 
-        command += ["-chunk_res"]
+        command += ["-in:file:input_res"]
         command += self.make_tag_with_dashes(chunk_res)
 
         if self.config["native_pdb_file"] != None and use_native_information:
