@@ -255,6 +255,9 @@ class RNAPrediction(object):
     def prepare(self, fasta_file="sequence.fasta", params_file="secstruct.txt", native_pdb_file=None, data_file=None, cst_file=None, torsions_file=None, name=None):
         if name is None:
             name = os.path.basename(os.path.abspath(os.getcwd()))
+        for f in [fasta_file, params_file, native_pdb_file, data_file, cst_file, torsions_file]:
+            if f is not None:
+                self.checkFileExistence(f)
         self.makeDirectory("stems_and_motifs")
         self.makeDirectory("assembly")
         self.makeDirectory("constraints")
