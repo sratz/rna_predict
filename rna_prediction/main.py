@@ -81,6 +81,8 @@ USAGE
     group_prepare = parser.add_argument_group(title="options for the --prepare step")
     group_prepare.add_argument("--name", dest="name", help="simulation name (for example the analyzed pdb). basename of directory will be used if not given [default: %(default)s]")
     group_prepare.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
+    group_prepare.add_argument("--sequence", dest="sequence", help="sequence fasta file [default: %(default)s]", default="sequence.fasta")
+    group_prepare.add_argument("--secstruct", dest="secstruct", help="secondary structure file [default: %(default)s]", default="secstruct.txt")
     group_simulaion = parser.add_argument_group(title="options for the --create-motifs and --assemble steps")
     group_simulaion.add_argument("--cycles", dest="cycles", help="number of cycles [default: %(default)s]", default=20000, type=int)
     group_simulaion.add_argument("--nstruct", dest="nstruct", help="number of structures to create [default: %(default)s]", default=50000, type=int)
@@ -129,7 +131,7 @@ USAGE
                 p.printConfig()
 
             if args.prepare:
-                p.prepare(native_pdb_file=args.native, name=args.name)
+                p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
                 p.saveConfig()
             if args.create_helices:
                 p.create_helices(dry_run=args.dry_run, threads=args.threads)
