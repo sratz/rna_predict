@@ -92,7 +92,7 @@ USAGE
     group_cst = parser.add_argument_group(title="constraint selection (for --assembly, --extract, --evaluate)")
     group_cst.add_argument("--cst", dest="cst", help="constraint file to use in assembly, extraction or evaluation steps [default: %(default)s]", default="constraints/default.cst")
     group_other = parser.add_argument_group(title="other arguments")
-    group_other.add_argument('-j', '--threads', dest="threads", help="maximum number of parallel subprocesses [default: %s(default)s]", default=1, type=int)
+    group_other.add_argument('-j', '--threads', dest="threads", help="maximum number of parallel subprocesses [default: %(default)s]", default=1, type=int)
     group_other.add_argument('-V', '--version', action='version', version=program_version_message)
     group_other.add_argument('-q', "--quiet", dest="quiet", action="store_true", help="don't print config on start [default: %(default)s]")
     group_other.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute and only print external commands [default: %(default)s]")
