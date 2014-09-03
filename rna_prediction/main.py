@@ -118,9 +118,11 @@ USAGE
 
     # TODO: Is it really useful to allow more than one path argument? This makes error / exit code handling complicated.
     # TODO: For now, at least try to make this work reliably if only one path is given.
+    init_workdir = os.getcwd()
     exit_code = 0
     for path in args.basepaths:
         try:
+            os.chdir(init_workdir)
             p = RNAPrediction(sysconfig, path)
 
             if args.config:
