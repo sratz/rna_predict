@@ -828,13 +828,9 @@ class RNAPrediction(object):
             self.mergeMotifs("stems_and_motifs/motif%d.out" % (i + 1), "stems_and_motifs/motif%d_*.out" % (i + 1))
 
 
-    def assemble(self, nstruct=50000, cycles=20000, constraints_file="constraints/default.cst", dry_run=False, seed=None, use_native_information=False):
+    # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with createMotifs, it is distributed.
+    def assemble(self, nstruct=50000, cycles=20000, constraints_file="constraints/default.cst", dry_run=False, seed=None, use_native_information=False, threads=1):
         self.checkConfig()
-        # In case the seed isn't specify, we do what rosetta does to get a random number, and seed it with that
-        # this way we know the number beforehand and can choose an appropriate output filename.
-        if seed == None:
-            seed = struct.unpack("=i", os.urandom(4))[0]
-
         print "Assembly configuration:"
         print "    cycles: %s" % (cycles)
         print "    nstruct: %s" % (nstruct)
@@ -843,13 +839,14 @@ class RNAPrediction(object):
         print "    random_seed: %s" % (seed)
         self.checkFileExistence(constraints_file)
 
+        commands = list()
+
         command = ["rna_denovo",
                    "-minimize_rna",
                    "-fasta", self.config["fasta_file"],
                    "-in:file:silent_struct_type", "binary_rna",
                    "-cycles", "%d" % (cycles),
                    "-nstruct", "%d" % (nstruct),
-                   "-out:file:silent", "assembly/%s_%d.out" % (splitext(basename(constraints_file))[0], seed),
                    "-params_file", "stems_and_motifs/sequence.params",
                    "-cst_file", constraints_file,
                    "-close_loops",
@@ -883,9 +880,21 @@ class RNAPrediction(object):
         if self.config["data_file"] != None:
             command += ["-data_file", self.config["data_file"]]
 
-        command += ["-constant_seed", "-jran", "%d" % (seed)]
+        for j in range(threads):
+            # In case no seed is specified, we do what rosetta does to get a random number, and seed it with that.
+            # This way we know the number beforehand and can choose an appropriate output filename.
+            # In case a seed was specified, we increment it here with the thread number.
+            if seed is None:
+                seed_used = struct.unpack("=i", os.urandom(4))[0]
+            else:
+                seed_used = seed + j
 
-        self.executeCommand(command, add_suffix="rosetta", dry_run=dry_run)
+            command_full = command + ["-out:file:silent", "assembly/%s_%d.out" % (splitext(basename(constraints_file))[0], seed_used),
+                                      "-constant_seed", "-jran", "%d" % (seed_used)]
+
+            commands.append(Command(command_full, add_suffix="rosetta", dry_run=dry_run))
+
+        self.executeCommands(commands, threads=threads)
 
 
     def deleteGlob(self, pattern, print_notice=True):
