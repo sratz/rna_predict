@@ -733,7 +733,7 @@ class RNAPrediction(object):
         return n
 
 
-    def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=-1, use_native_information=False, threads=1):
+    def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1):
         self.checkConfig()
         print "Assembly configuration:"
         print "    cycles: %s" % (cycles)
@@ -811,15 +811,15 @@ class RNAPrediction(object):
             command += ["-in:file:input_res"]
             command += self.make_tag_with_dashes(stem_chunk_res)
 
-            if seed != -1:
-                command += ["-constant_seed", "-jran", "%d" % (seed)]
-
-
             for j in range(threads):
                 if structs_threads[j] == 0:
                     continue
                 command_full = command + ["-out:file:silent", "stems_and_motifs/motif%d_%d.out" % (i + 1, j + 1),
                                           "-nstruct", "%d" % (structs_threads[j])]
+                if seed != None:
+                    command_full += ["-constant_seed", "-jran", "%d" % (seed)]
+                    seed += 1
+
                 commands.append(Command(command_full, add_suffix="rosetta", dry_run=dry_run))
         self.executeCommands(commands, threads=threads)
 
@@ -828,11 +828,11 @@ class RNAPrediction(object):
             self.mergeMotifs("stems_and_motifs/motif%d.out" % (i + 1), "stems_and_motifs/motif%d_*.out" % (i + 1))
 
 
-    def assemble(self, nstruct=50000, cycles=20000, constraints_file="constraints/default.cst", dry_run=False, seed=-1, use_native_information=False):
+    def assemble(self, nstruct=50000, cycles=20000, constraints_file="constraints/default.cst", dry_run=False, seed=None, use_native_information=False):
         self.checkConfig()
         # In case the seed isn't specify, we do what rosetta does to get a random number, and seed it with that
         # this way we know the number beforehand and can choose an appropriate output filename.
-        if seed == -1:
+        if seed == None:
             seed = struct.unpack("=i", os.urandom(4))[0]
 
         print "Assembly configuration:"

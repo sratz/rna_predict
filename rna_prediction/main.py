@@ -86,7 +86,7 @@ USAGE
     group_simulaion = parser.add_argument_group(title="options for the --create-motifs and --assemble steps")
     group_simulaion.add_argument("--cycles", dest="cycles", help="number of cycles [default: %(default)s]", default=20000, type=int)
     group_simulaion.add_argument("--nstruct", dest="nstruct", help="number of structures to create [default: %(default)s]", default=50000, type=int)
-    group_simulaion.add_argument("--seed", dest="seed", help="random seed [default: %(default)s]", default=-1, type=int)
+    group_simulaion.add_argument("--seed", dest="seed", help="force random seed (when multithreading, this will be incremented for each process) [default: %(default)s]", default=None, type=int)
     group_simulaion.add_argument("--use-native", dest="use_native", action="store_true", help="use native information for motif generation and assembly [default: %(default)s]")
     group_evaluate = parser.add_argument_group(title="options for the --evaluate step")
     group_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in nm [default: %(default)s]", default=0.41, type=float)
