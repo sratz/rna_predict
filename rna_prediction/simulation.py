@@ -998,8 +998,10 @@ class RNAPrediction(object):
         try:
             self.config["evaluate"][cst_name]["models"][1]["score"]
         except:
-            raise SimulationException("No extracted data for constraint '%s' found. Did you run with --extract?\n" % (cst_name))
+            raise SimulationException("No extracted data for constraint '%s' found. Did you forget to run --extract?" % (cst_name))
 
+        if not os.path.isfile("temp/%s_%09d_p.pdb" % (cst_name, len(self.config["evaluate"][cst_name]["models"]))):
+            raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))
 
         # clear old evaluation clusters
         self.config["evaluate"][cst_name]["clusters"] = {}
