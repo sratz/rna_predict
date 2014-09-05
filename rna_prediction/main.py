@@ -158,7 +158,7 @@ USAGE
             continue
         except KeyboardInterrupt:
             exit_code = 1
-            continue
+            break
         except Exception, e:
             if DEBUG or TESTRUN:
                 raise
