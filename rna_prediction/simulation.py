@@ -1019,6 +1019,8 @@ class RNAPrediction(object):
             raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))
 
         # clear old evaluation clusters
+        self.deleteGlob("output/%s*.pdb" % (cst_name))
+        self.deleteGlob("output/%s.log" % (cst_name))
         self.config["evaluate"][cst_name]["clusters"] = {}
         for m in self.config["evaluate"][cst_name]["models"].iteritems():
             m[1].pop("native_rmsd", None)
