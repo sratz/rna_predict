@@ -909,9 +909,15 @@ class RNAPrediction(object):
     def extractPOnly(self, filename):
         p_only = ""
         with open(filename, "r") as fd:
+            # only extract first chain
+            chain_id = None
             for line in fd:
                 fields = line.split()
                 if fields[0] == "ATOM" and "P" in fields[2]:
+                    if chain_id is None:
+                        chain_id = fields[4]
+                    elif chain_id != fields[4]:
+                        break
                     p_only += line
             p_only += "TER\n"
             return p_only
