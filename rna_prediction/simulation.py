@@ -29,7 +29,8 @@ class SimulationException(Exception):
 
 
 class SysConfig(object):
-    SYSCONFIG_FILE = expanduser("~/.rna_predict")
+    SYSCONFIG_LOCATION = expanduser("~/.rna_predict")
+    SYSCONFIG_FILE = SYSCONFIG_LOCATION + os.sep + "sysconfig"
 
     def __init__(self):
         '''
