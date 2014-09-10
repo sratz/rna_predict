@@ -17,6 +17,7 @@ import errno
 import string
 import ConfigParser
 import pickle
+import dcatools
 from os.path import expanduser, splitext, basename, abspath
 
 
@@ -31,6 +32,8 @@ class SimulationException(Exception):
 class SysConfig(object):
     SYSCONFIG_LOCATION = expanduser("~/.rna_predict")
     SYSCONFIG_FILE = SYSCONFIG_LOCATION + os.sep + "sysconfig"
+    SYSCONFIG_PDB_DIRECTORY = SYSCONFIG_LOCATION + os.sep + "pdbs"
+    SYSCONFIG_STRUCTURE_INFO_DIRECTORY = SYSCONFIG_LOCATION + os.sep + "structure_info"
 
     def __init__(self):
         '''
@@ -264,6 +267,7 @@ class RNAPrediction(object):
         self.makeDirectory("constraints")
         self.makeDirectory("output")
         self.makeDirectory("temp")
+        self.makeDirectory("dca")
         self.config["fasta_file"] = fasta_file
         self.config["params_file"] = params_file
         self.config["native_pdb_file"] = native_pdb_file
@@ -1132,3 +1136,41 @@ class RNAPrediction(object):
                         min_rmsd = rmsd
                 comparisons.append("%.2f" % (min_rmsd * 10))
             printComparisonLine(cst_name, comparisons)
+
+
+    def makeConstraints(self, pdbShift=0, dcaPredictionFileName="dca/dca.txt", outputFileName="constraints/dca.cst", numberDcaPredictions=100):
+        dca = []
+        with open(dcaPredictionFileName) as f:
+            for line in f:
+                if len(dca) >= numberDcaPredictions:
+                    break
+                dca.append([int(line.rstrip('\n').split(' ')[0]) - pdbShift, int(line.rstrip('\n').split(' ')[1]) - pdbShift])
+
+        atoms = []
+        first = True
+        for res in self.config["sequence"]:
+            res = res.upper()
+            atoms.append((res, dcatools.getAtomsForRes(res, termPhosphate=(not first))))
+            first = False
+
+        # TODO: cache global distance map in sysconfig?
+        distanceMap = dcatools.buildContactDistanceMap(SysConfig.SYSCONFIG_PDB_DIRECTORY, SysConfig.SYSCONFIG_STRUCTURE_INFO_DIRECTORY)
+        distanceMapMean = dcatools.buildMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
+
+        shutil.copy("constraints/default.cst", outputFileName)
+        with open(outputFileName, "a") as out:
+            for residueContact in dca:
+                res1 = atoms[residueContact[0] - 1]
+                res2 = atoms[residueContact[1] - 1]
+                contactKey = res1[0] + res2[0]
+
+                print residueContact, contactKey
+
+                for atom1 in res1[1]:
+                    for atom2 in res2[1]:
+                        atomContactKey = atom1 + '-' + atom2
+                        if atomContactKey in distanceMapMean[contactKey]:
+                            distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
+                            print contactKey, atomContactKey, distance
+                            # TODO: make function a parameter
+                            out.write("%s %s %s %s FADE -100 26 20 -2 2\n" % (atom1, residueContact[0], atom2, residueContact[1]))

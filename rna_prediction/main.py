@@ -74,6 +74,7 @@ USAGE
     group_steps.add_argument("--prepare", dest="prepare", action="store_true", help="prepare stems and motifs [default: %(default)s]")
     group_steps.add_argument("--create-helices", dest="create_helices", action="store_true", help="create ideal a-helices [default: %(default)s]")
     group_steps.add_argument("--create-motifs", dest="create_motifs", action="store_true", help="create motifs [default: %(default)s]")
+    group_steps.add_argument("--make-constraints", dest="make_constraints", action="store_true", help="create a constraints file from a dca prediction [default: %(default)s]")
     group_steps.add_argument("--assemble", dest="assemble", action="store_true", help="assemble [default: %(default)s]")
     group_steps.add_argument("--extract", dest="extract", action="store_true", help="extract pdb data and scrore [default: %(default)s]")
     group_steps.add_argument("--evaluate", dest="evaluate", action="store_true", help="evaluate data (clusters) [default: %(default)s]")
@@ -93,6 +94,11 @@ USAGE
     group_evaluate.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     group_cst = parser.add_argument_group(title="constraint selection (for --assembly, --extract, --evaluate)")
     group_cst.add_argument("--cst", dest="cst", help="constraint file to use in assembly, extraction or evaluation steps [default: %(default)s]", default="constraints/default.cst")
+    group_makecst = parser.add_argument_group(title="options for --make-constraints")
+    group_makecst.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
+    group_makecst.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
+    # TODO: get rid of pdb-shift and create a new tool to prepare dca predictions file? or write a header in the dca file to specify irregularites and offsets
+    group_makecst.add_argument("--pdb-shift", dest="pdb_shift", help="offset between pdb and dca residue numbers [default: %(default)s]", default=0, type=int)
     group_other = parser.add_argument_group(title="other arguments")
     group_other.add_argument('-j', '--threads', dest="threads", help="maximum number of parallel subprocesses [default: %(default)s]", default=1, type=int)
     group_other.add_argument('-V', '--version', action='version', version=program_version_message)
@@ -134,6 +140,9 @@ USAGE
 
             if args.prepare:
                 p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
+                p.saveConfig()
+            if args.make_constraints:
+                p.makeConstraints(pdbShift=args.pdb_shift, dcaPredictionFileName=args.dca_file, numberDcaPredictions=args.dca_count)
                 p.saveConfig()
             if args.create_helices:
                 p.create_helices(dry_run=args.dry_run, threads=args.threads)
