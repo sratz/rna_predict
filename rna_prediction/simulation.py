@@ -1138,10 +1138,14 @@ class RNAPrediction(object):
             printComparisonLine(cst_name, comparisons)
 
 
-    def makeConstraints(self, pdbShift=0, dcaPredictionFileName="dca/dca.txt", outputFileName="constraints/dca.cst", numberDcaPredictions=100):
+    def makeConstraints(self, pdbShift=0, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
         self.checkFileExistence(dcaPredictionFileName)
+
+        if outputFileName is None:
+            outputFileName = "constraints/%s.cst" % (splitext(basename(dcaPredictionFileName))[0])
+
         dca = []
         with open(dcaPredictionFileName) as f:
             for line in f:

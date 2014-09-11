@@ -96,8 +96,7 @@ USAGE
     group_cst.add_argument("--cst", dest="cst", help="constraint file to use in assembly, extraction or evaluation steps [default: %(default)s]", default="constraints/default.cst")
     group_makecst = parser.add_argument_group(title="options for --make-constraints")
     group_makecst.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
-    # TODO: change default to None and base output filename on input filename?
-    group_makecst.add_argument("--cst-out-file", dest="cst_out_file", help="output cst file [default: %(default)s]", default="constraints/dca.txt")
+    group_makecst.add_argument("--cst-out-file", dest="cst_out_file", help="output cst file [default: inferred from dca input file]", default=None)
     group_makecst.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
     # TODO: get rid of pdb-shift and create a new tool to prepare dca predictions file? or write a header in the dca file to specify irregularites and offsets
     group_makecst.add_argument("--pdb-shift", dest="pdb_shift", help="offset between pdb and dca residue numbers [default: %(default)s]", default=0, type=int)
