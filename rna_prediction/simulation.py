@@ -1161,9 +1161,11 @@ class RNAPrediction(object):
             first = False
 
         # TODO: cache global distance map in sysconfig?
+        print "Building contact distance map:"
         distanceMap = dcatools.buildContactDistanceMap(SysConfig.SYSCONFIG_PDB_DIRECTORY, SysConfig.SYSCONFIG_STRUCTURE_INFO_DIRECTORY)
         distanceMapMean = dcatools.buildMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
 
+        print "Creating constraints:"
         shutil.copy("constraints/default.cst", outputFileName)
         with open(outputFileName, "a") as out:
             for residueContact in dca:
@@ -1171,13 +1173,11 @@ class RNAPrediction(object):
                 res2 = atoms[residueContact[1] - 1]
                 contactKey = res1[0] + res2[0]
 
-                print residueContact, contactKey
-
                 for atom1 in res1[1]:
                     for atom2 in res2[1]:
                         atomContactKey = atom1 + '-' + atom2
                         if atomContactKey in distanceMapMean[contactKey]:
                             distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
-                            print contactKey, atomContactKey, distance
+                            print "%s %s %s %s" % (residueContact, contactKey, atomContactKey, distance)
                             # TODO: make function a parameter
                             out.write("%s %s %s %s FADE -100 26 20 -2 2\n" % (atom1, residueContact[0], atom2, residueContact[1]))

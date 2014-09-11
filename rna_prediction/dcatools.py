@@ -63,8 +63,6 @@ def buildContactDistanceMap(pdbDirectory, structureDirectory):
                 if pdbCode == '-':
                     continue
 
-                print index, pdbCode
-
                 if pdbCode not in pdbStructureDict:
                     pdbStructureDict[pdbCode] = Bio.PDB.PDBParser().get_structure(pdbCode, pdbDirectory + pdbCode + '.pdb')
 
@@ -95,9 +93,9 @@ def buildContactDistanceMap(pdbDirectory, structureDirectory):
                         break
 
                 if not found1 or not found2:
-                    raise Exception("foooo")
+                    raise Exception("Could not find residue contact in pdb file: %s-%s %s %s %s" % (nt1, nt2, pdbCode, residues[index][0], residues[index][1]))
 
-                print pdbCodes[index], res1, res2
+                print "%s-%s %s %s %s" % (nt1, nt2, pdbCode, residues[index][0], residues[index][1])
                 for atom1 in res1:
                     for atom2 in res2:
                         if not (atom1.name.startswith('H') or atom2.name.startswith('H')):
