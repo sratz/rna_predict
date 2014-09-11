@@ -1138,7 +1138,7 @@ class RNAPrediction(object):
             printComparisonLine(cst_name, comparisons)
 
 
-    def makeConstraints(self, pdbShift=0, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100):
+    def makeConstraints(self, pdbMapping=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
         self.checkFileExistence(dcaPredictionFileName)
@@ -1146,12 +1146,36 @@ class RNAPrediction(object):
         if outputFileName is None:
             outputFileName = "constraints/%s.cst" % (splitext(basename(dcaPredictionFileName))[0])
 
+        if pdbMapping is not None:
+            pdbMapping = dcatools.createPdbMapping(self.config["sequence"], pdbMapping)
+        pattern_parameter = re.compile(r"^#\s(\S+)\s+(.*)$")
         dca = []
         with open(dcaPredictionFileName) as f:
             for line in f:
+                line = line.strip()
+                if len(line) == 0:
+                    continue
+                if line[0] == "#":
+                    # comment / parameter line
+                    m = pattern_parameter.match(line)
+                    if m:
+                        if m.group(1) == "pdb-mapping":
+                            # if pdbMapping is already set, it was overridden on invocation, skip this line!
+                            if pdbMapping is not None:
+                                continue
+                            pdbMapping = dcatools.createPdbMapping(self.config["sequence"], m.group(2))
+                    continue
+                # data line
                 if len(dca) >= numberDcaPredictions:
                     break
-                dca.append([int(line.rstrip('\n').split(' ')[0]) - pdbShift, int(line.rstrip('\n').split(' ')[1]) - pdbShift])
+                parts = line.split(" ")
+                if pdbMapping is not None:
+                    try:
+                        dca.append([pdbMapping[int(parts[0])], pdbMapping[int(parts[1])]])
+                    except:
+                        raise SimulationException("Invalid PDB mapping. Could not access residue: %s" % (parts[:2]))
+                else:
+                    dca.append([int(parts[0]), int(parts[1])])
 
         atoms = []
         first = True

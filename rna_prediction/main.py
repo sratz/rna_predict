@@ -98,8 +98,7 @@ USAGE
     group_makecst.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
     group_makecst.add_argument("--cst-out-file", dest="cst_out_file", help="output cst file [default: inferred from dca input file]", default=None)
     group_makecst.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
-    # TODO: get rid of pdb-shift and create a new tool to prepare dca predictions file? or write a header in the dca file to specify irregularites and offsets
-    group_makecst.add_argument("--pdb-shift", dest="pdb_shift", help="offset between pdb and dca residue numbers [default: %(default)s]", default=0, type=int)
+    group_makecst.add_argument("--pdb-mapping", dest="pdb_mapping", help="map pdb residue numbers to 1,2,... [example: 12-18,25-] [default: read from dca file")
     group_other = parser.add_argument_group(title="other arguments")
     group_other.add_argument('-j', '--threads', dest="threads", help="maximum number of parallel subprocesses [default: %(default)s]", default=1, type=int)
     group_other.add_argument('-V', '--version', action='version', version=program_version_message)
@@ -143,7 +142,7 @@ USAGE
                 p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
                 p.saveConfig()
             if args.make_constraints:
-                p.makeConstraints(pdbShift=args.pdb_shift, dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count)
+                p.makeConstraints(pdbMapping=args.pdb_mapping, dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count)
                 p.saveConfig()
             if args.create_helices:
                 p.create_helices(dry_run=args.dry_run, threads=args.threads)

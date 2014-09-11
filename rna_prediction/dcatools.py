@@ -129,3 +129,27 @@ def buildMeanDistanceMapMean(distanceMap, meanCutoff=3, stdCutoff=6):
     return meanDistanceMap
 
 
+def createPdbMapping(sequence, mapping):
+    # parse a range in the form of 1-7,80,100-120,8-
+    pdbMapping = {}
+    i = 1
+    ranges = mapping.split(",")
+    for r in ranges:
+        r = r.split("-")
+        if len(r) == 1:
+            # single number
+            pdbMapping[int(r[0])] = i
+            i += 1
+        elif r[1] == "":
+            # open end range, fill till the end of the sequence
+            x = int(r[0])
+            while i <= len(sequence):
+                pdbMapping[x] = i
+                x += 1
+                i += 1
+        else:
+            # regular start-end
+            for x in range(int(r[0]), int(r[1]) + 1):
+                pdbMapping[x] = i
+                i += 1
+    return pdbMapping
