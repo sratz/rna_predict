@@ -1139,6 +1139,9 @@ class RNAPrediction(object):
 
 
     def makeConstraints(self, pdbShift=0, dcaPredictionFileName="dca/dca.txt", outputFileName="constraints/dca.cst", numberDcaPredictions=100):
+        # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
+        self.checkConfig()
+        self.checkFileExistence(dcaPredictionFileName)
         dca = []
         with open(dcaPredictionFileName) as f:
             for line in f:
