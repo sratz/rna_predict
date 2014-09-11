@@ -80,7 +80,7 @@ USAGE
     group_steps.add_argument("--evaluate", dest="evaluate", action="store_true", help="evaluate data (clusters) [default: %(default)s]")
     group_steps.add_argument("--compare", dest="compare", action="store_true", help="print comparison of prediction to native structure [default: %(default)s]")
     group_prepare = parser.add_argument_group(title="options for the --prepare step")
-    group_prepare.add_argument("--name", dest="name", help="simulation name (for example the analyzed pdb). basename of directory will be used if not given [default: %(default)s]")
+    group_prepare.add_argument("--name", dest="name", help="simulation name (for example the analyzed pdb) [default: basename of directory]")
     group_prepare.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
     group_prepare.add_argument("--sequence", dest="sequence", help="sequence fasta file [default: %(default)s]", default="sequence.fasta")
     group_prepare.add_argument("--secstruct", dest="secstruct", help="secondary structure file [default: %(default)s]", default="secstruct.txt")
