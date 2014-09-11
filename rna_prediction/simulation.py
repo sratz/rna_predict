@@ -1141,10 +1141,14 @@ class RNAPrediction(object):
     def makeConstraints(self, pdbMapping=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
-        self.checkFileExistence(dcaPredictionFileName)
-
         if outputFileName is None:
             outputFileName = "constraints/%s.cst" % (splitext(basename(dcaPredictionFileName))[0])
+        print "Constraints creation:"
+        print "    dcaPredictionFileName: %s" % (dcaPredictionFileName)
+        print "    outputFileName: %s" % (outputFileName)
+        print "    numberDcaPredictions: %d" % (numberDcaPredictions)
+        print "  %s pdbMapping (user): %s" % (" " if pdbMapping is None else "*", pdbMapping)
+        self.checkFileExistence(dcaPredictionFileName)
 
         if pdbMapping is not None:
             pdbMapping = dcatools.createPdbMapping(self.config["sequence"], pdbMapping)
@@ -1161,6 +1165,7 @@ class RNAPrediction(object):
                     if m:
                         if m.group(1) == "pdb-mapping":
                             # if pdbMapping is already set, it was overridden on invocation, skip this line!
+                            print "  %s pdbMapping (file): %s" % (" " if pdbMapping is not None else "*", m.group(2))
                             if pdbMapping is not None:
                                 continue
                             pdbMapping = dcatools.createPdbMapping(self.config["sequence"], m.group(2))
