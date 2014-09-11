@@ -2,7 +2,9 @@ import os
 import numpy
 import math
 import Bio.PDB
+import warnings
 from eSBMTools import PdbFile
+from Bio.PDB.PDBExceptions import PDBConstructionWarning
 
 '''
 Created on Sep 10, 2014
@@ -64,7 +66,9 @@ def buildContactDistanceMap(pdbDirectory, structureDirectory):
                     continue
 
                 if pdbCode not in pdbStructureDict:
-                    pdbStructureDict[pdbCode] = Bio.PDB.PDBParser().get_structure(pdbCode, pdbDirectory + pdbCode + '.pdb')
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", PDBConstructionWarning)
+                        pdbStructureDict[pdbCode] = Bio.PDB.PDBParser().get_structure(pdbCode, pdbDirectory + pdbCode + '.pdb')
 
                 model = pdbStructureDict[pdbCode][0]
 
