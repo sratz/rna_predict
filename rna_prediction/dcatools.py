@@ -49,24 +49,23 @@ def buildContactDistanceMap(pdbDirectory, structureDirectory, westhofVector=[1, 
             pdbCodes = []
             residues = []
 
+            # read the structures for the 12 edge-to-edge bonding families
             for line in open(structureDirectory + nt1 + '-' + nt2 + '.txt'):
-                if not line.startswith('-'):
-                    pdbCodes.append(line.rstrip('\n').split(' ')[0].upper())
-                    residues.append((int(line.rstrip('\n').split(' ')[1]),int(line.rstrip('\n').split(' ')[2])))
+                fields = line.strip().split(" ")
+                if fields[0] != "-":
+                    pdbCodes.append(fields[0].upper())
+                    residues.append((int(fields[1]), int(fields[2])))
                 else:
-                    pdbCodes.append('-')
-                    residues.append('-')
-
-            for pdbCode in pdbCodes:
-                if not os.path.exists(pdbDirectory + pdbCode + '.pdb'):
-                    if not pdbCode == '-':
-                        PdbFile.downloadPdbFile(pdbDirectory, pdbCode)
+                    pdbCodes.append(None)
+                    residues.append(None)
 
             for index, pdbCode in enumerate(pdbCodes):
-                if pdbCode == '-':
+                if pdbCode is None:
                     continue
 
                 if pdbCode not in pdbStructureDict:
+                    if not os.path.exists(pdbDirectory + pdbCode + '.pdb'):
+                        PdbFile.downloadPdbFile(pdbDirectory, pdbCode)
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", PDBConstructionWarning)
                         pdbStructureDict[pdbCode] = Bio.PDB.PDBParser().get_structure(pdbCode, pdbDirectory + pdbCode + '.pdb')
