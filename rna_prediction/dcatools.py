@@ -27,7 +27,8 @@ def getAtomsForRes(res, termPhosphate=False):
         return atoms + ["N1", "C2", "O2", "N3", "C4", "N4", "C5", "C6"]
 
 
-def buildContactDistanceMap(pdbDirectory, structureDirectory):
+# the westhofVector can be used to apply different weights to the bonding family classes
+def buildContactDistanceMap(pdbDirectory, structureDirectory, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]):
     # make sure directory names have a trailing slash
     pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
     structureDirectory = os.path.normpath(structureDirectory) + os.sep
@@ -106,7 +107,7 @@ def buildContactDistanceMap(pdbDirectory, structureDirectory):
                             contactKey = str(atom1.name) + '-' + str(atom2.name)
                             x1, y1, z1 = atom1.coord
                             x2, y2, z2 = atom2.coord
-                            distance = math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
+                            distance = westhofVector[index] * math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
                             if not contactKey in distanceMapResPair:
                                 distanceMapResPair[contactKey] = [distance]
                             else:
