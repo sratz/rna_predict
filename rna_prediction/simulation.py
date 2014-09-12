@@ -1138,7 +1138,7 @@ class RNAPrediction(object):
             printComparisonLine(cst_name, comparisons)
 
 
-    def makeConstraints(self, pdbMapping=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100):
+    def makeConstraints(self, pdbMapping=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2"):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
         if outputFileName is None:
@@ -1147,6 +1147,7 @@ class RNAPrediction(object):
         print "    dcaPredictionFileName: %s" % (dcaPredictionFileName)
         print "    outputFileName: %s" % (outputFileName)
         print "    numberDcaPredictions: %d" % (numberDcaPredictions)
+        print "    function: %s" % (cstFunction)
         print "  %s pdbMapping (user): %s" % (" " if pdbMapping is None else "*", pdbMapping)
         self.checkFileExistence(dcaPredictionFileName)
 
@@ -1208,5 +1209,4 @@ class RNAPrediction(object):
                         if atomContactKey in distanceMapMean[contactKey]:
                             distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
                             print "%s %s %s %s" % (residueContact, contactKey, atomContactKey, distance)
-                            # TODO: make function a parameter
-                            out.write("%s %s %s %s FADE -100 26 20 -2 2\n" % (atom1, residueContact[0], atom2, residueContact[1]))
+                            out.write("%s %s %s %s %s\n" % (atom1, residueContact[0], atom2, residueContact[1], cstFunction))
