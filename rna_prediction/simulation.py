@@ -1116,7 +1116,7 @@ class RNAPrediction(object):
         print self.config["name"]
 
         def printComparisonLine(cst_name, comparisons):
-            print "  %015s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2])
+            print "  %-035s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2])
 
         # loop over all different constraint sets
         for cst_file in sorted(glob.glob("constraints/*.cst")):
