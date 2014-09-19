@@ -146,20 +146,17 @@ USAGE
                 p.saveConfig()
             if args.make_constraints:
                 p.makeConstraints(pdbMapping=args.pdb_mapping, dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function)
-                p.saveConfig()
             if args.edit_constraints:
                 p.editConstraints(inputFileName=args.cst, outputFileName=args.cst_out_file,cstFunction=args.cst_function)
             if args.create_helices:
                 p.create_helices(dry_run=args.dry_run, threads=args.threads)
-                p.saveConfig()
             if args.create_motifs:
                 p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
-                p.saveConfig()
             if args.assemble:
                 p.assemble(dry_run=args.dry_run, constraints_file=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
-                p.saveConfig()
             if args.extract:
                 p.extract(constraints_file=args.cst)
+                # TODO: save evaluation config to different file so that multiple processes can access the same main config simultaneously
                 p.saveConfig()
             if args.evaluate:
                 p.evaluate(constraints_file=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
