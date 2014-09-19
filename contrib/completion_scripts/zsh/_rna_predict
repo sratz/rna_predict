@@ -1,0 +1,71 @@
+#compdef rna_predict
+
+typeset -a prepare_args
+typeset -a assemble_args
+typeset -a evaluate_args
+typeset -a cst_args
+typeset -a make_constraints_args
+
+if (( words[(I)--prepare] )); then
+  prepare_args=(
+    '--name=[simulation name (default: infer from dirname)]:name: '
+    '--native=[native pdb file (default: None)]:pdb file:_files -g \*.pdb'
+    '--sequence=[sequence fasta file (default: sequence.fasta)]:fasta file:_files -g \*.fasta'
+    '--secstruct=[secondary structure file (default: secstruct.txt)]:secstruct file:_files'
+  )
+fi
+
+if (( words[(I)--create-motifs|--assemble] )); then
+  assemble_args=(
+    '--cycles=[number of cycles (default: 20000)]: :_guard "[0-9]#" "cycles"'
+    '--nstruct=[number of structures to create (default: 50000)]: :_guard "[0-9]#" "number of structures"'
+    '--seed=[random seed (default: -)]: :_guard "(-|)[0-9]#" "seed"'
+    '--use-native[use native information for motif generation and assembly]'
+    {-j,--threads}'[maximum number of parallel subprocesses (default: 1)]: :_guard "[0-9]#" "threads"'
+  )
+fi
+
+if (( words[(I)--evaluate] )); then
+  evaluate_args=(
+    '--cluster-cutoff=[cluster cutoff in nm (default: 0.41)]: : _guard "[0-9]#(.|)[0-9]#" "cutoff"'
+    '--cluster-limit=[maximum number of clusters to create (default: 10)]: :_guard "[0-9]#" "limit"'
+  )
+fi
+
+if (( words[(I)--evaluate|--extract|--assemble] )); then
+  cst_args=(
+    '--cst=[constraints file to use in assembly, extraction or evaluation steps (default: constraints/default.cst)]:constraints file:_files -g \*.cst'
+  )
+fi
+
+if (( words[(I)--make-constraints] )); then
+  make_constraints_args=(
+    '--dca-file=[dca file to use as input (default: dca/dca.txt)]:dca file:_files'
+    '--dca-count=[maximum number o dca predictions to use (default: 100)]: :_guard "[0-9]#" "limit"'
+    '--pdb-mapping=[map pdb residue numbers to 1,2,... (example: 12-18,25-) (default: read from dca file)]:pdb mapping: '
+    '--cst-out-file=[output cst file (default: inferred from dca input file)]:constraints file:_files -g \*.cst'
+    '--cst-function=[rosetta function to use for the constraints (default: "FADE -100 26 20 -2 2")]:function: '
+  )
+fi
+
+
+_arguments -s -w \
+  {-h,--help}'[show help]' \
+  '--prepare[prepare stems and motifs]' \
+  '--create-helices[create ideal a-helices]' \
+  '--create-motifs[create motifs]' \
+  '--assemble[assemble]' \
+  '--extract[extract pdb data and scrore]' \
+  '--evaluate[evaluate data (clusters)]' \
+  '--make-constraints[create a constraints file from a dca prediction]' \
+  '--compare[print comparison of prediction to native structure]' \
+  {-V,--version}'[show program version number and exit]' \
+  {-q,--quiet}'[do not print config on start]' \
+  {-n,--dry-run}'[do not execute and only print external commands]' \
+  '--config[modify config variable]:key:(fasta_file name native_pdb_file params_file torsions_file):value: ' \
+  $prepare_args \
+  $assemble_args \
+  $evaluate_args \
+  $cst_args \
+  $make_constraints_args \
+  '*:directory:_path_files -/'
