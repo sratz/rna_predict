@@ -1119,7 +1119,7 @@ class RNAPrediction(object):
             print "  %-035s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2])
 
         # loop over all different constraint sets
-        for cst_file in sorted(glob.glob("constraints/*.cst")):
+        for cst_file in sorted(glob.glob("constraints/*.cst"), key=natural_sort_key):
             cst_name = splitext(basename(cst_file))[0]
             try:
                 self.config["evaluate"][cst_name]["models"][1]["native_rmsd"]
