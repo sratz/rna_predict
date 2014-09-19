@@ -1210,3 +1210,31 @@ class RNAPrediction(object):
                             distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
                             print "%s %s %s %s" % (residueContact, contactKey, atomContactKey, distance)
                             out.write("%s %s %s %s %s\n" % (atom1, residueContact[0], atom2, residueContact[1], cstFunction))
+
+    def editConstraints(self, inputFileName, outputFileName=None, cstFunction="FADE -100 26 20 -2 2"):
+        ':type cstFunction:string'
+        cstName = splitext(basename(inputFileName))[0]
+        cstFunctionUnderscore = cstFunction.replace(" ", "_")
+        if outputFileName is None:
+            outputFileName = "constraints/%s_%s.cst" % (cstName, cstFunctionUnderscore)
+        else:
+            outputFileName = outputFileName.replace("%f", cstFunctionUnderscore)
+        print "Constraints editing:"
+        print "    inputFileName:  %s" % (inputFileName)
+        print "    outputFileName: %s" % (outputFileName)
+        print "    function:       %s" % (cstFunction)
+        self.checkFileExistence(inputFileName)
+
+        if inputFileName == outputFileName:
+            raise SimulationException("Input and output filename cannot be the same")
+
+        pattern = re.compile(r"^(\S+\s+\d+\s+\S+\s+\d+)\s+(\S+)\s+.+$")
+        with open(inputFileName, "r") as inputFd:
+            with open(outputFileName, "w") as outputFd:
+                for line in inputFd:
+                    m = pattern.match(line)
+                    # TODO: is this a good idea? what if we actually want to use HARMONIC for our custom constraints at some point?
+                    if m and m.group(2) != "HARMONIC":
+                        outputFd.write("%s %s\n" % (m.group(1), cstFunction))
+                    else:
+                        outputFd.write(line)
