@@ -48,7 +48,7 @@ if (( words[(I)--make-constraints] )); then
 fi
 
 if (( words[(I)--make-constraints|--edit-constraints] )); then
-  make_constraints_args=(
+  makeedit_constraints_args=(
     '--cst-out-file=[output cst file (default: inferred from dca input file)]:constraints file:_files -g \*.cst'
     '--cst-function=[rosetta function to use for the constraints (default: "FADE -100 26 20 -2 2")]:function: '
   )
