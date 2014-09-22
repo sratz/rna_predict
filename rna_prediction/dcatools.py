@@ -122,14 +122,14 @@ def buildContactDistanceMap(pdbDirectory=PDB_DIRECTORY, structureDirectory=INFO_
     return distanceMap
 
 
-def buildMeanDistanceMapMean(distanceMap, meanCutoff=3, stdCutoff=6):
+def buildMeanDistanceMapMean(distanceMap, meanCutoff=None, stdCutoff=None):
     meanDistanceMap = {}
     for resPair, distanceMapResPair in distanceMap.iteritems():
         meanDistanceMapRes = {}
         for atomPair, distancesAtomPair in distanceMapResPair.iteritems():
             mean = numpy.asarray(distancesAtomPair).mean()
             std = numpy.asarray(distancesAtomPair).std()
-            if mean < meanCutoff and std < stdCutoff:
+            if (meanCutoff is None or mean < meanCutoff) and (stdCutoff is None or std < stdCutoff):
                 meanDistanceMapRes[atomPair] = [mean, std]
         meanDistanceMap[resPair] = meanDistanceMapRes
     return meanDistanceMap
