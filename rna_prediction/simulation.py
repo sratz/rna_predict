@@ -941,17 +941,14 @@ class RNAPrediction(object):
         print "    constraints: %s" % (cst_name)
         self.checkFileExistence(constraints_file)
 
-        # create dict if needed
-        if not self.config.has_key("evaluate"):
-            self.config["evaluate"] = {}
-
         # delete old files
         self.deleteGlob("assembly/%s.pdb" % (cst_name))
         self.deleteGlob("output/%s*.pdb" % (cst_name))
         self.deleteGlob("output/%s.log" % (cst_name))
+        self.deleteGlob("output/%s.dat" % (cst_name))
 
-        # clear old evaluation data
-        self.config["evaluate"][cst_name] = {"models": {}, "clusters": {}}
+        # create dict to store evaluation data
+        evalData = {"models": {}, "clusters": {}}
 
         # model counter
         model = 0
@@ -1001,7 +998,11 @@ class RNAPrediction(object):
                 shutil.move(fe, "temp/%s_%09d.pdb" % (cst_name, model))
 
                 # create evaluation dict for model
-                self.config["evaluate"][cst_name]["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
+                evalData["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
+
+        # save evaluation data to file
+        with open("output/%s.dat" % (cst_name), "w") as f:
+            pickle.dump(evalData, f)
 
 
     # TODO: set the cutoff value back to 0.40? It was set to 0.41 because the old bash script used integer comparison and even 0.409 was treated as 0.40
@@ -1014,20 +1015,25 @@ class RNAPrediction(object):
         print "    constraints: %s" % (cst_name)
         self.checkFileExistence(constraints_file)
 
-        # check if extraction step was run before
+        # load evaluation data and check if extraction step was run before
+        evalDataFilename = "output/%s.dat" % (cst_name)
         try:
-            self.config["evaluate"][cst_name]["models"][1]["score"]
+            with open(evalDataFilename, "r") as f:
+                evalData = pickle.load(f)
+            evalData["models"][1]["score"]
+        except KeyError:
+            raise SimulationException("Broken data file %s. Try running --extract again" % (evalDataFilename))
         except:
-            raise SimulationException("No extracted data for constraint '%s' found. Did you forget to run --extract?" % (cst_name))
+            raise SimulationException("Data file %s for constraint not found. Did you forget to run --extract?" % (evalDataFilename))
 
-        if not os.path.isfile("temp/%s_%09d_p.pdb" % (cst_name, len(self.config["evaluate"][cst_name]["models"]))):
+        if not os.path.isfile("temp/%s_%09d_p.pdb" % (cst_name, len(evalData["models"]))):
             raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))
 
         # clear old evaluation clusters
         self.deleteGlob("output/%s*.pdb" % (cst_name))
         self.deleteGlob("output/%s.log" % (cst_name))
-        self.config["evaluate"][cst_name]["clusters"] = {}
-        for m in self.config["evaluate"][cst_name]["models"].iteritems():
+        evalData["clusters"] = {}
+        for m in evalData["models"].iteritems():
             m[1].pop("native_rmsd", None)
             m[1].pop("cluster", None)
             m[1].pop("rmsd_to_primary", None)
@@ -1048,7 +1054,7 @@ class RNAPrediction(object):
                     if not re.match(r"^[\s\d-]", line):
                         continue
                     model, native_rmsd = line.split()
-                    self.config["evaluate"][cst_name]["models"][int(float(model))]["native_rmsd"] = float(native_rmsd)
+                    evalData["models"][int(float(model))]["native_rmsd"] = float(native_rmsd)
             self.deleteGlob("rmsd.xvg", print_notice=False)
 
         # cluster counter
@@ -1060,7 +1066,7 @@ class RNAPrediction(object):
         # do we have native rmsd information?
         use_native = self.config["native_pdb_file"] != None
         # loop over all models sorted by their score
-        for model, data in sorted(self.config["evaluate"][cst_name]["models"].items(), key=lambda x: x[1]["score"]):
+        for model, data in sorted(evalData["models"].items(), key=lambda x: x[1]["score"]):
             filename_pdb = "temp/%s_%09d.pdb" % (cst_name, model)
             filename_pdb_p = "temp/%s_%09d_p.pdb" % (cst_name, model)
 
@@ -1083,23 +1089,23 @@ class RNAPrediction(object):
                 cluster = cluster + 1
                 shutil.copyfile(filename_pdb, "output/%s_%d.pdb" % (cst_name, cluster))
                 shutil.copyfile(filename_pdb_p, "output/%s_%d_p.pdb" % (cst_name, cluster))
-                self.config["evaluate"][cst_name]["clusters"][cluster] = {"primary_model": model}
-                self.config["evaluate"][cst_name]["models"][model]["cluster"] = cluster
-                self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"] = 0
+                evalData["clusters"][cluster] = {"primary_model": model}
+                evalData["models"][model]["cluster"] = cluster
+                evalData["models"][model]["rmsd_to_primary"] = 0
                 output = "new cluster: %02s, model: %05s, native_rmsd: %.7f, score: %.3f" % (cluster,
                                                                                            model,
-                                                                                           self.config["evaluate"][cst_name]["models"][model]["native_rmsd"] if use_native else -1,
-                                                                                           self.config["evaluate"][cst_name]["models"][model]["score"])
+                                                                                           evalData["models"][model]["native_rmsd"] if use_native else -1,
+                                                                                           evalData["models"][model]["score"])
                 print "    %s" % (output)
                 log.write(output + "\n")
             else:
-                self.config["evaluate"][cst_name]["models"][model]["cluster"] = matches_cluster
-                self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"] = rmsd_to_cluster_primary
+                evalData["models"][model]["cluster"] = matches_cluster
+                evalData["models"][model]["rmsd_to_primary"] = rmsd_to_cluster_primary
                 output = "    cluster: %02s, model: %05s, native_rmsd: %.7f, score: %.3f, rmsd_to_cluster_primary: %.7f" % (matches_cluster,
                                                                                                                         model,
-                                                                                                                        self.config["evaluate"][cst_name]["models"][model]["native_rmsd"] if use_native else -1,
-                                                                                                                        self.config["evaluate"][cst_name]["models"][model]["score"],
-                                                                                                                        self.config["evaluate"][cst_name]["models"][model]["rmsd_to_primary"])
+                                                                                                                        evalData["models"][model]["native_rmsd"] if use_native else -1,
+                                                                                                                        evalData["models"][model]["score"],
+                                                                                                                        evalData["models"][model]["rmsd_to_primary"])
                 print "    %s" % (output)
                 log.write(output + "\n")
 
@@ -1108,6 +1114,11 @@ class RNAPrediction(object):
             if cluster == cluster_limit:
                 print "    maximum number of clusters reached. stopping..."
                 break
+
+        # save evaluation data
+        with open(evalDataFilename, "w") as f:
+            pickle.dump(evalData, f)
+
 
     def compare(self):
         self.checkConfig()
@@ -1122,7 +1133,9 @@ class RNAPrediction(object):
         for cst_file in sorted(glob.glob("constraints/*.cst"), key=natural_sort_key):
             cst_name = splitext(basename(cst_file))[0]
             try:
-                self.config["evaluate"][cst_name]["models"][1]["native_rmsd"]
+                with open("output/%s.dat" % (cst_name), "r") as f:
+                    evalData = pickle.load(f)
+                    evalData["models"][1]["native_rmsd"]
             except:
                 printComparisonLine(cst_name, ["-", "-", "-"])
                 continue
@@ -1130,8 +1143,8 @@ class RNAPrediction(object):
             for c in (1, 5, 10):
                 min_rmsd = 999
                 for c2 in range(1, c + 1):
-                    model = self.config["evaluate"][cst_name]["clusters"][c2]["primary_model"]
-                    rmsd = self.config["evaluate"][cst_name]["models"][model]["native_rmsd"]
+                    model = evalData["clusters"][c2]["primary_model"]
+                    rmsd = evalData["models"][model]["native_rmsd"]
                     if rmsd < min_rmsd:
                         min_rmsd = rmsd
                 comparisons.append("%.2f" % (min_rmsd * 10))

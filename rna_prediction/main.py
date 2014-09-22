@@ -156,11 +156,8 @@ USAGE
                 p.assemble(dry_run=args.dry_run, constraints_file=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
             if args.extract:
                 p.extract(constraints_file=args.cst)
-                # TODO: save evaluation config to different file so that multiple processes can access the same main config simultaneously
-                p.saveConfig()
             if args.evaluate:
                 p.evaluate(constraints_file=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
-                p.saveConfig()
             if args.compare:
                 p.compare()
         except SimulationException, e:
