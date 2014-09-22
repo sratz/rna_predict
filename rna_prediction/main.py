@@ -23,8 +23,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 from rna_prediction.simulation import RNAPrediction
-from rna_prediction.simulation import SysConfig
 from rna_prediction.simulation import SimulationException
+from rna_prediction.sysconfig import SysConfig
+from . import dcatools
 
 __all__ = []
 __version__ = 0.1

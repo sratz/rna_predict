@@ -5,12 +5,18 @@ import Bio.PDB
 import warnings
 from eSBMTools import PdbFile
 from Bio.PDB.PDBExceptions import PDBConstructionWarning
+from sysconfig import SysConfig
 
 '''
 Created on Sep 10, 2014
 
 @author: sebastian, blutz
 '''
+
+PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
+INFO_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "structure_info"
+
+
 def _getAtomsBackbone(termPhosphate=False):
     atoms = ["P", "OP1", "OP2"] if termPhosphate else []
     return atoms + ["O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "O2'", "C1'"]
@@ -28,7 +34,7 @@ def getAtomsForRes(res, termPhosphate=False):
 
 
 # the westhofVector can be used to apply different weights to the bonding family classes
-def buildContactDistanceMap(pdbDirectory, structureDirectory, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]):
+def buildContactDistanceMap(pdbDirectory=PDB_DIRECTORY, structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]):
     # make sure directory names have a trailing slash
     pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
     structureDirectory = os.path.normpath(structureDirectory) + os.sep

@@ -15,10 +15,9 @@ import subprocess
 import sys
 import errno
 import string
-import ConfigParser
 import pickle
 import dcatools
-from os.path import expanduser, splitext, basename, abspath
+from os.path import splitext, basename, abspath
 
 
 def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
@@ -27,79 +26,6 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
 
 class SimulationException(Exception):
     pass
-
-
-class SysConfig(object):
-    SYSCONFIG_LOCATION = expanduser("~/.rna_predict")
-    SYSCONFIG_FILE = SYSCONFIG_LOCATION + os.sep + "sysconfig"
-    SYSCONFIG_PDB_DIRECTORY = SYSCONFIG_LOCATION + os.sep + "pdbs"
-    SYSCONFIG_STRUCTURE_INFO_DIRECTORY = SYSCONFIG_LOCATION + os.sep + "structure_info"
-
-    def __init__(self):
-        '''
-        Load system configuration
-        '''
-        #defaults
-        self.rosetta_exe_path = ""
-        self.rosetta_exe_suffix = ".linuxgccrelease"
-        self.gromacs_exe_path = ""
-        self.gromacs_exe_suffix = ""
-        self.subprocess_buffsize = None
-
-        self.loadSysConfig()
-
-    def loadSysConfig(self):
-        config = ConfigParser.RawConfigParser()
-        config.read(SysConfig.SYSCONFIG_FILE)
-        if config.has_section("rosetta"):
-            if config.has_option("rosetta", "exe_path"):
-                self.rosetta_exe_path = re.sub("/+$", "", config.get("rosetta", "exe_path")) + "/"
-            if config.has_option("rosetta", "exe_suffix"):
-                self.rosetta_exe_suffix = config.get("rosetta", "exe_suffix")
-        if config.has_section("gromacs"):
-            if config.has_option("gromacs", "exe_path"):
-                self.gromacs_exe_path = re.sub("/+$", "", config.get("gromacs", "exe_path")) + "/"
-            if config.has_option("gromacs", "exe_suffix"):
-                self.gromacs_exe_suffix = config.get("gromacs", "exe_suffix")
-        if config.has_section("rna_predict"):
-            if config.has_option("rna_predict", "subprocess_buffsize"):
-                self.subprocess_buffsize = config.get("rna_predict", "subprocess_buffsize")
-
-    def checkSysConfig(self):
-        def is_exe(fpath):
-            return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-        progs = [self.rosetta_exe_path + "rna_helix" + self.rosetta_exe_suffix,
-                 self.gromacs_exe_path + "g_rms" + self.gromacs_exe_suffix]
-
-        if self.subprocess_buffsize is not None:
-            progs += ["stdbuf"]
-
-        def isOk(prog):
-            fpath, fname = os.path.split(prog)
-            if fpath:
-                if is_exe(prog):
-                    return True
-            else:
-                for path in os.environ["PATH"].split(os.pathsep):
-                    path = path.strip('"')
-                    exe_file = os.path.join(path, prog)
-                    if is_exe(exe_file):
-                        return True
-
-        fail = []
-        success = []
-        for prog in progs:
-            if isOk(prog):
-                success += [prog]
-            else:
-                fail += [prog]
-        return {    "fail": fail, "success": success}
-
-    def printSysConfig(self):
-        print "System configuration:"
-        for key, value in sorted(self.__dict__.items()):
-            print "    %s: %s" %(key, "-" if value is None else value)
 
 
 class Command(object):
@@ -1205,7 +1131,7 @@ class RNAPrediction(object):
 
         # TODO: cache global distance map in sysconfig?
         print "Building contact distance map:"
-        distanceMap = dcatools.buildContactDistanceMap(SysConfig.SYSCONFIG_PDB_DIRECTORY, SysConfig.SYSCONFIG_STRUCTURE_INFO_DIRECTORY)
+        distanceMap = dcatools.buildContactDistanceMap()
         distanceMapMean = dcatools.buildMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
 
         print "Creating constraints:"
