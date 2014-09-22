@@ -1,4 +1,6 @@
+import glob
 import os
+import pickle
 import numpy
 import math
 import Bio.PDB
@@ -15,6 +17,8 @@ Created on Sep 10, 2014
 
 PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
 INFO_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "structure_info"
+CACHE_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "cache"
+CACHE_DISTANCEMAP = CACHE_DIRECTORY + os.sep + "distancemap.dat"
 
 
 def _getAtomsBackbone(termPhosphate=False):
@@ -34,7 +38,25 @@ def getAtomsForRes(res, termPhosphate=False):
 
 
 # the westhofVector can be used to apply different weights to the bonding family classes
-def buildContactDistanceMap(pdbDirectory=PDB_DIRECTORY, structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]):
+def getContactDistanceMap(pdbDirectory=PDB_DIRECTORY, structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], forceRebuild=False):
+    # try to use a cached version of the distance map if found and recent and forceRebuild is False
+    if not forceRebuild:
+        try:
+            cacheOk = True
+            if os.path.isfile(CACHE_DISTANCEMAP):
+                cacheTimestamp = os.path.getmtime(CACHE_DISTANCEMAP)
+                for d in glob.glob(INFO_DIRECTORY + os.sep + "*.txt"):
+                    if (os.path.getmtime(d) > cacheTimestamp):
+                        cacheOk = False
+                        print "Contact map cache out of date. Rebuilding..."
+                        break
+                if cacheOk:
+                    with open(CACHE_DISTANCEMAP, "r") as f:
+                        return pickle.load(f)
+        except Exception:
+            print "Contact map cache broken. Rebuilding..."
+
+    print "Building contact distance map:"
     # make sure directory names have a trailing slash
     pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
     structureDirectory = os.path.normpath(structureDirectory) + os.sep
@@ -119,10 +141,19 @@ def buildContactDistanceMap(pdbDirectory=PDB_DIRECTORY, structureDirectory=INFO_
                                 distanceMapResPair[contactKey].append(distance)
 
             distanceMap[nt1 + nt2] = distanceMapResPair
+
+    # save distance map in cache
+    try:
+        os.makedirs(CACHE_DIRECTORY)
+    except:
+        pass
+    with open(CACHE_DISTANCEMAP, "w") as f:
+        pickle.dump(distanceMap, f)
+
     return distanceMap
 
 
-def buildMeanDistanceMapMean(distanceMap, meanCutoff=None, stdCutoff=None):
+def getMeanDistanceMapMean(distanceMap, meanCutoff=None, stdCutoff=None):
     meanDistanceMap = {}
     for resPair, distanceMapResPair in distanceMap.iteritems():
         meanDistanceMapRes = {}

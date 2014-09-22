@@ -1129,10 +1129,8 @@ class RNAPrediction(object):
             atoms.append((res, dcatools.getAtomsForRes(res, termPhosphate=(not first))))
             first = False
 
-        # TODO: cache global distance map in sysconfig?
-        print "Building contact distance map:"
-        distanceMap = dcatools.buildContactDistanceMap()
-        distanceMapMean = dcatools.buildMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
+        distanceMap = dcatools.getContactDistanceMap()
+        distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
 
         print "Creating constraints:"
         shutil.copy("constraints/default.cst", outputFileName)
