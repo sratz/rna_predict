@@ -880,7 +880,9 @@ class RNAPrediction(object):
         model = 0
 
         # cleanup
-        self.deleteGlob("temp/%s*.pdb" % (cst_name))
+        tmp_dir = "temp/%s" % (cst_name)
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        self.makeDirectory(tmp_dir)
 
         # loop over all out files matching the constraint
         for f in sorted(glob.glob("assembly/%s_*.out" % (cst_name)), key=natural_sort_key):
@@ -918,10 +920,10 @@ class RNAPrediction(object):
                 self.writePdb("assembly/%s.pdb" % (cst_name), data=p_only, model=model, remark=remark, append=True)
 
                 # write p only model to temp file
-                self.writePdb("temp/%s_%09d_p.pdb" % (cst_name, model), data=p_only, model=model, remark=remark)
+                self.writePdb("%s/%09d_p.pdb" % (tmp_dir, model), data=p_only, model=model, remark=remark)
 
                 # move original pdb to temp directory
-                shutil.move(fe, "temp/%s_%09d.pdb" % (cst_name, model))
+                shutil.move(fe, "%s/%09d.pdb" % (tmp_dir, model))
 
                 # create evaluation dict for model
                 evalData["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
@@ -952,7 +954,8 @@ class RNAPrediction(object):
         except:
             raise SimulationException("Data file %s for constraint not found. Did you forget to run --extract?" % (evalDataFilename))
 
-        if not os.path.isfile("temp/%s_%09d_p.pdb" % (cst_name, len(evalData["models"]))):
+        tmp_dir = "temp/%s" % (cst_name)
+        if not os.path.isdir(tmp_dir) or not os.path.isfile("%s/%09d_p.pdb" % (tmp_dir, len(evalData["models"]))):
             raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))
 
         # clear old evaluation clusters
@@ -993,8 +996,8 @@ class RNAPrediction(object):
         use_native = self.config["native_pdb_file"] != None
         # loop over all models sorted by their score
         for model, data in sorted(evalData["models"].items(), key=lambda x: x[1]["score"]):
-            filename_pdb = "temp/%s_%09d.pdb" % (cst_name, model)
-            filename_pdb_p = "temp/%s_%09d_p.pdb" % (cst_name, model)
+            filename_pdb = "%s/%09d.pdb" % (tmp_dir, model)
+            filename_pdb_p = "%s/%09d_p.pdb" % (tmp_dir, model)
 
             # check if the current structure matches a cluster
             matches_cluster = 0
