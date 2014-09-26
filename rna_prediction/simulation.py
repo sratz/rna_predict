@@ -904,13 +904,18 @@ class RNAPrediction(object):
             self.deleteGlob("S_*.pdb")
 
             # extract pdb files
-            command = ["rna_extract", "-in:file:silent", f, "-in:file:silent_struct_type", "rna"]
-            self.executeCommand(command, add_suffix="rosetta")
+            command = ["rna_extract", "-in:file:silent", abspath(f), "-in:file:silent_struct_type", "rna"]
+            owd = os.getcwd()
+            try:
+                os.chdir(tmp_dir)
+                self.executeCommand(command, add_suffix="rosetta")
+            finally:
+                os.chdir(owd)
 
             # loop over all extracted pdb files
-            for fe in sorted(glob.glob("S_*.pdb")):
+            for fe in sorted(glob.glob("%s/S_*.pdb" % (tmp_dir))):
                 model += 1
-                name = fe[:-4]
+                name = basename(fe)[:-4]
                 remark = "%s %s" % (description, scores[name]["line"])
 
                 # extract all P atoms from the pdb file
