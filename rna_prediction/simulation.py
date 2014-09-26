@@ -833,7 +833,10 @@ class RNAPrediction(object):
             if print_notice:
                 print "deleting %s..." % (f)
             try:
-                os.remove(f)
+                if os.path.isdir(f):
+                    shutil.rmtree(f, ignore_errors=True)
+                else:
+                    os.remove(f)
             except:
                 pass
 
@@ -881,7 +884,7 @@ class RNAPrediction(object):
 
         # cleanup
         tmp_dir = "temp/%s" % (cst_name)
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        self.deleteGlob(tmp_dir)
         self.makeDirectory(tmp_dir)
 
         # loop over all out files matching the constraint
