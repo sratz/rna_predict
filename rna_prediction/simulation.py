@@ -977,6 +977,7 @@ class RNAPrediction(object):
 
 
         # calculate native rmsd values for all models if native pdb available
+        filename_rmsd = "%s/rmsd.xvg" % (tmp_dir)
         if self.config["native_pdb_file"] != None:
             # create native_p.pdb if needed
             native_p_only = "%s_p.pdb" % (self.config["native_pdb_file"][:-4])
@@ -985,14 +986,14 @@ class RNAPrediction(object):
                 self.writePdb(native_p_only, data=self.extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
             print "  caluculating rmsd values to native structure for all models..."
             sys.stdout.write("    ")
-            self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "assembly/%s.pdb" % (cst_name)], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
-            with open("rmsd.xvg", "r") as r:
+            self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "assembly/%s.pdb" % (cst_name), "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
+            with open(filename_rmsd, "r") as r:
                 for line in r:
                     if not re.match(r"^[\s\d-]", line):
                         continue
                     model, native_rmsd = line.split()
                     evalData["models"][int(float(model))]["native_rmsd"] = float(native_rmsd)
-            self.deleteGlob("rmsd.xvg", print_notice=False)
+            self.deleteGlob(filename_rmsd, print_notice=False)
 
         # cluster counter
         cluster = 0
@@ -1012,15 +1013,15 @@ class RNAPrediction(object):
             rmsd_to_cluster_primary = cluster_cutoff
             for c in range(cluster):
                 # calculate rmsd between cluster and pdb
-                self.executeCommand(["g_rms", "-quiet", "-s", "output/%s_%d_p.pdb" % (cst_name, c + 1), "-f", filename_pdb_p], add_suffix="gromacs", stdin="1\n1\n", quiet=True, print_commands=False)
-                with open("rmsd.xvg", "r") as r:
+                self.executeCommand(["g_rms", "-quiet", "-s", "output/%s_%d_p.pdb" % (cst_name, c + 1), "-f", filename_pdb_p, "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True, print_commands=False)
+                with open(filename_rmsd, "r") as r:
                     for line in r:
                         pass
                     new_rmsd = float(line.split()[1])
                     if new_rmsd < rmsd_to_cluster_primary:
                         rmsd_to_cluster_primary = new_rmsd
                         matches_cluster = c + 1
-                self.deleteGlob("rmsd.xvg", print_notice=False)
+                self.deleteGlob(filename_rmsd, print_notice=False)
 
             if matches_cluster == 0:
                 cluster = cluster + 1
