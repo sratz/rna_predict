@@ -631,6 +631,17 @@ class RNAPrediction(object):
             commands.append(Command(command, add_suffix="rosetta", dry_run=dry_run))
         self.executeCommands(commands, threads=threads)
 
+        # rna_helix dumps <sequence>.pdb files in the working directory.
+        # These can be useful for us, so move them to the stems_and_motifs directory with a proper stemX.pdb filename.
+        # TODO: What happens if there are multiple helices with the same sequence? In that case we need to move them
+        #       out of the way before running the next command.
+        #       Just disable multithreading here (not really needed with stem generation anyways)?
+        for i in range(len(self.config["stems"])):
+            with open("stems_and_motifs/stem%d.fasta" % (i + 1), "r") as f:
+                l = f.readlines()
+                sequence = l[1].strip()
+                shutil.move("%s.pdb" % (sequence), "stems_and_motifs/stem%d.pdb" % (i + 1))
+
 
     def mergeMotifs(self, target, sources):
         n = 0
