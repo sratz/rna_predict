@@ -1,0 +1,17 @@
+Important workflow information:
+
+
+- Native pdb files:
+  When using the --native option while --preparing, make sure the pdb file has
+  been  adjusted to work with rosetta. This means that the residues have to be
+  reordered  starting at 1, so that pdbslice.py takes the corrent ones. To
+  achieve this, prepare the file using the rosetta tool:
+    make_rna_rosetta_ready.py <native_pdb>
+
+- Number of created structures in relation to the number of threads:
+  The --nstruct parameter behaves differently for the motif generation and the
+  assembly steps. Motif generation: The total number of structures is given and
+  distributed among the threads. Assembly: Each thread is started with the
+  total number of structures. The reasoning behind this is that the number of
+  structures for assembly is not reached anyways. Instead, the current workflow
+  uses a constant walltime.
