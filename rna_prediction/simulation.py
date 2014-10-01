@@ -852,13 +852,22 @@ class RNAPrediction(object):
                 pass
 
     def extractPOnly(self, filename):
+        def isValidAtom(atom):
+            if atom == "P":
+                return True
+            if atom == "OP1":
+                return True
+            if atom == "OP2":
+                return True
+            return False
+
         p_only = ""
         with open(filename, "r") as fd:
             # only extract first chain
             chain_id = None
             for line in fd:
                 fields = line.split()
-                if fields[0] == "ATOM" and "P" in fields[2]:
+                if fields[0] == "ATOM" and isValidAtom(fields[2]):
                     if chain_id is None:
                         chain_id = fields[4]
                     elif chain_id != fields[4]:
