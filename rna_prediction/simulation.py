@@ -660,9 +660,26 @@ class RNAPrediction(object):
         return cst_info
 
 
-    def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints_file="constraints/default.cst"):
+    def _parseCstNameAndFile(self, constraints):
+        if constraints is None:
+            cst_name = "none"
+            cst_file = None
+        elif os.path.isfile(constraints):
+            cst_file = constraints
+            cst_name = splitext(basename(cst_file))[0]
+        else:
+            constraints = basename(constraints)
+            cst_name, cst_ext = splitext(constraints)
+            if cst_ext != ".cst":
+                cst_name = constraints
+            cst_file = "constraints/%s.cst" % (cst_name)
+            self.checkFileExistence(cst_file)
+        return (cst_name, cst_file)
+
+
+    def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None):
         self.checkConfig()
-        cst_name = splitext(basename(constraints_file))[0]
+        cst_name, cst_file = self._parseCstNameAndFile(constraints)
         print "Motif creation configuration:"
         print "    constraints: %s" % (cst_name)
         print "    cycles: %s" % (cycles)
@@ -670,7 +687,6 @@ class RNAPrediction(object):
         print "    dry_run: %s" % (dry_run)
         print "    random_seed: %s" % (seed)
         print "    threads: %s" % (threads)
-        self.checkFileExistence(constraints_file)
 
         dir_motifs = "predictions/%s/motifs" % (cst_name)
         self.makeDirectory("predictions/%s" % (cst_name))
@@ -679,19 +695,20 @@ class RNAPrediction(object):
         n_motifs = len(self.config["motifs"])
 
         # load constraints information
-        cst_info = self._getCstInfo(constraints_file)
+        if cst_file is not None:
+            cst_info = self._getCstInfo(cst_file)
 
-        # extract relevant constraints for motif generation from global cst file
-        for i in range(n_motifs):
-            motif_res_map = self.config["motif_res_maps"][i]
-            motif_cst_file = '%s/motif%d.cst' % (dir_motifs, i+1)
-            fid_cst = open(motif_cst_file, 'w')
-            fid_cst.write( '[ atompairs ]\n' )
-            for cst in cst_info:
-                if cst[1]-1 in motif_res_map.keys() and cst[3]-1 in motif_res_map.keys():
-                    fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1,cst[4]) )
-            fid_cst.close()
-            print 'Created: ', motif_cst_file
+            # extract relevant constraints for motif generation from global cst file
+            for i in range(n_motifs):
+                motif_res_map = self.config["motif_res_maps"][i]
+                motif_cst_file = '%s/motif%d.cst' % (dir_motifs, i+1)
+                fid_cst = open(motif_cst_file, 'w')
+                fid_cst.write( '[ atompairs ]\n' )
+                for cst in cst_info:
+                    if cst[1]-1 in motif_res_map.keys() and cst[3]-1 in motif_res_map.keys():
+                        fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1,cst[4]) )
+                fid_cst.close()
+                print 'Created: ', motif_cst_file
 
         # merge all motifs abd check what we have so far
         completed = {}
@@ -719,9 +736,10 @@ class RNAPrediction(object):
                        "-mute", "all",
                        "-close_loops",
                        "-close_loops_after_each_move",
-                       "-minimize_rna",
-                       "-cst_file", '%s/motif%d.cst' % (dir_motifs, i+1)]
+                       "-minimize_rna"]
 
+            if cst_file is not None:
+                command += ["-cst_file", '%s/motif%d.cst' % (dir_motifs, i+1)]
             if self.config["native_pdb_file"] != None and use_native_information:
                 command += ["-native", "preparation/motif%d_%s" % (i+1, self.config["native_pdb_file"])]
             if self.config["data_file"] != None:
@@ -777,9 +795,9 @@ class RNAPrediction(object):
 
 
     # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with createMotifs, it is distributed.
-    def assemble(self, nstruct=50000, cycles=20000, constraints_file="constraints/default.cst", dry_run=False, seed=None, use_native_information=False, threads=1):
+    def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1):
         self.checkConfig()
-        cst_name = splitext(basename(constraints_file))[0]
+        cst_name, cst_file = self._parseCstNameAndFile(constraints)
         print "Assembly configuration:"
         print "    constraints: %s" % (cst_name)
         print "    cycles: %s" % (cycles)
@@ -789,22 +807,21 @@ class RNAPrediction(object):
 
         dir_assembly = "predictions/%s/assembly" % (cst_name)
         dir_motifs = "predictions/%s/motifs" % (cst_name)
-        self.checkFileExistence(constraints_file)
         self.checkFileExistence("%s/motif1.out" % (dir_motifs))
         self.checkFileExistence("preparation/cutpoints.cst")
 
         self.makeDirectory(dir_assembly)
 
-        # load constraints information
-        cst_info = self._getCstInfo(constraints_file)
-
         # prepare assembly constraints: default harmonic cutpoints + tertiary constraints
         assembly_cst = "%s/assembly.cst" % (dir_assembly)
         self.deleteGlob(assembly_cst)
         shutil.copy("preparation/cutpoints.cst", assembly_cst)
-        with open(assembly_cst, "a") as ft:
-            for cst in cst_info:
-                ft.write('%s %d %s %d %s \n' % (cst[0], cst[1], cst[2], cst[3], cst[4]))
+        if cst_file is not None:
+            # load tertiary constraints information
+            cst_info = self._getCstInfo(cst_file)
+            with open(assembly_cst, "a") as ft:
+                for cst in cst_info:
+                    ft.write('%s %d %s %d %s \n' % (cst[0], cst[1], cst[2], cst[3], cst[4]))
         print 'Created: ', assembly_cst
 
         commands = list()
@@ -909,12 +926,11 @@ class RNAPrediction(object):
             output_pdb_fd.write(data)
             output_pdb_fd.write("ENDMDL\n")
 
-    def extract(self, constraints_file="constraints/default.cst"):
+    def extract(self, constraints=None):
         self.checkConfig()
-        cst_name = splitext(basename(constraints_file))[0]
+        cst_name, cst_file = self._parseCstNameAndFile(constraints)
         print "Extraction:"
         print "    constraints: %s" % (cst_name)
-        self.checkFileExistence(constraints_file)
 
         dir_assembly = "predictions/%s/assembly" % (cst_name)
         dir_output = "predictions/%s/output" % (cst_name)
@@ -991,14 +1007,13 @@ class RNAPrediction(object):
 
 
     # TODO: set the cutoff value back to 0.40? It was set to 0.41 because the old bash script used integer comparison and even 0.409 was treated as 0.40
-    def evaluate(self, constraints_file="constraints/default.cst", cluster_limit=10, cluster_cutoff=0.41):
+    def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=0.41):
         self.checkConfig()
-        cst_name = splitext(basename(constraints_file))[0]
+        cst_name, cst_file = self._parseCstNameAndFile(constraints)
         print "Evaluation configuration:"
         print "    cluster_limit: %s" % (cluster_limit)
         print "    cluster_cutoff: %s" % (cluster_cutoff)
         print "    constraints: %s" % (cst_name)
-        self.checkFileExistence(constraints_file)
 
         dir_assembly = "predictions/%s/assembly" % (cst_name)
         dir_output = "predictions/%s/output" % (cst_name)
@@ -1121,8 +1136,11 @@ class RNAPrediction(object):
             print "  %-035s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2])
 
         # loop over all different constraint sets
-        for cst_file in sorted(glob.glob("constraints/*.cst"), key=natural_sort_key):
-            cst_name = splitext(basename(cst_file))[0]
+        # that is either files in the "constraints" directory, or directories under "predictions", and always "none"
+        cst_names = ["none"]
+        cst_names += [splitext(basename(cst_file))[0] for cst_file in glob.glob("constraints/*.cst")]
+        cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
+        for cst_name in sorted(set(cst_names), key=natural_sort_key):
             try:
                 with open("predictions/%s/output/evaldata.dat" % (cst_name), "r") as f:
                     evalData = pickle.load(f)

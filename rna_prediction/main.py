@@ -95,7 +95,7 @@ USAGE
     group_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in nm [default: %(default)s]", default=0.41, type=float)
     group_evaluate.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     group_cst = parser.add_argument_group(title="constraint selection (for --assemble, --extract, --evaluate, --edit-constraint)")
-    group_cst.add_argument("--cst", dest="cst", help="constraint file to use in assembly, extraction or evaluation steps [default: %(default)s]", default="constraints/default.cst")
+    group_cst.add_argument("--cst", dest="cst", help="constraint file or name to use in assembly, extraction or evaluation steps [default: %(default)s]", default=None)
     group_makecst = parser.add_argument_group(title="options for --make-constraints")
     group_makecst.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
     group_makecst.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
@@ -152,13 +152,13 @@ USAGE
             if args.create_helices:
                 p.create_helices(dry_run=args.dry_run, threads=args.threads)
             if args.create_motifs:
-                p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints_file=args.cst)
+                p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
             if args.assemble:
-                p.assemble(dry_run=args.dry_run, constraints_file=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
+                p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
             if args.extract:
-                p.extract(constraints_file=args.cst)
+                p.extract(constraints=args.cst)
             if args.evaluate:
-                p.evaluate(constraints_file=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
+                p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
             if args.compare:
                 p.compare()
         except SimulationException, e:
