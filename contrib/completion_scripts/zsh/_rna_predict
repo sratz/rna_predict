@@ -33,7 +33,7 @@ if (( words[(I)--evaluate] )); then
   )
 fi
 
-if (( words[(I)--evaluate|--extract|--assemble|--edit-constraints] )); then
+if (( words[(I)--evaluate|--extract|--assemble|--edit-constraints|--create-motifs] )); then
   cst_args=(
     '--cst=[constraints file to use in assembly, extraction or evaluation steps (default: constraints/default.cst)]:constraints file:_files -g \*.cst'
   )
