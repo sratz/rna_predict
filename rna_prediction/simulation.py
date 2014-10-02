@@ -920,6 +920,9 @@ class RNAPrediction(object):
         dir_output = "predictions/%s/output" % (cst_name)
         dir_tmp = "predictions/%s/temp" % (cst_name)
 
+        if not os.path.isdir("predictions/%s" % (cst_name)):
+            raise SimulationException("No prediction directory for constraint '%s' found! Maybe you should assemble first?" % (cst_name))
+
         # cleanup
         self.deleteGlob("%s/assembly_p.pdb" % (dir_assembly))
         self.deleteGlob(dir_output)
