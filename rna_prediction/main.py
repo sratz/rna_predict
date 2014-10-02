@@ -152,7 +152,7 @@ USAGE
             if args.create_helices:
                 p.create_helices(dry_run=args.dry_run, threads=args.threads)
             if args.create_motifs:
-                p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
+                p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints_file=args.cst)
             if args.assemble:
                 p.assemble(dry_run=args.dry_run, constraints_file=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
             if args.extract:

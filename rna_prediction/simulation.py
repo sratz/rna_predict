@@ -182,23 +182,20 @@ class RNAPrediction(object):
 
         return tag
 
-    def prepare(self, fasta_file="sequence.fasta", params_file="secstruct.txt", native_pdb_file=None, data_file=None, cst_file=None, torsions_file=None, name=None):
+    def prepare(self, fasta_file="sequence.fasta", params_file="secstruct.txt", native_pdb_file=None, data_file=None, torsions_file=None, name=None):
         if name is None:
             name = os.path.basename(os.path.abspath(os.getcwd()))
-        for f in [fasta_file, params_file, native_pdb_file, data_file, cst_file, torsions_file]:
+        for f in [fasta_file, params_file, native_pdb_file, data_file, torsions_file]:
             if f is not None:
                 self.checkFileExistence(f)
-        self.makeDirectory("stems_and_motifs")
-        self.makeDirectory("assembly")
         self.makeDirectory("constraints")
-        self.makeDirectory("output")
-        self.makeDirectory("temp")
+        self.makeDirectory("preparation")
         self.makeDirectory("dca")
+        self.makeDirectory("predictions")
         self.config["fasta_file"] = fasta_file
         self.config["params_file"] = params_file
         self.config["native_pdb_file"] = native_pdb_file
         self.config["data_file"] = data_file
-        self.config["cst_file"] = cst_file
         self.config["torsions_file"] = torsions_file
         self.config["name"] = name
 
@@ -225,33 +222,6 @@ class RNAPrediction(object):
                     cols = string.split( line )
                     for i in range( 1,len(cols) ):
                         self.config["backbone_burial_info"].append( int( cols[i] ) )
-
-        pyrimidines = ['c','u']
-        purines = ['a','g']
-        cst_info = []
-        if cst_file != None:
-            lines = open( cst_file ).readlines()
-            for line in lines:
-                if len( line ) > 6 and line[0]!='[':
-                    cols = string.split( line )
-                    atom_name1 = cols[0]
-                    res1 = int( cols[1] )
-                    atom_name2 = cols[2]
-                    res2 = int( cols[3] )
-                    if ( self.config["sequence"][ res1 - 1 ] in pyrimidines and atom_name1=='N1'):
-                        atom_name1 = 'N3'
-                        print 'correcting atom name for ', res1
-                    if ( self.config["sequence"][ res2 - 1 ] in pyrimidines and atom_name2=='N1'):
-                        atom_name2 = 'N3'
-                        print 'correcting atom name for ', res2
-                    if ( self.config["sequence"][ res1 - 1 ] in purines and atom_name1=='N3'):
-                        atom_name1 = 'N1'
-                        print 'correcting atom name for ', res1
-                    if ( self.config["sequence"][ res2 - 1 ] in purines and atom_name2=='N3'):
-                        atom_name2 = 'N1'
-                        print 'correcting atom name for ', res2
-
-                    cst_info.append( [ atom_name1, res1, atom_name2, res2, string.join( cols[4:] )] )
 
         pair_map = {}
         all_pairs = []
@@ -429,7 +399,7 @@ class RNAPrediction(object):
         for i in range( len(self.config["stems"]) ):
 
             # Fasta
-            tag = 'stems_and_motifs/stem%d.fasta' % (i+1)
+            tag = 'preparation/stem%d.fasta' % (i+1)
             fid = open( tag , 'w' )
             fid.write( '>'+tag+'\n')
 
@@ -457,9 +427,9 @@ class RNAPrediction(object):
                           "%d" % (stem_res[-1][0]+1),
                           "%d" % (stem_res[-1][-1]+1),
                           "%d" % (stem_res[0][-1]+1),
-                          "stems_and_motifs/stem%d_" % (i+1)]
+                          "preparation/stem%d_" % (i+1)]
                 self.executeCommand(command)
-                native_pdb_file_subset =  'stems_and_motifs/stem%d_%s' % (i+1, native_pdb_file )
+                native_pdb_file_subset =  'preparation/stem%d_%s' % (i+1, native_pdb_file )
                 print 'Created: ', native_pdb_file_subset
 
 
@@ -467,7 +437,7 @@ class RNAPrediction(object):
         for i in range( len(self.config["motifs"]) ):
 
             # Fasta
-            motif_fasta_file = 'stems_and_motifs/motif%d.fasta' % (i+1)
+            motif_fasta_file = 'preparation/motif%d.fasta' % (i+1)
             fid = open( motif_fasta_file , 'w' )
             fid.write( '>'+motif_fasta_file+'\n')
 
@@ -485,7 +455,7 @@ class RNAPrediction(object):
             motif_res_map = self.config["motif_res_maps"][ i ]
             motif_cutpoint = motif_cutpoints[ i ]
 
-            motif_params_file = 'stems_and_motifs/motif%d.params' % (i+1)
+            motif_params_file = 'preparation/motif%d.params' % (i+1)
             fid = open( motif_params_file , 'w' )
 
             for k in range( len(motif_stem_set) ):
@@ -522,13 +492,13 @@ class RNAPrediction(object):
                            "-subset"]
                 for k in range( motif_length ):
                     command += ["%d" % (motif_res[k]+1)]
-                command += ["stems_and_motifs/motif%d_" % (i+1)]
+                command += ["preparation/motif%d_" % (i+1)]
                 self.executeCommand(command)
-                native_pdb_file_subset =  'stems_and_motifs/motif%d_%s' % (i+1, native_pdb_file )
+                native_pdb_file_subset =  'preparation/motif%d_%s' % (i+1, native_pdb_file )
                 print 'Created: ', native_pdb_file_subset
 
             if data_file != None:
-                motif_data_file = 'stems_and_motifs/motif%d.data' % ( i+1 )
+                motif_data_file = 'preparation/motif%d.data' % ( i+1 )
                 fid_data = open( motif_data_file, 'w' )
                 fid_data.write( 'EXPOSE' )
                 for data in self.config["data_info"]:
@@ -544,16 +514,6 @@ class RNAPrediction(object):
                     fid_data.write( '\n' )
                 fid_data.close()
                 print 'Created: ', motif_data_file
-
-            if cst_file != None:
-                motif_cst_file = 'stems_and_motifs/motif%d.cst' % ( i+1 )
-                fid_cst = open( motif_cst_file, 'w' )
-                fid_cst.write( '[ atompairs ]\n' )
-                for cst in cst_info:
-                    if cst[1]-1 in motif_res_map.keys() and cst[3]-1 in motif_res_map.keys():
-                        fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1,cst[4]) )
-                fid_cst.close()
-                print 'Created: ', motif_cst_file
 
 
         if len( cutpoints_original ) > 0:
@@ -577,7 +537,7 @@ class RNAPrediction(object):
                 cutpoints.append( possible_cutpoints[ 0 ] )
 
 
-        params_file = "stems_and_motifs/sequence.params"
+        params_file = "preparation/sequence.params"
         fid = open( params_file, 'w')
 
         if len( cutpoints ) > 0:
@@ -604,43 +564,38 @@ class RNAPrediction(object):
         fid.close()
         print 'Created: ', params_file
 
-        ########
-        assemble_cst_file = "constraints/default.cst"
+        # default cutpoint constraints
+        assemble_cst_file = "preparation/cutpoints.cst"
         fid = open( assemble_cst_file,'w')
         fid.write('[ atompairs ]\n')
         for cutpoint in cutpoints:
             fid.write( "O3'  %d  P     %d  HARMONIC  1.619  2.0\n" % \
                            ( cutpoint+1, cutpoint+2 ) )
-        if cst_file != None:
-            for cst in cst_info:
-                    fid.write( '%s %d %s %d %s \n' % (cst[0], cst[1], cst[2], cst[3], cst[4]) )
-
         fid.close()
         print 'Created: ', assemble_cst_file
 
 
-        #########
-
     def create_helices(self, dry_run=False, threads=1):
         self.checkConfig()
         commands = list()
+        self.deleteGlob("preparation/stem*.out")
         for i in range(len(self.config["stems"])):
             command = ["rna_helix",
-                       "-fasta", "stems_and_motifs/stem%d.fasta" % (i+1),
-                       "-out:file:silent","stems_and_motifs/stem%d.out" % (i+1)]
+                       "-fasta", "preparation/stem%d.fasta" % (i+1),
+                       "-out:file:silent","preparation/stem%d.out" % (i+1)]
             commands.append(Command(command, add_suffix="rosetta", dry_run=dry_run))
         self.executeCommands(commands, threads=threads)
 
         # rna_helix dumps <sequence>.pdb files in the working directory.
-        # These can be useful for us, so move them to the stems_and_motifs directory with a proper stemX.pdb filename.
+        # These can be useful for us, so move them to the preparation directory with a proper stemX.pdb filename.
         # TODO: What happens if there are multiple helices with the same sequence? In that case we need to move them
         #       out of the way before running the next command.
         #       Just disable multithreading here (not really needed with stem generation anyways)?
         for i in range(len(self.config["stems"])):
-            with open("stems_and_motifs/stem%d.fasta" % (i + 1), "r") as f:
+            with open("preparation/stem%d.fasta" % (i + 1), "r") as f:
                 l = f.readlines()
                 sequence = l[1].strip()
-                shutil.move("%s.pdb" % (sequence), "stems_and_motifs/stem%d.pdb" % (i + 1))
+                shutil.move("%s.pdb" % (sequence), "preparation/stem%d.pdb" % (i + 1))
 
 
     def mergeMotifs(self, target, sources):
@@ -675,24 +630,76 @@ class RNAPrediction(object):
         return n
 
 
-    def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1):
+    def _getCstInfo(self, constraints_file):
+        pyrimidines = ['c', 'u']
+        purines = ['a', 'g']
+        cst_info = []
+        with open(constraints_file) as c:
+            lines = c.readlines()
+        for line in lines:
+            if len(line) > 6 and line[0] != '[':
+                cols = string.split(line)
+                atom_name1 = cols[0]
+                res1 = int(cols[1])
+                atom_name2 = cols[2]
+                res2 = int(cols[3])
+                # TODO: THIS IS MOST LIKELY WRONG!
+                if self.config["sequence"][res1 - 1] in pyrimidines and atom_name1 == 'N1':
+                    atom_name1 = 'N3'
+                    print 'correcting atom name for ', res1
+                if self.config["sequence"][res2 - 1] in pyrimidines and atom_name2 == 'N1':
+                    atom_name2 = 'N3'
+                    print 'correcting atom name for ', res2
+                if self.config["sequence"][res1 - 1] in purines and atom_name1 == 'N3':
+                    atom_name1 = 'N1'
+                    print 'correcting atom name for ', res1
+                if self.config["sequence"][res2 - 1] in purines and atom_name2 == 'N3':
+                    atom_name2 = 'N1'
+                    print 'correcting atom name for ', res2
+                cst_info.append( [ atom_name1, res1, atom_name2, res2, string.join( cols[4:] )] )
+        return cst_info
+
+
+    def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints_file="constraints/default.cst"):
         self.checkConfig()
-        print "Assembly configuration:"
+        cst_name = splitext(basename(constraints_file))[0]
+        print "Motif creation configuration:"
+        print "    constraints: %s" % (cst_name)
         print "    cycles: %s" % (cycles)
         print "    nstruct: %s" % (nstruct)
         print "    dry_run: %s" % (dry_run)
         print "    random_seed: %s" % (seed)
         print "    threads: %s" % (threads)
+        self.checkFileExistence(constraints_file)
 
+        dir_motifs = "predictions/%s/motifs" % (cst_name)
+        self.makeDirectory("predictions/%s" % (cst_name))
+        self.makeDirectory(dir_motifs)
+
+        n_motifs = len(self.config["motifs"])
+
+        # load constraints information
+        cst_info = self._getCstInfo(constraints_file)
+
+        # extract relevant constraints for motif generation from global cst file
+        for i in range(n_motifs):
+            motif_res_map = self.config["motif_res_maps"][i]
+            motif_cst_file = '%s/motif%d.cst' % (dir_motifs, i+1)
+            fid_cst = open(motif_cst_file, 'w')
+            fid_cst.write( '[ atompairs ]\n' )
+            for cst in cst_info:
+                if cst[1]-1 in motif_res_map.keys() and cst[3]-1 in motif_res_map.keys():
+                    fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1,cst[4]) )
+            fid_cst.close()
+            print 'Created: ', motif_cst_file
 
         # merge all motifs abd check what we have so far
-        n_motifs = len(self.config["motifs"])
         completed = {}
         for i in range(n_motifs):
-            completed[i] = self.mergeMotifs("stems_and_motifs/motif%d.out" % (i + 1), "stems_and_motifs/motif%d_*.out" % (i + 1))
+            completed[i] = self.mergeMotifs("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
 
         commands = list()
-        for i in range(len(self.config["motifs"])):
+        for i in range(n_motifs):
             # split the rest of the work in multiple jobs
             structs_missing = nstruct - completed[i]
             print "motif %d:  completed: %d  missing: %d" % (i + 1, completed[i], structs_missing)
@@ -706,22 +713,21 @@ class RNAPrediction(object):
                 structs_threads[j] += 1
 
             command = ["rna_denovo",
-                       "-fasta", "stems_and_motifs/motif%d.fasta" % (i+1),
-                       "-params_file", "stems_and_motifs/motif%d.params" % (i+1),
+                       "-fasta", "preparation/motif%d.fasta" % (i+1),
+                       "-params_file", "preparation/motif%d.params" % (i+1),
                        "-cycles", "%d" % (cycles),
                        "-mute", "all",
                        "-close_loops",
                        "-close_loops_after_each_move",
-                       "-minimize_rna"]
+                       "-minimize_rna",
+                       "-cst_file", '%s/motif%d.cst' % (dir_motifs, i+1)]
 
             if self.config["native_pdb_file"] != None and use_native_information:
-                command += ["-native", "stems_and_motifs/motif%d_%s" % (i+1, self.config["native_pdb_file"])]
+                command += ["-native", "preparation/motif%d_%s" % (i+1, self.config["native_pdb_file"])]
             if self.config["data_file"] != None:
-                command += ["-data_file", "stems_and_motifs/motif%d.data" % (i+1)]
-            if self.config["cst_file"] != None:
-                command += ["-cst_file", "stems_and_motifs/motif%d.cst" % (i+1)]
+                command += ["-data_file", "preparation/motif%d.data" % (i+1)]
             if self.config["torsions_file"] != None:
-                command += ["-vall_torsions", "stems_and_motifs/motif%d.torsions" % (i+1)]
+                command += ["-vall_torsions", "preparation/motif%d.torsions" % (i+1)]
 
             which_stems = []
             stem_chunk_res = []
@@ -748,7 +754,7 @@ class RNAPrediction(object):
             command += ["-in:file:silent_struct_type", "rna",
                         "-in:file:silent"]
             for n in which_stems:
-                command += ["stems_and_motifs/stem%d.out" % (n+1)]
+                command += ["preparation/stem%d.out" % (n+1)]
 
             command += ["-in:file:input_res"]
             command += self.make_tag_with_dashes(stem_chunk_res)
@@ -756,7 +762,7 @@ class RNAPrediction(object):
             for j in range(threads):
                 if structs_threads[j] == 0:
                     continue
-                command_full = command + ["-out:file:silent", "stems_and_motifs/motif%d_%d.out" % (i + 1, j + 1),
+                command_full = command + ["-out:file:silent", "%s/motif%d_%d.out" % (dir_motifs, i + 1, j + 1),
                                           "-nstruct", "%d" % (structs_threads[j])]
                 if seed != None:
                     command_full += ["-constant_seed", "-jran", "%d" % (seed)]
@@ -767,19 +773,39 @@ class RNAPrediction(object):
 
         # merge motifs
         for i in range(n_motifs):
-            self.mergeMotifs("stems_and_motifs/motif%d.out" % (i + 1), "stems_and_motifs/motif%d_*.out" % (i + 1))
+            self.mergeMotifs("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
 
 
     # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with createMotifs, it is distributed.
     def assemble(self, nstruct=50000, cycles=20000, constraints_file="constraints/default.cst", dry_run=False, seed=None, use_native_information=False, threads=1):
         self.checkConfig()
+        cst_name = splitext(basename(constraints_file))[0]
         print "Assembly configuration:"
+        print "    constraints: %s" % (cst_name)
         print "    cycles: %s" % (cycles)
         print "    nstruct: %s" % (nstruct)
-        print "    constraints: %s" % (constraints_file)
         print "    dry_run: %s" % (dry_run)
         print "    random_seed: %s" % (seed)
+
+        dir_assembly = "predictions/%s/assembly" % (cst_name)
+        dir_motifs = "predictions/%s/motifs" % (cst_name)
         self.checkFileExistence(constraints_file)
+        self.checkFileExistence("%s/motif1.out" % (dir_motifs))
+        self.checkFileExistence("preparation/cutpoints.cst")
+
+        self.makeDirectory(dir_assembly)
+
+        # load constraints information
+        cst_info = self._getCstInfo(constraints_file)
+
+        # prepare assembly constraints: default harmonic cutpoints + tertiary constraints
+        assembly_cst = "%s/assembly.cst" % (dir_assembly)
+        self.deleteGlob(assembly_cst)
+        shutil.copy("preparation/cutpoints.cst", assembly_cst)
+        with open(assembly_cst, "a") as ft:
+            for cst in cst_info:
+                ft.write('%s %d %s %d %s \n' % (cst[0], cst[1], cst[2], cst[3], cst[4]))
+        print 'Created: ', assembly_cst
 
         commands = list()
 
@@ -789,16 +815,16 @@ class RNAPrediction(object):
                    "-in:file:silent_struct_type", "binary_rna",
                    "-cycles", "%d" % (cycles),
                    "-nstruct", "%d" % (nstruct),
-                   "-params_file", "stems_and_motifs/sequence.params",
-                   "-cst_file", constraints_file,
+                   "-params_file", "preparation/sequence.params",
+                   "-cst_file", assembly_cst,
                    "-close_loops",
                    "-in:file:silent"]
 
         for i in range(len(self.config["stems"])):
-            command += ["stems_and_motifs/stem%d.out" % (i+1)]
+            command += ["preparation/stem%d.out" % (i+1)]
 
         for i in range(len(self.config["motifs"])):
-            command += ["stems_and_motifs/motif%d.out" % (i+1)]
+            command += ["%s/motif%d.out" % (dir_motifs, i+1)]
 
         chunk_res = []
         for n in range( len(self.config["stems"])  ):
@@ -831,7 +857,7 @@ class RNAPrediction(object):
             else:
                 seed_used = seed + j
 
-            command_full = command + ["-out:file:silent", "assembly/%s_%d.out" % (splitext(basename(constraints_file))[0], seed_used),
+            command_full = command + ["-out:file:silent", "%s/assembly_%d.out" % (dir_assembly, seed_used),
                                       "-constant_seed", "-jran", "%d" % (seed_used)]
 
             commands.append(Command(command_full, add_suffix="rosetta", dry_run=dry_run))
@@ -890,11 +916,16 @@ class RNAPrediction(object):
         print "    constraints: %s" % (cst_name)
         self.checkFileExistence(constraints_file)
 
-        # delete old files
-        self.deleteGlob("assembly/%s.pdb" % (cst_name))
-        self.deleteGlob("output/%s*.pdb" % (cst_name))
-        self.deleteGlob("output/%s.log" % (cst_name))
-        self.deleteGlob("output/%s.dat" % (cst_name))
+        dir_assembly = "predictions/%s/assembly" % (cst_name)
+        dir_output = "predictions/%s/output" % (cst_name)
+        dir_tmp = "predictions/%s/temp" % (cst_name)
+
+        # cleanup
+        self.deleteGlob("%s/assembly_p.pdb" % (dir_assembly))
+        self.deleteGlob(dir_output)
+        self.deleteGlob(dir_tmp)
+        self.makeDirectory(dir_output)
+        self.makeDirectory(dir_tmp)
 
         # create dict to store evaluation data
         evalData = {"models": {}, "clusters": {}}
@@ -902,13 +933,8 @@ class RNAPrediction(object):
         # model counter
         model = 0
 
-        # cleanup
-        tmp_dir = "temp/%s" % (cst_name)
-        self.deleteGlob(tmp_dir)
-        self.makeDirectory(tmp_dir)
-
         # loop over all out files matching the constraint
-        for f in sorted(glob.glob("assembly/%s_*.out" % (cst_name)), key=natural_sort_key):
+        for f in sorted(glob.glob("%s/assembly_*.out" % (dir_assembly)), key=natural_sort_key):
             print "  processing rosetta silent file: %s..." % (f)
 
             description = splitext(basename(f))[0]
@@ -930,13 +956,13 @@ class RNAPrediction(object):
             command = ["rna_extract", "-in:file:silent", abspath(f), "-in:file:silent_struct_type", "rna"]
             owd = os.getcwd()
             try:
-                os.chdir(tmp_dir)
+                os.chdir(dir_tmp)
                 self.executeCommand(command, add_suffix="rosetta")
             finally:
                 os.chdir(owd)
 
             # loop over all extracted pdb files
-            for fe in sorted(glob.glob("%s/S_*.pdb" % (tmp_dir))):
+            for fe in sorted(glob.glob("%s/S_*.pdb" % (dir_tmp))):
                 model += 1
                 name = basename(fe)[:-4]
                 remark = "%s %s" % (description, scores[name]["line"])
@@ -945,19 +971,19 @@ class RNAPrediction(object):
                 p_only = self.extractPOnly(fe)
 
                 # append p only model to trajectory
-                self.writePdb("assembly/%s.pdb" % (cst_name), data=p_only, model=model, remark=remark, append=True)
+                self.writePdb("%s/assembly_p.pdb" % (dir_assembly), data=p_only, model=model, remark=remark, append=True)
 
                 # write p only model to temp file
-                self.writePdb("%s/%09d_p.pdb" % (tmp_dir, model), data=p_only, model=model, remark=remark)
+                self.writePdb("%s/%09d_p.pdb" % (dir_tmp, model), data=p_only, model=model, remark=remark)
 
                 # move original pdb to temp directory
-                shutil.move(fe, "%s/%09d.pdb" % (tmp_dir, model))
+                shutil.move(fe, "%s/%09d.pdb" % (dir_tmp, model))
 
                 # create evaluation dict for model
                 evalData["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
 
         # save evaluation data to file
-        with open("output/%s.dat" % (cst_name), "w") as f:
+        with open("%s/evaldata.dat" % (dir_output), "w") as f:
             pickle.dump(evalData, f)
 
 
@@ -971,8 +997,12 @@ class RNAPrediction(object):
         print "    constraints: %s" % (cst_name)
         self.checkFileExistence(constraints_file)
 
+        dir_assembly = "predictions/%s/assembly" % (cst_name)
+        dir_output = "predictions/%s/output" % (cst_name)
+        dir_tmp = "predictions/%s/temp" % (cst_name)
+
         # load evaluation data and check if extraction step was run before
-        evalDataFilename = "output/%s.dat" % (cst_name)
+        evalDataFilename = "%s/evaldata.dat" % (dir_output)
         try:
             with open(evalDataFilename, "r") as f:
                 evalData = pickle.load(f)
@@ -982,13 +1012,13 @@ class RNAPrediction(object):
         except:
             raise SimulationException("Data file %s for constraint not found. Did you forget to run --extract?" % (evalDataFilename))
 
-        tmp_dir = "temp/%s" % (cst_name)
-        if not os.path.isdir(tmp_dir) or not os.path.isfile("%s/%09d_p.pdb" % (tmp_dir, len(evalData["models"]))):
+        if not os.path.isdir(dir_tmp) or not os.path.isfile("%s/%09d_p.pdb" % (dir_tmp, len(evalData["models"]))):
             raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))
 
         # clear old evaluation clusters
-        self.deleteGlob("output/%s*.pdb" % (cst_name))
-        self.deleteGlob("output/%s.log" % (cst_name))
+        self.deleteGlob(dir_output)
+        self.makeDirectory(dir_output)
+
         evalData["clusters"] = {}
         for m in evalData["models"].iteritems():
             m[1].pop("native_rmsd", None)
@@ -997,7 +1027,7 @@ class RNAPrediction(object):
 
 
         # calculate native rmsd values for all models if native pdb available
-        filename_rmsd = "%s/rmsd.xvg" % (tmp_dir)
+        filename_rmsd = "%s/rmsd.xvg" % (dir_tmp)
         if self.config["native_pdb_file"] != None:
             # create native_p.pdb if needed
             native_p_only = "%s_p.pdb" % (self.config["native_pdb_file"][:-4])
@@ -1006,7 +1036,7 @@ class RNAPrediction(object):
                 self.writePdb(native_p_only, data=self.extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
             print "  caluculating rmsd values to native structure for all models..."
             sys.stdout.write("    ")
-            self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "assembly/%s.pdb" % (cst_name), "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
+            self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "%s/assembly_p.pdb" % (dir_assembly), "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
             with open(filename_rmsd, "r") as r:
                 for line in r:
                     if not re.match(r"^[\s\d-]", line):
@@ -1018,22 +1048,22 @@ class RNAPrediction(object):
         # cluster counter
         cluster = 0
 
-        log = open("output/%s.log" % (cst_name), "w")
+        log = open("%s/clusters.log" % (dir_output), "w")
         print "  sorting models into clusters..."
 
         # do we have native rmsd information?
         use_native = self.config["native_pdb_file"] != None
         # loop over all models sorted by their score
         for model, data in sorted(evalData["models"].items(), key=lambda x: x[1]["score"]):
-            filename_pdb = "%s/%09d.pdb" % (tmp_dir, model)
-            filename_pdb_p = "%s/%09d_p.pdb" % (tmp_dir, model)
+            filename_pdb = "%s/%09d.pdb" % (dir_tmp, model)
+            filename_pdb_p = "%s/%09d_p.pdb" % (dir_tmp, model)
 
             # check if the current structure matches a cluster
             matches_cluster = 0
             rmsd_to_cluster_primary = cluster_cutoff
             for c in range(cluster):
                 # calculate rmsd between cluster and pdb
-                self.executeCommand(["g_rms", "-quiet", "-s", "output/%s_%d_p.pdb" % (cst_name, c + 1), "-f", filename_pdb_p, "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True, print_commands=False)
+                self.executeCommand(["g_rms", "-quiet", "-s", "%s/cluster_%d_p.pdb" % (dir_output, c + 1), "-f", filename_pdb_p, "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True, print_commands=False)
                 with open(filename_rmsd, "r") as r:
                     for line in r:
                         pass
@@ -1045,8 +1075,8 @@ class RNAPrediction(object):
 
             if matches_cluster == 0:
                 cluster = cluster + 1
-                shutil.copyfile(filename_pdb, "output/%s_%d.pdb" % (cst_name, cluster))
-                shutil.copyfile(filename_pdb_p, "output/%s_%d_p.pdb" % (cst_name, cluster))
+                shutil.copyfile(filename_pdb, "%s/cluster_%d.pdb" % (dir_output, cluster))
+                shutil.copyfile(filename_pdb_p, "%s/cluster_%d_p.pdb" % (dir_output, cluster))
                 evalData["clusters"][cluster] = {"primary_model": model}
                 evalData["models"][model]["cluster"] = cluster
                 evalData["models"][model]["rmsd_to_primary"] = 0
@@ -1091,7 +1121,7 @@ class RNAPrediction(object):
         for cst_file in sorted(glob.glob("constraints/*.cst"), key=natural_sort_key):
             cst_name = splitext(basename(cst_file))[0]
             try:
-                with open("output/%s.dat" % (cst_name), "r") as f:
+                with open("predictions/%s/output/evaldata.dat" % (cst_name), "r") as f:
                     evalData = pickle.load(f)
                     evalData["models"][1]["native_rmsd"]
             except:
@@ -1168,8 +1198,7 @@ class RNAPrediction(object):
         distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
 
         print "Creating constraints:"
-        shutil.copy("constraints/default.cst", outputFileName)
-        with open(outputFileName, "a") as out:
+        with open(outputFileName, "w") as out:
             for residueContact in dca:
                 res1 = atoms[residueContact[0] - 1]
                 res2 = atoms[residueContact[1] - 1]
@@ -1205,8 +1234,4 @@ class RNAPrediction(object):
             with open(outputFileName, "w") as outputFd:
                 for line in inputFd:
                     m = pattern.match(line)
-                    # TODO: is this a good idea? what if we actually want to use HARMONIC for our custom constraints at some point?
-                    if m and m.group(2) != "HARMONIC":
-                        outputFd.write("%s %s\n" % (m.group(1), cstFunction))
-                    else:
-                        outputFd.write(line)
+                    outputFd.write("%s %s\n" % (m.group(1), cstFunction))
