@@ -643,19 +643,19 @@ class RNAPrediction(object):
                 res1 = int(cols[1])
                 atom_name2 = cols[2]
                 res2 = int(cols[3])
-                # TODO: THIS IS MOST LIKELY WRONG!
-                if self.config["sequence"][res1 - 1] in pyrimidines and atom_name1 == 'N1':
-                    atom_name1 = 'N3'
-                    print 'correcting atom name for ', res1
-                if self.config["sequence"][res2 - 1] in pyrimidines and atom_name2 == 'N1':
-                    atom_name2 = 'N3'
-                    print 'correcting atom name for ', res2
-                if self.config["sequence"][res1 - 1] in purines and atom_name1 == 'N3':
-                    atom_name1 = 'N1'
-                    print 'correcting atom name for ', res1
-                if self.config["sequence"][res2 - 1] in purines and atom_name2 == 'N3':
-                    atom_name2 = 'N1'
-                    print 'correcting atom name for ', res2
+#                 # TODO: THIS IS MOST LIKELY WRONG!
+#                 if self.config["sequence"][res1 - 1] in pyrimidines and atom_name1 == 'N1':
+#                     atom_name1 = 'N3'
+#                     print 'correcting atom name for ', res1
+#                 if self.config["sequence"][res2 - 1] in pyrimidines and atom_name2 == 'N1':
+#                     atom_name2 = 'N3'
+#                     print 'correcting atom name for ', res2
+#                 if self.config["sequence"][res1 - 1] in purines and atom_name1 == 'N3':
+#                     atom_name1 = 'N1'
+#                     print 'correcting atom name for ', res1
+#                 if self.config["sequence"][res2 - 1] in purines and atom_name2 == 'N3':
+#                     atom_name2 = 'N1'
+#                     print 'correcting atom name for ', res2
                 cst_info.append( [ atom_name1, res1, atom_name2, res2, string.join( cols[4:] )] )
         return cst_info
 
