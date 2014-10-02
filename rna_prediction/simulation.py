@@ -1099,6 +1099,9 @@ class RNAPrediction(object):
                 continue
             comparisons = []
             for c in (1, 5, 10):
+                if c > len(evalData["clusters"]):
+                    comparisons.append("-")
+                    continue
                 min_rmsd = 999
                 for c2 in range(1, c + 1):
                     model = evalData["clusters"][c2]["primary_model"]
