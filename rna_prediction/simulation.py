@@ -82,10 +82,10 @@ class RNAPrediction(object):
         if not self.config:
             raise SimulationException("No config file found. Please run --prepare first!")
 
-    def checkFileExistence(self, path):
+    def checkFileExistence(self, path, alternativeErrorText=None):
         if not os.path.isfile(path):
-            raise SimulationException("Cannot find file: %s" % path)
 
+            raise SimulationException(alternativeErrorText if alternativeErrorText is not None else "Cannot find file: %s" % path)
     def __init__(self, sysconfig, path):
         '''
         Create or load a prediction simulation
