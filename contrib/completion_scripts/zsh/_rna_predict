@@ -33,7 +33,7 @@ if (( words[(I)--evaluate] )); then
   )
 fi
 
-if (( words[(I)--evaluate|--extract|--assemble|--edit-constraints|--create-motifs] )); then
+if (( words[(I)--evaluate|--extract|--assemble|--edit-constraints|--create-motifs|--prepare-cst] )); then
   cst_args=(
     '--cst=[constraints file or name to use in motif creation, assembly, extraction or evaluation steps (default: None)]:constraints file:_files -W "(constraints)" -g \*.cst'
   )
@@ -58,6 +58,7 @@ fi
 _arguments -s -w \
   {-h,--help}'[show help]' \
   '--prepare[prepare stems and motifs]' \
+  '--prepare-cst[prepare constraints file for motif generation and assembly]' \
   '--create-helices[create ideal a-helices]' \
   '--create-motifs[create motifs]' \
   '--assemble[assemble]' \

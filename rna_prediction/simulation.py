@@ -677,6 +677,47 @@ class RNAPrediction(object):
         return (cst_name, cst_file)
 
 
+    # prepare constraints files for motif generation and assembly
+    # this is done separately to prevent a race condition when starting multiple parallel assembly jobs
+    def prepareCst(self, constraints=None):
+        self.checkConfig()
+        cst_name, cst_file = self._parseCstNameAndFile(constraints)
+        print "Constraints preparation:"
+        print "    constraints: %s" % (cst_name)
+        if cst_file is None:
+            print "Nothing to do."
+            return
+
+        dir_assembly = "predictions/%s/assembly" % (cst_name)
+        dir_motifs = "predictions/%s/motifs" % (cst_name)
+        self.makeDirectory("predictions/%s" % (cst_name))
+        self.makeDirectory(dir_assembly)
+        self.makeDirectory(dir_motifs)
+
+        # load constraints information
+        cst_info = self._getCstInfo(cst_file)
+
+        # extract relevant constraints for motif generation from global cst file
+        for i in range(len(self.config["motifs"])):
+            motif_res_map = self.config["motif_res_maps"][i]
+            motif_cst_file = '%s/motif%d.cst' % (dir_motifs, i+1)
+            fid_cst = open(motif_cst_file, 'w')
+            fid_cst.write( '[ atompairs ]\n' )
+            for cst in cst_info:
+                if cst[1]-1 in motif_res_map.keys() and cst[3]-1 in motif_res_map.keys():
+                    fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1,cst[4]) )
+            fid_cst.close()
+            print 'Created: ', motif_cst_file
+
+        # assembly constraints: default harmonic cutpoints + tertiary constraints
+        assembly_cst = "%s/assembly.cst" % (dir_assembly)
+        shutil.copy("preparation/cutpoints.cst", assembly_cst)
+        with open(assembly_cst, "a") as ft:
+            for cst in cst_info:
+                ft.write('%s %d %s %d %s \n' % (cst[0], cst[1], cst[2], cst[3], cst[4]))
+        print 'Created: ', assembly_cst
+
+
     def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None):
         self.checkConfig()
         cst_name, cst_file = self._parseCstNameAndFile(constraints)
@@ -694,21 +735,10 @@ class RNAPrediction(object):
 
         n_motifs = len(self.config["motifs"])
 
-        # load constraints information
+        # check if motif constraints were created correctly
         if cst_file is not None:
-            cst_info = self._getCstInfo(cst_file)
-
-            # extract relevant constraints for motif generation from global cst file
             for i in range(n_motifs):
-                motif_res_map = self.config["motif_res_maps"][i]
-                motif_cst_file = '%s/motif%d.cst' % (dir_motifs, i+1)
-                fid_cst = open(motif_cst_file, 'w')
-                fid_cst.write( '[ atompairs ]\n' )
-                for cst in cst_info:
-                    if cst[1]-1 in motif_res_map.keys() and cst[3]-1 in motif_res_map.keys():
-                        fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1,cst[4]) )
-                fid_cst.close()
-                print 'Created: ', motif_cst_file
+                self.checkFileExistence("%s/motif%d.cst" % (dir_motifs, i+1), "Motif cst files not found. Please run --prepare-cst step!")
 
         # merge all motifs abd check what we have so far
         completed = {}
@@ -812,17 +842,11 @@ class RNAPrediction(object):
 
         self.makeDirectory(dir_assembly)
 
-        # prepare assembly constraints: default harmonic cutpoints + tertiary constraints
+        # Check if assembly constraints are available.
+        # Do NOT always try to create them here because that would cause a race condition when multiple assembly jobs are started in parallel!
         assembly_cst = "%s/assembly.cst" % (dir_assembly)
-        self.deleteGlob(assembly_cst)
-        shutil.copy("preparation/cutpoints.cst", assembly_cst)
         if cst_file is not None:
-            # load tertiary constraints information
-            cst_info = self._getCstInfo(cst_file)
-            with open(assembly_cst, "a") as ft:
-                for cst in cst_info:
-                    ft.write('%s %d %s %d %s \n' % (cst[0], cst[1], cst[2], cst[3], cst[4]))
-        print 'Created: ', assembly_cst
+            self.checkFileExistence(assembly_cst, "Assembly cst file '%s' not found. Please run --prepare-cst step!" % (assembly_cst))
 
         commands = list()
 

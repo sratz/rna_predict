@@ -73,6 +73,7 @@ USAGE
     parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
     group_steps = parser.add_argument_group(title="main arguments (processing steps)")
     group_steps.add_argument("--prepare", dest="prepare", action="store_true", help="prepare stems and motifs [default: %(default)s]")
+    group_steps.add_argument("--prepare-cst", dest="prepare_cst", action="store_true", help="prepare constraints file for motif generation and assembly [default: %(default)s]")
     group_steps.add_argument("--create-helices", dest="create_helices", action="store_true", help="create ideal a-helices [default: %(default)s]")
     group_steps.add_argument("--create-motifs", dest="create_motifs", action="store_true", help="create motifs [default: %(default)s]")
     group_steps.add_argument("--make-constraints", dest="make_constraints", action="store_true", help="create a constraints file from a dca prediction [default: %(default)s]")
@@ -145,6 +146,8 @@ USAGE
             if args.prepare:
                 p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
                 p.saveConfig()
+            if args.prepare_cst:
+                p.prepareCst(constraints=args.cst)
             if args.make_constraints:
                 p.makeConstraints(pdbMapping=args.pdb_mapping, dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function)
             if args.edit_constraints:
