@@ -20,8 +20,117 @@ import dcatools
 from os.path import splitext, basename, abspath
 
 
+def checkFileExistence(path, alternativeErrorText=None):
+    if not os.path.isfile(path):
+        raise SimulationException(alternativeErrorText if alternativeErrorText is not None else "Cannot find file: %s" % path)
+
+
+def deleteGlob(pattern, print_notice=True):
+    for f in glob.glob(pattern):
+        if print_notice:
+            print "deleting %s..." % (f)
+        try:
+            if os.path.isdir(f):
+                shutil.rmtree(f, ignore_errors=True)
+            else:
+                os.remove(f)
+        except:
+            pass
+
+
+def extractPOnly(filename):
+    def isValidAtom(atom):
+        if atom == "P":
+            return True
+        if atom == "OP1":
+            return True
+        if atom == "OP2":
+            return True
+        return False
+
+    p_only = ""
+    with open(filename, "r") as fd:
+        # only extract first chain
+        chain_id = None
+        for line in fd:
+            fields = line.split()
+            if fields[0] == "ATOM" and isValidAtom(fields[2]):
+                if chain_id is None:
+                    chain_id = fields[4]
+                elif chain_id != fields[4]:
+                    break
+                p_only += line
+        p_only += "TER\n"
+        return p_only
+
+
+def writePdb(filename, data, model=1, remark=None, append=False):
+    with open(filename, "a" if append else "w") as output_pdb_fd:
+        output_pdb_fd.write("MODEL %d\n" % (model))
+        output_pdb_fd.write("REMARK %s\n" % (remark))
+        output_pdb_fd.write(data)
+        output_pdb_fd.write("ENDMDL\n")
+
+
+def makeDirectory(directory):
+    try:
+        os.mkdir(directory)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(directory):
+            pass
+        else:
+            raise
+
+
+def mergeSilentFiles(target, sources):
+    n = 0
+    pattern_header = re.compile("^(?:SEQUENCE:|SCORE:\s+score).*")
+    pattern_normal = re.compile("^(.*)S_\d+$")
+    with open(target, "a+") as t:
+        for line in t:
+            pass
+        if 'line' in locals():
+            m = re.match(".*S_(\d+)$", line)
+            if m:
+                n = int(m.group(1))
+        for source in glob.glob(sources):
+            print "merging %s into %s" % (source, target)
+            with open(source, "r") as s:
+                for line in s:
+                    m = pattern_header.match(line)
+                    if m:
+                        # only write header if this is he first one
+                        if n == 0:
+                            t.write(line)
+                        continue
+                    m = pattern_normal.match(line)
+                    if m:
+                        if line.startswith("SCORE:"):
+                            n += 1
+                        t.write("%sS_%06d\n" % (m.group(1), n))
+                        continue
+                    t.write(line)
+    deleteGlob(sources, print_notice=True)
+    return n
+
+
 def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(_nsre, s)]
+
+
+def parseCstFile(constraints_file):
+    cst_info = []
+    with open(constraints_file) as c:
+        lines = c.readlines()
+    for line in lines:
+        if len(line) > 6 and line[0] != '[':
+            cols = string.split(line)
+            atom_name1 = cols[0]
+            res1 = int(cols[1])
+            atom_name2 = cols[2]
+            res2 = int(cols[3])
+            cst_info.append( [ atom_name1, res1, atom_name2, res2, string.join( cols[4:] )] )
+    return cst_info
 
 
 class SimulationException(Exception):
@@ -82,10 +191,6 @@ class RNAPrediction(object):
         if not self.config:
             raise SimulationException("No config file found. Please run --prepare first!")
 
-    def checkFileExistence(self, path, alternativeErrorText=None):
-        if not os.path.isfile(path):
-
-            raise SimulationException(alternativeErrorText if alternativeErrorText is not None else "Cannot find file: %s" % path)
     def __init__(self, sysconfig, path):
         '''
         Create or load a prediction simulation
@@ -96,15 +201,6 @@ class RNAPrediction(object):
             raise SimulationException("Invalid basepath: %s" % (path))
         self.sysconfig = sysconfig
         self.loadConfig()
-
-    def makeDirectory(self, directory):
-        try:
-            os.mkdir(directory)
-        except OSError as exc:
-            if exc.errno == errno.EEXIST and os.path.isdir(directory):
-                pass
-            else:
-                raise
 
     def executeCommand(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
         self.executeCommands([Command(command, add_suffix, dry_run, print_commands, stdin, quiet)])
@@ -165,7 +261,7 @@ class RNAPrediction(object):
             if stdout is not None:
                 stdout.close()
 
-    def make_tag_with_dashes(self, int_vector ):
+    def _make_tag_with_dashes(self, int_vector ):
         tag = []
 
         start_res = int_vector[0]
@@ -187,11 +283,11 @@ class RNAPrediction(object):
             name = os.path.basename(os.path.abspath(os.getcwd()))
         for f in [fasta_file, params_file, native_pdb_file, data_file, torsions_file]:
             if f is not None:
-                self.checkFileExistence(f)
-        self.makeDirectory("constraints")
-        self.makeDirectory("preparation")
-        self.makeDirectory("dca")
-        self.makeDirectory("predictions")
+                checkFileExistence(f)
+        makeDirectory("constraints")
+        makeDirectory("preparation")
+        makeDirectory("dca")
+        makeDirectory("predictions")
         self.config["fasta_file"] = fasta_file
         self.config["params_file"] = params_file
         self.config["native_pdb_file"] = native_pdb_file
@@ -578,7 +674,7 @@ class RNAPrediction(object):
     def create_helices(self, dry_run=False, threads=1):
         self.checkConfig()
         commands = list()
-        self.deleteGlob("preparation/stem*.out")
+        deleteGlob("preparation/stem*.out")
         for i in range(len(self.config["stems"])):
             command = ["rna_helix",
                        "-fasta", "preparation/stem%d.fasta" % (i+1),
@@ -598,67 +694,7 @@ class RNAPrediction(object):
                 shutil.move("%s.pdb" % (sequence), "preparation/stem%d.pdb" % (i + 1))
 
 
-    def mergeMotifs(self, target, sources):
-        n = 0
-        pattern_header = re.compile("^(?:SEQUENCE:|SCORE:\s+score).*")
-        pattern_normal = re.compile("^(.*)S_\d+$")
-        with open(target, "a+") as t:
-            for line in t:
-                pass
-            if 'line' in locals():
-                m = re.match(".*S_(\d+)$", line)
-                if m:
-                    n = int(m.group(1))
-            for source in glob.glob(sources):
-                print "merging %s into %s" % (source, target)
-                with open(source, "r") as s:
-                    for line in s:
-                        m = pattern_header.match(line)
-                        if m:
-                            # only write header if this is he first one
-                            if n == 0:
-                                t.write(line)
-                            continue
-                        m = pattern_normal.match(line)
-                        if m:
-                            if line.startswith("SCORE:"):
-                                n += 1
-                            t.write("%sS_%06d\n" % (m.group(1), n))
-                            continue
-                        t.write(line)
-        self.deleteGlob(sources, print_notice=True)
-        return n
-
-
-    def _getCstInfo(self, constraints_file):
-        cst_info = []
-        with open(constraints_file) as c:
-            lines = c.readlines()
-        for line in lines:
-            if len(line) > 6 and line[0] != '[':
-                cols = string.split(line)
-                atom_name1 = cols[0]
-                res1 = int(cols[1])
-                atom_name2 = cols[2]
-                res2 = int(cols[3])
-                if correctAtomNames:
-                    if self.config["sequence"][res1 - 1] in pyrimidines and atom_name1 == 'N1':
-                        atom_name1 = 'N3'
-                        print 'correcting atom name for ', res1
-                    if self.config["sequence"][res2 - 1] in pyrimidines and atom_name2 == 'N1':
-                        atom_name2 = 'N3'
-                        print 'correcting atom name for ', res2
-                    if self.config["sequence"][res1 - 1] in purines and atom_name1 == 'N3':
-                        atom_name1 = 'N1'
-                        print 'correcting atom name for ', res1
-                    if self.config["sequence"][res2 - 1] in purines and atom_name2 == 'N3':
-                        atom_name2 = 'N1'
-                        print 'correcting atom name for ', res2
-                cst_info.append( [ atom_name1, res1, atom_name2, res2, string.join( cols[4:] )] )
-        return cst_info
-
-
-    def _parseCstNameAndFile(self, constraints):
+    def _parseCstNameAndFilename(self, constraints):
         if constraints is None:
             cst_name = "none"
             cst_file = None
@@ -671,15 +707,14 @@ class RNAPrediction(object):
             if cst_ext != ".cst":
                 cst_name = constraints
             cst_file = "constraints/%s.cst" % (cst_name)
-            self.checkFileExistence(cst_file)
+            checkFileExistence(cst_file)
         return (cst_name, cst_file)
-
 
     # prepare constraints files for motif generation and assembly
     # this is done separately to prevent a race condition when starting multiple parallel assembly jobs
     def prepareCst(self, constraints=None):
         self.checkConfig()
-        cst_name, cst_file = self._parseCstNameAndFile(constraints)
+        cst_name, cst_file = self._parseCstNameAndFilename(constraints)
         print "Constraints preparation:"
         print "    constraints: %s" % (cst_name)
         if cst_file is None:
@@ -688,12 +723,12 @@ class RNAPrediction(object):
 
         dir_assembly = "predictions/%s/assembly" % (cst_name)
         dir_motifs = "predictions/%s/motifs" % (cst_name)
-        self.makeDirectory("predictions/%s" % (cst_name))
-        self.makeDirectory(dir_assembly)
-        self.makeDirectory(dir_motifs)
+        makeDirectory("predictions/%s" % (cst_name))
+        makeDirectory(dir_assembly)
+        makeDirectory(dir_motifs)
 
         # load constraints information
-        cst_info = self._getCstInfo(cst_file)
+        cst_info = parseCstFile(cst_file)
 
         # TODO: Correcting atom names IS MOST LIKELY WRONG! It is commented out for now and can probably be removed completely.
 #         pyrimidines = ['c', 'u']
@@ -737,7 +772,7 @@ class RNAPrediction(object):
 
     def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None):
         self.checkConfig()
-        cst_name, cst_file = self._parseCstNameAndFile(constraints)
+        cst_name, cst_file = self._parseCstNameAndFilename(constraints)
         print "Motif creation configuration:"
         print "    constraints: %s" % (cst_name)
         print "    cycles: %s" % (cycles)
@@ -747,20 +782,20 @@ class RNAPrediction(object):
         print "    threads: %s" % (threads)
 
         dir_motifs = "predictions/%s/motifs" % (cst_name)
-        self.makeDirectory("predictions/%s" % (cst_name))
-        self.makeDirectory(dir_motifs)
+        makeDirectory("predictions/%s" % (cst_name))
+        makeDirectory(dir_motifs)
 
         n_motifs = len(self.config["motifs"])
 
         # check if motif constraints were created correctly
         if cst_file is not None:
             for i in range(n_motifs):
-                self.checkFileExistence("%s/motif%d.cst" % (dir_motifs, i+1), "Motif cst files not found. Please run --prepare-cst step!")
+                checkFileExistence("%s/motif%d.cst" % (dir_motifs, i+1), "Motif cst files not found. Please run --prepare-cst step!")
 
         # merge all motifs abd check what we have so far
         completed = {}
         for i in range(n_motifs):
-            completed[i] = self.mergeMotifs("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
+            completed[i] = mergeSilentFiles("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
 
         commands = list()
         for i in range(n_motifs):
@@ -822,7 +857,7 @@ class RNAPrediction(object):
                 command += ["preparation/stem%d.out" % (n+1)]
 
             command += ["-in:file:input_res"]
-            command += self.make_tag_with_dashes(stem_chunk_res)
+            command += self._make_tag_with_dashes(stem_chunk_res)
 
             for j in range(threads):
                 if structs_threads[j] == 0:
@@ -838,13 +873,13 @@ class RNAPrediction(object):
 
         # merge motifs
         for i in range(n_motifs):
-            self.mergeMotifs("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
+            mergeSilentFiles("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
 
 
     # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with createMotifs, it is distributed.
     def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1):
         self.checkConfig()
-        cst_name, cst_file = self._parseCstNameAndFile(constraints)
+        cst_name, cst_file = self._parseCstNameAndFilename(constraints)
         print "Assembly configuration:"
         print "    constraints: %s" % (cst_name)
         print "    cycles: %s" % (cycles)
@@ -854,16 +889,16 @@ class RNAPrediction(object):
 
         dir_assembly = "predictions/%s/assembly" % (cst_name)
         dir_motifs = "predictions/%s/motifs" % (cst_name)
-        self.checkFileExistence("%s/motif1.out" % (dir_motifs))
-        self.checkFileExistence("preparation/cutpoints.cst")
+        checkFileExistence("%s/motif1.out" % (dir_motifs))
+        checkFileExistence("preparation/cutpoints.cst")
 
-        self.makeDirectory(dir_assembly)
+        makeDirectory(dir_assembly)
 
         # Check if assembly constraints are available.
         # Do NOT always try to create them here because that would cause a race condition when multiple assembly jobs are started in parallel!
         assembly_cst = "%s/assembly.cst" % (dir_assembly)
         if cst_file is not None:
-            self.checkFileExistence(assembly_cst, "Assembly cst file '%s' not found. Please run --prepare-cst step!" % (assembly_cst))
+            checkFileExistence(assembly_cst, "Assembly cst file '%s' not found. Please run --prepare-cst step!" % (assembly_cst))
 
         commands = list()
 
@@ -895,7 +930,7 @@ class RNAPrediction(object):
             for m in motif_res: chunk_res.append(m+1)
 
         command += ["-in:file:input_res"]
-        command += self.make_tag_with_dashes(chunk_res)
+        command += self._make_tag_with_dashes(chunk_res)
 
         if self.config["native_pdb_file"] != None and use_native_information:
             command += ["-native", self.config["native_pdb_file"]]
@@ -923,53 +958,9 @@ class RNAPrediction(object):
         self.executeCommands(commands, threads=threads)
 
 
-    def deleteGlob(self, pattern, print_notice=True):
-        for f in glob.glob(pattern):
-            if print_notice:
-                print "deleting %s..." % (f)
-            try:
-                if os.path.isdir(f):
-                    shutil.rmtree(f, ignore_errors=True)
-                else:
-                    os.remove(f)
-            except:
-                pass
-
-    def extractPOnly(self, filename):
-        def isValidAtom(atom):
-            if atom == "P":
-                return True
-            if atom == "OP1":
-                return True
-            if atom == "OP2":
-                return True
-            return False
-
-        p_only = ""
-        with open(filename, "r") as fd:
-            # only extract first chain
-            chain_id = None
-            for line in fd:
-                fields = line.split()
-                if fields[0] == "ATOM" and isValidAtom(fields[2]):
-                    if chain_id is None:
-                        chain_id = fields[4]
-                    elif chain_id != fields[4]:
-                        break
-                    p_only += line
-            p_only += "TER\n"
-            return p_only
-
-    def writePdb(self, filename, data, model=1, remark=None, append=False):
-        with open(filename, "a" if append else "w") as output_pdb_fd:
-            output_pdb_fd.write("MODEL %d\n" % (model))
-            output_pdb_fd.write("REMARK %s\n" % (remark))
-            output_pdb_fd.write(data)
-            output_pdb_fd.write("ENDMDL\n")
-
     def extract(self, constraints=None):
         self.checkConfig()
-        cst_name, cst_file = self._parseCstNameAndFile(constraints)
+        cst_name, cst_file = self._parseCstNameAndFilename(constraints)
         print "Extraction:"
         print "    constraints: %s" % (cst_name)
 
@@ -981,11 +972,11 @@ class RNAPrediction(object):
             raise SimulationException("No prediction directory for constraint '%s' found! Maybe you should assemble first?" % (cst_name))
 
         # cleanup
-        self.deleteGlob("%s/assembly_p.pdb" % (dir_assembly))
-        self.deleteGlob(dir_output)
-        self.deleteGlob(dir_tmp)
-        self.makeDirectory(dir_output)
-        self.makeDirectory(dir_tmp)
+        deleteGlob("%s/assembly_p.pdb" % (dir_assembly))
+        deleteGlob(dir_output)
+        deleteGlob(dir_tmp)
+        makeDirectory(dir_output)
+        makeDirectory(dir_tmp)
 
         # create dict to store evaluation data
         evalData = {"models": {}, "clusters": {}}
@@ -1010,7 +1001,7 @@ class RNAPrediction(object):
 
 
             # delete any pdb files if existing
-            self.deleteGlob("S_*.pdb")
+            deleteGlob("S_*.pdb")
 
             # extract pdb files
             command = ["rna_extract", "-in:file:silent", abspath(f), "-in:file:silent_struct_type", "rna"]
@@ -1028,13 +1019,13 @@ class RNAPrediction(object):
                 remark = "%s %s" % (description, scores[name]["line"])
 
                 # extract all P atoms from the pdb file
-                p_only = self.extractPOnly(fe)
+                p_only = extractPOnly(fe)
 
                 # append p only model to trajectory
-                self.writePdb("%s/assembly_p.pdb" % (dir_assembly), data=p_only, model=model, remark=remark, append=True)
+                writePdb("%s/assembly_p.pdb" % (dir_assembly), data=p_only, model=model, remark=remark, append=True)
 
                 # write p only model to temp file
-                self.writePdb("%s/%09d_p.pdb" % (dir_tmp, model), data=p_only, model=model, remark=remark)
+                writePdb("%s/%09d_p.pdb" % (dir_tmp, model), data=p_only, model=model, remark=remark)
 
                 # move original pdb to temp directory
                 shutil.move(fe, "%s/%09d.pdb" % (dir_tmp, model))
@@ -1050,7 +1041,7 @@ class RNAPrediction(object):
     # TODO: set the cutoff value back to 0.40? It was set to 0.41 because the old bash script used integer comparison and even 0.409 was treated as 0.40
     def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=0.41):
         self.checkConfig()
-        cst_name, cst_file = self._parseCstNameAndFile(constraints)
+        cst_name, cst_file = self._parseCstNameAndFilename(constraints)
         print "Evaluation configuration:"
         print "    cluster_limit: %s" % (cluster_limit)
         print "    cluster_cutoff: %s" % (cluster_cutoff)
@@ -1075,8 +1066,8 @@ class RNAPrediction(object):
             raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))
 
         # clear old evaluation clusters
-        self.deleteGlob(dir_output)
-        self.makeDirectory(dir_output)
+        deleteGlob(dir_output)
+        makeDirectory(dir_output)
 
         evalData["clusters"] = {}
         for m in evalData["models"].iteritems():
@@ -1092,7 +1083,7 @@ class RNAPrediction(object):
             native_p_only = "%s_p.pdb" % (self.config["native_pdb_file"][:-4])
             if not os.path.exists(native_p_only):
                 print "  creating p only native pdb file: %s" % (native_p_only)
-                self.writePdb(native_p_only, data=self.extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
+                writePdb(native_p_only, data=extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
             print "  caluculating rmsd values to native structure for all models..."
             sys.stdout.write("    ")
             self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "%s/assembly_p.pdb" % (dir_assembly), "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
@@ -1102,7 +1093,7 @@ class RNAPrediction(object):
                         continue
                     model, native_rmsd = line.split()
                     evalData["models"][int(float(model))]["native_rmsd"] = float(native_rmsd)
-            self.deleteGlob(filename_rmsd, print_notice=False)
+            deleteGlob(filename_rmsd, print_notice=False)
 
         # cluster counter
         cluster = 0
@@ -1130,7 +1121,7 @@ class RNAPrediction(object):
                     if new_rmsd < rmsd_to_cluster_primary:
                         rmsd_to_cluster_primary = new_rmsd
                         matches_cluster = c + 1
-                self.deleteGlob(filename_rmsd, print_notice=False)
+                deleteGlob(filename_rmsd, print_notice=False)
 
             if matches_cluster == 0:
                 cluster = cluster + 1
@@ -1215,7 +1206,7 @@ class RNAPrediction(object):
         print "    numberDcaPredictions: %d" % (numberDcaPredictions)
         print "    function: %s" % (cstFunction)
         print "  %s pdbMapping (user): %s" % (" " if pdbMapping is None else "*", pdbMapping)
-        self.checkFileExistence(dcaPredictionFileName)
+        checkFileExistence(dcaPredictionFileName)
 
         if pdbMapping is not None:
             pdbMapping = dcatools.createPdbMapping(self.config["sequence"], pdbMapping)
@@ -1286,7 +1277,7 @@ class RNAPrediction(object):
         print "    inputFileName:  %s" % (inputFileName)
         print "    outputFileName: %s" % (outputFileName)
         print "    function:       %s" % (cstFunction)
-        self.checkFileExistence(inputFileName)
+        checkFileExistence(inputFileName)
 
         if inputFileName == outputFileName:
             raise SimulationException("Input and output filename cannot be the same")
