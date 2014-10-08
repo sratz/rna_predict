@@ -132,6 +132,29 @@ def parseCstFile(constraints_file):
             cst_info.append( [ atom_name1, res1, atom_name2, res2, string.join( cols[4:] )] )
     return cst_info
 
+# TODO: Correcting atom names IS MOST LIKELY WRONG! It is commented out for now and can probably be removed completely.
+def fixAtomNamesInCst(cst_info, sequence):
+    pyrimidines = ['c', 'u']
+    purines = ['a', 'g']
+    cst_info_new = []
+    for cst in cst_info:
+        atom_name1, res1, atom_name2, res2, function = cst
+        if sequence[res1 - 1] in pyrimidines and atom_name1 == 'N1':
+            atom_name1 = 'N3'
+            print 'correcting atom name for ', res1
+        if sequence[res2 - 1] in pyrimidines and atom_name2 == 'N1':
+            atom_name2 = 'N3'
+            print 'correcting atom name for ', res2
+        if sequence[res1 - 1] in purines and atom_name1 == 'N3':
+            atom_name1 = 'N1'
+            print 'correcting atom name for ', res1
+        if sequence[res2 - 1] in purines and atom_name2 == 'N3':
+            atom_name2 = 'N1'
+            print 'correcting atom name for ', res2
+        cst_info_new.append([atom_name1, res1, atom_name2, res2, function])
+    return cst_info_new
+
+
 
 class SimulationException(Exception):
     pass
@@ -729,25 +752,8 @@ class RNAPrediction(object):
 
         # load constraints information
         cst_info = parseCstFile(cst_file)
-
-        # TODO: Correcting atom names IS MOST LIKELY WRONG! It is commented out for now and can probably be removed completely.
-#         pyrimidines = ['c', 'u']
-#         purines = ['a', 'g']
-#         for i, cst in enumerate(cst_info):
-#             atom_name1, res1, atom_name2, res2, function = cst
-#             if self.config["sequence"][res1 - 1] in pyrimidines and atom_name1 == 'N1':
-#                 atom_name1 = 'N3'
-#                 print 'correcting atom name for ', res1
-#             if self.config["sequence"][res2 - 1] in pyrimidines and atom_name2 == 'N1':
-#                 atom_name2 = 'N3'
-#                 print 'correcting atom name for ', res2
-#             if self.config["sequence"][res1 - 1] in purines and atom_name1 == 'N3':
-#                 atom_name1 = 'N1'
-#                 print 'correcting atom name for ', res1
-#             if self.config["sequence"][res2 - 1] in purines and atom_name2 == 'N3':
-#                 atom_name2 = 'N1'
-#                 print 'correcting atom name for ', res2
-#             cst_info[i] = [atom_name1, res1, atom_name2, res2, function]
+        # probably wrong, commented out for now!
+        #cst_info = fixAtomNamesInCst(cst_info, self.config["sequence"])
 
         # extract relevant constraints for motif generation from global cst file
         for i in range(len(self.config["motifs"])):
