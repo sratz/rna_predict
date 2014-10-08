@@ -631,8 +631,6 @@ class RNAPrediction(object):
 
 
     def _getCstInfo(self, constraints_file):
-        pyrimidines = ['c', 'u']
-        purines = ['a', 'g']
         cst_info = []
         with open(constraints_file) as c:
             lines = c.readlines()
@@ -643,19 +641,19 @@ class RNAPrediction(object):
                 res1 = int(cols[1])
                 atom_name2 = cols[2]
                 res2 = int(cols[3])
-#                 # TODO: THIS IS MOST LIKELY WRONG!
-#                 if self.config["sequence"][res1 - 1] in pyrimidines and atom_name1 == 'N1':
-#                     atom_name1 = 'N3'
-#                     print 'correcting atom name for ', res1
-#                 if self.config["sequence"][res2 - 1] in pyrimidines and atom_name2 == 'N1':
-#                     atom_name2 = 'N3'
-#                     print 'correcting atom name for ', res2
-#                 if self.config["sequence"][res1 - 1] in purines and atom_name1 == 'N3':
-#                     atom_name1 = 'N1'
-#                     print 'correcting atom name for ', res1
-#                 if self.config["sequence"][res2 - 1] in purines and atom_name2 == 'N3':
-#                     atom_name2 = 'N1'
-#                     print 'correcting atom name for ', res2
+                if correctAtomNames:
+                    if self.config["sequence"][res1 - 1] in pyrimidines and atom_name1 == 'N1':
+                        atom_name1 = 'N3'
+                        print 'correcting atom name for ', res1
+                    if self.config["sequence"][res2 - 1] in pyrimidines and atom_name2 == 'N1':
+                        atom_name2 = 'N3'
+                        print 'correcting atom name for ', res2
+                    if self.config["sequence"][res1 - 1] in purines and atom_name1 == 'N3':
+                        atom_name1 = 'N1'
+                        print 'correcting atom name for ', res1
+                    if self.config["sequence"][res2 - 1] in purines and atom_name2 == 'N3':
+                        atom_name2 = 'N1'
+                        print 'correcting atom name for ', res2
                 cst_info.append( [ atom_name1, res1, atom_name2, res2, string.join( cols[4:] )] )
         return cst_info
 
@@ -696,6 +694,25 @@ class RNAPrediction(object):
 
         # load constraints information
         cst_info = self._getCstInfo(cst_file)
+
+        # TODO: Correcting atom names IS MOST LIKELY WRONG! It is commented out for now and can probably be removed completely.
+#         pyrimidines = ['c', 'u']
+#         purines = ['a', 'g']
+#         for i, cst in enumerate(cst_info):
+#             atom_name1, res1, atom_name2, res2, function = cst
+#             if self.config["sequence"][res1 - 1] in pyrimidines and atom_name1 == 'N1':
+#                 atom_name1 = 'N3'
+#                 print 'correcting atom name for ', res1
+#             if self.config["sequence"][res2 - 1] in pyrimidines and atom_name2 == 'N1':
+#                 atom_name2 = 'N3'
+#                 print 'correcting atom name for ', res2
+#             if self.config["sequence"][res1 - 1] in purines and atom_name1 == 'N3':
+#                 atom_name1 = 'N1'
+#                 print 'correcting atom name for ', res1
+#             if self.config["sequence"][res2 - 1] in purines and atom_name2 == 'N3':
+#                 atom_name2 = 'N1'
+#                 print 'correcting atom name for ', res2
+#             cst_info[i] = [atom_name1, res1, atom_name2, res2, function]
 
         # extract relevant constraints for motif generation from global cst file
         for i in range(len(self.config["motifs"])):
