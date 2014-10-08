@@ -37,8 +37,28 @@ def getAtomsForRes(res, termPhosphate=False):
         return atoms + ["N1", "C2", "O2", "N3", "C4", "N4", "C5", "C6"]
 
 
+def getPdbByCode(pdbCode, pdbDirectory=PDB_DIRECTORY):
+    # make sure directory names have a trailing slash
+    pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
+
+    try:
+        os.makedirs(pdbDirectory)
+    except:
+        pass
+    pdbFile = pdbDirectory + pdbCode + '.pdb'
+    if not os.path.exists(pdbFile):
+        PdbFile.downloadPdbFile(pdbDirectory, pdbCode)
+    return parsePdb(pdbCode, pdbFile)
+
+
+def parsePdb(pdbCode, pdbFile):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", PDBConstructionWarning)
+        return Bio.PDB.PDBParser().get_structure(pdbCode, pdbFile)
+
+
 # the westhofVector can be used to apply different weights to the bonding family classes
-def getContactDistanceMap(pdbDirectory=PDB_DIRECTORY, structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], forceRebuild=False):
+def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], forceRebuild=False):
     # try to use a cached version of the distance map if found and recent and forceRebuild is False
     if not forceRebuild:
         try:
@@ -57,14 +77,9 @@ def getContactDistanceMap(pdbDirectory=PDB_DIRECTORY, structureDirectory=INFO_DI
             print "Contact map cache broken. Rebuilding..."
 
     print "Building contact distance map:"
-    # make sure directory names have a trailing slash
-    pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
-    structureDirectory = os.path.normpath(structureDirectory) + os.sep
 
-    try:
-        os.makedirs(pdbDirectory)
-    except:
-        pass
+    # make sure directory names have a trailing slash
+    structureDirectory = os.path.normpath(structureDirectory) + os.sep
 
     # TODO: add exception handling in case structureDirectory does not exist or is missing needed files
     pdbStructureDict = {}
@@ -92,11 +107,7 @@ def getContactDistanceMap(pdbDirectory=PDB_DIRECTORY, structureDirectory=INFO_DI
                     continue
 
                 if pdbCode not in pdbStructureDict:
-                    if not os.path.exists(pdbDirectory + pdbCode + '.pdb'):
-                        PdbFile.downloadPdbFile(pdbDirectory, pdbCode)
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore", PDBConstructionWarning)
-                        pdbStructureDict[pdbCode] = Bio.PDB.PDBParser().get_structure(pdbCode, pdbDirectory + pdbCode + '.pdb')
+                    pdbStructureDict[pdbCode] = getPdbByCode(pdbCode)
 
                 model = pdbStructureDict[pdbCode][0]
 
