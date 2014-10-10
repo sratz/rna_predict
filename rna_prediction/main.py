@@ -151,7 +151,7 @@ USAGE
             if args.make_constraints:
                 p.makeConstraints(pdbMapping=args.pdb_mapping, dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function)
             if args.edit_constraints:
-                p.editConstraints(inputFileName=args.cst, outputFileName=args.cst_out_file,cstFunction=args.cst_function)
+                p.editConstraints(constraints=args.cst, outputFileName=args.cst_out_file,cstFunction=args.cst_function)
             if args.create_helices:
                 p.create_helices(dry_run=args.dry_run, threads=args.threads)
             if args.create_motifs:

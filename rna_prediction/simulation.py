@@ -1200,12 +1200,32 @@ class RNAPrediction(object):
                 comparisons.append("%.2f" % (min_rmsd * 10))
             printComparisonLine(cst_name, comparisons)
 
+    # create a reasonable output filename from
+    # output format uses placeholders for input name, number of predictions, and function
+    def _createConstraintsOutputFilename(self, inputFileName, outputFileName, cstFunction, numberDcaPredictions=None, outputFormat="%n_%f"):
+        sourceBasename = splitext(basename(inputFileName))[0]
+        cstFunctionUnderscore = cstFunction.replace(" ", "_")
+
+        # chose a default filename, is none given
+        if outputFileName is None:
+            outputFileName = "constraints/%s.cst" % (outputFormat)
+        # check if a path was given, if not put it in the constraints dir
+        elif basename(outputFileName) == outputFileName:
+            outputFileName = "constraints/%s" % (outputFileName)
+
+        # make sure the filename always ends in .cst
+        if splitext(outputFileName)[1] != ".cst":
+            outputFileName = outputFileName + ".cst"
+
+        # replace placeholders with actual values
+        outputFileName = outputFileName.replace("%f", cstFunctionUnderscore).replace("%n", sourceBasename).replace("%d", str(numberDcaPredictions))
+        return outputFileName
+
 
     def makeConstraints(self, pdbMapping=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2"):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
-        if outputFileName is None:
-            outputFileName = "constraints/%s.cst" % (splitext(basename(dcaPredictionFileName))[0])
+        outputFileName = self._createConstraintsOutputFilename(dcaPredictionFileName, outputFileName, cstFunction, numberDcaPredictions, "%d%n_%f")
         print "Constraints creation:"
         print "    dcaPredictionFileName: %s" % (dcaPredictionFileName)
         print "    outputFileName: %s" % (outputFileName)
@@ -1271,14 +1291,10 @@ class RNAPrediction(object):
                             print "%s %s %s %s" % (residueContact, contactKey, atomContactKey, distance)
                             out.write("%s %s %s %s %s\n" % (atom1, residueContact[0], atom2, residueContact[1], cstFunction))
 
-    def editConstraints(self, inputFileName, outputFileName=None, cstFunction="FADE -100 26 20 -2 2"):
+    def editConstraints(self, constraints, outputFileName=None, cstFunction="FADE -100 26 20 -2 2"):
         ':type cstFunction:string'
-        cstName = splitext(basename(inputFileName))[0]
-        cstFunctionUnderscore = cstFunction.replace(" ", "_")
-        if outputFileName is None:
-            outputFileName = "constraints/%s_%s.cst" % (cstName, cstFunctionUnderscore)
-        else:
-            outputFileName = outputFileName.replace("%f", cstFunctionUnderscore)
+        cst_name, inputFileName = self._parseCstNameAndFilename(constraints)
+        outputFileName = self._createConstraintsOutputFilename(inputFileName, outputFileName, cstFunction)
         print "Constraints editing:"
         print "    inputFileName:  %s" % (inputFileName)
         print "    outputFileName: %s" % (outputFileName)
