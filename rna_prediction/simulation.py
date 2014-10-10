@@ -1233,7 +1233,8 @@ class RNAPrediction(object):
         print "    function: %s" % (cstFunction)
         checkFileExistence(dcaPredictionFileName)
 
-        dca = dcatools.parseDcaData(dcaPredictionFileName, numberDcaPredictions, pdbMappingOverride)
+        print "Parsing dca file..."
+        dca = dcatools.parseDcaData(dcaPredictionFileName, pdbMappingOverride)
         atoms = []
         first = True
         for res in self.config["sequence"]:
@@ -1246,7 +1247,11 @@ class RNAPrediction(object):
 
         print "Creating constraints:"
         with open(outputFileName, "w") as out:
-            for residueContact in dca:
+            for i, residueContact in enumerate(dca):
+                if i >= numberDcaPredictions:
+                    print "Limit of %d predictions reached. Stopping..." % (numberDcaPredictions)
+                    break
+                print "Prediction number: %d" % (i + 1)
                 res1 = atoms[residueContact[0] - 1]
                 res2 = atoms[residueContact[1] - 1]
                 contactKey = res1[0] + res2[0]

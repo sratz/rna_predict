@@ -203,7 +203,7 @@ def createPdbMapping(mapping):
         raise DcaException("Invalid pdb mapping string: %s" % (mapping))
 
 
-def parseDcaData(dcaPredictionFileName, numberDcaPredictions, pdbMappingOverride=None):
+def parseDcaData(dcaPredictionFileName, pdbMappingOverride=None):
     pdbMapping = None
     if pdbMappingOverride is not None:
         print "  %s pdbMapping (user): %s" % (" " if pdbMappingOverride is None else "*", pdbMappingOverride)
@@ -227,8 +227,6 @@ def parseDcaData(dcaPredictionFileName, numberDcaPredictions, pdbMappingOverride
                         pdbMapping = createPdbMapping(m.group(2))
                 continue
             # data line
-            if len(dca) >= numberDcaPredictions:
-                break
             parts = line.split(" ")
             if pdbMapping is not None:
                 try:
