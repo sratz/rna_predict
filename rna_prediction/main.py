@@ -25,6 +25,7 @@ from argparse import RawDescriptionHelpFormatter
 from rna_prediction.simulation import RNAPrediction
 from rna_prediction.simulation import SimulationException
 from rna_prediction.sysconfig import SysConfig
+from .dcatools import DcaException
 from . import dcatools
 
 __all__ = []
@@ -100,7 +101,7 @@ USAGE
     group_makecst = parser.add_argument_group(title="options for --make-constraints")
     group_makecst.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
     group_makecst.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
-    group_makecst.add_argument("--pdb-mapping", dest="pdb_mapping", help="map pdb residue numbers to 1,2,... [example: 12-18,25-] [default: read from dca file]")
+    group_makecst.add_argument("--pdb-mapping", dest="pdb_mapping", help="map pdb residue numbers to 1,2,... [example: 12-18,25-50] [default: read from dca file]")
     group_editmakecst = parser.add_argument_group(title="options for --make-constraints, --edit-constraints")
     group_editmakecst.add_argument("--cst-function", dest="cst_function", help="rosetta function to use for the constraints [default: '%(default)s']", default="FADE -100 26 20 -2 2")
     group_editmakecst.add_argument("--cst-out-file", dest="cst_out_file", help="output cst file [default: inferred from input file]", default=None)
@@ -149,7 +150,7 @@ USAGE
             if args.prepare_cst:
                 p.prepareCst(constraints=args.cst)
             if args.make_constraints:
-                p.makeConstraints(pdbMapping=args.pdb_mapping, dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function)
+                p.makeConstraints(pdbMappingOverride=args.pdb_mapping, dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function)
             if args.edit_constraints:
                 p.editConstraints(constraints=args.cst, outputFileName=args.cst_out_file,cstFunction=args.cst_function)
             if args.create_helices:
@@ -164,7 +165,7 @@ USAGE
                 p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
             if args.compare:
                 p.compare()
-        except SimulationException, e:
+        except (SimulationException, DcaException) as e:
             printToStderr(e)
             exit_code = 1
             continue

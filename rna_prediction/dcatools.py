@@ -4,11 +4,11 @@ import pickle
 import numpy
 import math
 import Bio.PDB
+import re
 import warnings
 from eSBMTools import PdbFile
 from Bio.PDB.PDBExceptions import PDBConstructionWarning
 from sysconfig import SysConfig
-
 '''
 Created on Sep 10, 2014
 
@@ -19,6 +19,10 @@ PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
 INFO_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "structure_info"
 CACHE_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "cache"
 CACHE_DISTANCEMAP = CACHE_DIRECTORY + os.sep + "distancemap.dat"
+
+
+class DcaException(Exception):
+    pass
 
 
 def _getAtomsBackbone(termPhosphate=False):
@@ -177,27 +181,60 @@ def getMeanDistanceMapMean(distanceMap, meanCutoff=None, stdCutoff=None):
     return meanDistanceMap
 
 
-def createPdbMapping(sequence, mapping):
-    # parse a range in the form of 1-7,80,100-120,8-
-    pdbMapping = {}
-    i = 1
-    ranges = mapping.split(",")
-    for r in ranges:
-        r = r.split("-")
-        if len(r) == 1:
-            # single number
-            pdbMapping[int(r[0])] = i
-            i += 1
-        elif r[1] == "":
-            # open end range, fill till the end of the sequence
-            x = int(r[0])
-            while i <= len(sequence):
-                pdbMapping[x] = i
-                x += 1
+def createPdbMapping(mapping):
+    # parse a range in the form of 1-7,80,100-120,8-9
+    try:
+        pdbMapping = {}
+        i = 1
+        ranges = mapping.split(",")
+        for r in ranges:
+            r = r.split("-")
+            if len(r) == 1:
+                # single number
+                pdbMapping[int(r[0])] = i
                 i += 1
-        else:
-            # regular start-end
-            for x in range(int(r[0]), int(r[1]) + 1):
-                pdbMapping[x] = i
-                i += 1
-    return pdbMapping
+            else:
+                # regular start-end
+                for x in range(int(r[0]), int(r[1]) + 1):
+                    pdbMapping[x] = i
+                    i += 1
+        return pdbMapping
+    except:
+        raise DcaException("Invalid pdb mapping string: %s" % (mapping))
+
+
+def parseDcaData(dcaPredictionFileName, numberDcaPredictions, pdbMappingOverride=None):
+    pdbMapping = None
+    if pdbMappingOverride is not None:
+        print "  %s pdbMapping (user): %s" % (" " if pdbMappingOverride is None else "*", pdbMappingOverride)
+        pdbMapping = createPdbMapping(pdbMappingOverride)
+    pattern_parameter = re.compile(r"^#\s(\S+)\s+(.*)$")
+    dca = []
+    with open(dcaPredictionFileName) as f:
+        for line in f:
+            line = line.strip()
+            if len(line) == 0:
+                continue
+            if line[0] == "#":
+                # comment / parameter line
+                m = pattern_parameter.match(line)
+                if m:
+                    if m.group(1) == "pdb-mapping":
+                        # if pdbMapping is already set, it was overridden on invocation, skip this line!
+                        if pdbMapping is not None:
+                            continue
+                        print "  %s pdbMapping (file): %s" % (" " if pdbMapping is not None else "*", m.group(2))
+                        pdbMapping = createPdbMapping(m.group(2))
+                continue
+            # data line
+            if len(dca) >= numberDcaPredictions:
+                break
+            parts = line.split(" ")
+            if pdbMapping is not None:
+                try:
+                    dca.append([pdbMapping[int(parts[0])], pdbMapping[int(parts[1])]])
+                except:
+                    raise DcaException("Invalid PDB mapping. Could not access residue: %s" % (parts[:2]))
+            else:
+                dca.append([int(parts[0]), int(parts[1])])
+    return dca

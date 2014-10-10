@@ -1222,7 +1222,7 @@ class RNAPrediction(object):
         return outputFileName
 
 
-    def makeConstraints(self, pdbMapping=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2"):
+    def makeConstraints(self, pdbMappingOverride=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2"):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
         outputFileName = self._createConstraintsOutputFilename(dcaPredictionFileName, outputFileName, cstFunction, numberDcaPredictions, "%d%n_%f")
@@ -1231,41 +1231,9 @@ class RNAPrediction(object):
         print "    outputFileName: %s" % (outputFileName)
         print "    numberDcaPredictions: %d" % (numberDcaPredictions)
         print "    function: %s" % (cstFunction)
-        print "  %s pdbMapping (user): %s" % (" " if pdbMapping is None else "*", pdbMapping)
         checkFileExistence(dcaPredictionFileName)
 
-        if pdbMapping is not None:
-            pdbMapping = dcatools.createPdbMapping(self.config["sequence"], pdbMapping)
-        pattern_parameter = re.compile(r"^#\s(\S+)\s+(.*)$")
-        dca = []
-        with open(dcaPredictionFileName) as f:
-            for line in f:
-                line = line.strip()
-                if len(line) == 0:
-                    continue
-                if line[0] == "#":
-                    # comment / parameter line
-                    m = pattern_parameter.match(line)
-                    if m:
-                        if m.group(1) == "pdb-mapping":
-                            # if pdbMapping is already set, it was overridden on invocation, skip this line!
-                            print "  %s pdbMapping (file): %s" % (" " if pdbMapping is not None else "*", m.group(2))
-                            if pdbMapping is not None:
-                                continue
-                            pdbMapping = dcatools.createPdbMapping(self.config["sequence"], m.group(2))
-                    continue
-                # data line
-                if len(dca) >= numberDcaPredictions:
-                    break
-                parts = line.split(" ")
-                if pdbMapping is not None:
-                    try:
-                        dca.append([pdbMapping[int(parts[0])], pdbMapping[int(parts[1])]])
-                    except:
-                        raise SimulationException("Invalid PDB mapping. Could not access residue: %s" % (parts[:2]))
-                else:
-                    dca.append([int(parts[0]), int(parts[1])])
-
+        dca = dcatools.parseDcaData(dcaPredictionFileName, numberDcaPredictions, pdbMappingOverride)
         atoms = []
         first = True
         for res in self.config["sequence"]:
