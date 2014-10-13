@@ -1,7 +1,7 @@
 import glob
 import os
 import pickle
-import numpy
+import numpy as np
 import math
 import Bio.PDB
 import re
@@ -173,8 +173,8 @@ def getMeanDistanceMapMean(distanceMap, meanCutoff=None, stdCutoff=None):
     for resPair, distanceMapResPair in distanceMap.iteritems():
         meanDistanceMapRes = {}
         for atomPair, distancesAtomPair in distanceMapResPair.iteritems():
-            mean = numpy.asarray(distancesAtomPair).mean()
-            std = numpy.asarray(distancesAtomPair).std()
+            mean = np.asarray(distancesAtomPair).mean()
+            std = np.asarray(distancesAtomPair).std()
             if (meanCutoff is None or mean < meanCutoff) and (stdCutoff is None or std < stdCutoff):
                 meanDistanceMapRes[atomPair] = [mean, std]
         meanDistanceMap[resPair] = meanDistanceMapRes
