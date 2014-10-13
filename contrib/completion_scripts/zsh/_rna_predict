@@ -1,7 +1,9 @@
 #compdef rna_predict
 
 typeset -a prepare_args
+typeset -a motifs_args
 typeset -a assemble_args
+typeset -a motifs_assemble_args
 typeset -a evaluate_args
 typeset -a cst_args
 typeset -a make_constraints_args
@@ -16,10 +18,22 @@ if (( words[(I)--prepare] )); then
   )
 fi
 
-if (( words[(I)--create-motifs|--assemble] )); then
+if (( words[(I)--create-motifs] )); then
+  motifs_args=(
+    '--cycles-motifs=[number of cycles for motif generation (default: 5000)]: :_guard "[0-9]#" "cycles"'
+    '--nstruct-motifs=[number of motif structures to create (default: 4000)]: :_guard "[0-9]#" "number of structures"'
+  )
+fi
+
+if (( words[(I)--assemble] )); then
   assemble_args=(
-    '--cycles=[number of cycles (default: 20000)]: :_guard "[0-9]#" "cycles"'
-    '--nstruct=[number of structures to create (default: 50000)]: :_guard "[0-9]#" "number of structures"'
+    '--cycles-assembly=[number of cycles for assembly (default: 20000)]: :_guard "[0-9]#" "cycles"'
+    '--nstruct-assembly=[number of assembly structures to create (default: 50000)]: :_guard "[0-9]#" "number of structures"'
+  )
+fi
+
+if (( words[(I)--create-motifs|--assemble] )); then
+  motifs_assemble_args=(
     '--seed=[random seed (default: -)]: :_guard "(-|)[0-9]#" "seed"'
     '--use-native[use native information for motif generation and assembly]'
     {-j,--threads}'[maximum number of parallel subprocesses (default: 1)]: :_guard "[0-9]#" "threads"'
@@ -74,7 +88,9 @@ _arguments -s -w \
   {-n,--dry-run}'[do not execute and only print external commands]' \
   '--config[modify config variable]:key:(fasta_file name native_pdb_file params_file torsions_file):value: ' \
   $prepare_args \
+  $motifs_args \
   $assemble_args \
+  $motifs_assemble_args \
   $evaluate_args \
   $cst_args \
   $make_constraints_args \
