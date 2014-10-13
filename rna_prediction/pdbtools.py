@@ -69,3 +69,22 @@ def parsePdb(pdbCode, pdbFile):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", PDBConstructionWarning)
         return Bio.PDB.PDBParser().get_structure(pdbCode, pdbFile)
+
+
+def filterAtoms(atoms, heavyOnly=False, pOnly=False):
+    ret = []
+    for atom in atoms:
+        if pOnly and atom.name != "P":
+            continue
+        elif heavyOnly and atom.name.startswith("H"):
+            continue
+        ret.append(atom)
+    return ret
+
+
+def getCenterOfRes(res):
+    coords = []
+    # loop over all atoms
+    for atom in filterAtoms(res, heavyOnly=True):
+        coords.append(atom.coord)
+    return np.mean(coords, axis=0)

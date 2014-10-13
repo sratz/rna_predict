@@ -215,3 +215,35 @@ def parseDcaData(dcaPredictionFileName, pdbMappingOverride=None):
             else:
                 dca.append([int(parts[0]), int(parts[1])])
     return dca
+
+
+# return True if contact is not realized
+# TODO: implement more stuff parameters?
+def filterOutDcaContact(contact, pdb, threshold):
+    if pdb is None:
+        return False
+    pdb = pdbtools.parsePdb("", pdb)
+    chain = pdb[0].child_list[0]
+    average_heavy, minimum_heavy, minimum_pair = getContactInformationInPdbChain(contact, chain)
+    print "Threshold filter: min_distance: %f, threshold: %f" % (minimum_heavy, threshold)
+    # filter out contact if realized minimum distance is larger than the threshold
+    if minimum_heavy > threshold:
+        return True
+    return False
+
+
+# returns distance information about dca contact in a realized pdb chain
+def getContactInformationInPdbChain(dcaContact, pdbChain):
+    res1, res2 = (pdbChain[dcaContact[0]], pdbChain[dcaContact[1]])
+    # calculate average distance
+    average_heavy = np.linalg.norm(pdbtools.getCenterOfRes(res1) - pdbtools.getCenterOfRes(res2))
+
+    minimum_heavy = 9999
+    minimum_pair = []
+    for atom1 in pdbtools.filterAtoms(res1, heavyOnly=True):
+        for atom2 in pdbtools.filterAtoms(res2, heavyOnly=True):
+            dist = np.linalg.norm(atom1.coord - atom2.coord)
+            if dist < minimum_heavy:
+                minimum_heavy = dist
+                minimum_pair = [atom1, atom2]
+    return (average_heavy, minimum_heavy, minimum_pair)

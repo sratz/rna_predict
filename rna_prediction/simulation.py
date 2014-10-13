@@ -1189,7 +1189,7 @@ class RNAPrediction(object):
         return outputFileName
 
 
-    def makeConstraints(self, pdbMappingOverride=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2"):
+    def makeConstraints(self, pdbMappingOverride=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterPdb=None, filterThreshold=0):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
         outputFileName = self._createConstraintsOutputFilename(dcaPredictionFileName, outputFileName, cstFunction, numberDcaPredictions, "%d%n_%f")
@@ -1213,12 +1213,22 @@ class RNAPrediction(object):
         distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
 
         print "Creating constraints:"
+        predictionsUsed = 0
         with open(outputFileName, "w") as out:
             for i, residueContact in enumerate(dca):
-                if i >= numberDcaPredictions:
-                    print "Limit of %d predictions reached. Stopping..." % (numberDcaPredictions)
+                if predictionsUsed >= numberDcaPredictions:
+                    print "Limit of %d used predictions reached. Stopping..." % (numberDcaPredictions)
                     break
-                print "Prediction number: %d" % (i + 1)
+
+                # check if current dca contact should be used or filtered out
+                if dcatools.filterOutDcaContact(residueContact, filterPdb, filterThreshold):
+                    print "Prediction number: %d: FAILED filter, skipping..." % (i + 1)
+                    continue
+
+                print "Prediction number: %d: PASSED filter. Using as: %d" % (i + 1, predictionsUsed + 1)
+
+                predictionsUsed += 1
+
                 res1 = atoms[residueContact[0] - 1]
                 res2 = atoms[residueContact[1] - 1]
                 contactKey = res1[0] + res2[0]
