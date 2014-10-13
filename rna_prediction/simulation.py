@@ -53,15 +53,21 @@ def mergeSilentFiles(target, sources):
     n = 0
     pattern_header = re.compile("^(?:SEQUENCE:|SCORE:\s+score).*")
     pattern_normal = re.compile("^(.*)S_\d+$")
-    with open(target, "a+") as t:
-        for line in t:
-            pass
-        if 'line' in locals():
-            m = re.match(".*S_(\d+)$", line)
-            if m:
-                n = int(m.group(1))
-        for source in glob.glob(sources):
-            print "merging %s into %s" % (source, target)
+    # if target already exists, see how many structures we have already
+    if os.path.isfile(target):
+        with open(target, "r") as t:
+            for line in t:
+                pass
+            if 'line' in locals():
+                m = re.match(".*S_(\d+)$", line)
+                if m:
+                    n = int(m.group(1))
+
+    # loop through all source files and append all new structures to target
+    # while adjusting the numbering
+    for source in glob.glob(sources):
+        print "merging %s into %s" % (source, target)
+        with open(target, "a+") as t:
             with open(source, "r") as s:
                 for line in s:
                     m = pattern_header.match(line)
@@ -77,7 +83,11 @@ def mergeSilentFiles(target, sources):
                         t.write("%sS_%06d\n" % (m.group(1), n))
                         continue
                     t.write(line)
+
+    # delete source files
     deleteGlob(sources, print_notice=True)
+
+    # return total number of structures
     return n
 
 
