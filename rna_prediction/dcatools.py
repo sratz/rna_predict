@@ -3,19 +3,18 @@ import os
 import pickle
 import numpy as np
 import math
-import Bio.PDB
 import re
-import warnings
-from eSBMTools import PdbFile
-from Bio.PDB.PDBExceptions import PDBConstructionWarning
+
+from . import pdbtools
 from sysconfig import SysConfig
+
+
 '''
 Created on Sep 10, 2014
 
 @author: sebastian, blutz
 '''
 
-PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
 INFO_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "structure_info"
 CACHE_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "cache"
 CACHE_DISTANCEMAP = CACHE_DIRECTORY + os.sep + "distancemap.dat"
@@ -39,26 +38,6 @@ def getAtomsForRes(res, termPhosphate=False):
         return atoms + ["N9", "C8", "N7", "C5", "C6", "O6", "N1", "C2", "N2", "N3", "C4"]
     elif res == "C":
         return atoms + ["N1", "C2", "O2", "N3", "C4", "N4", "C5", "C6"]
-
-
-def getPdbByCode(pdbCode, pdbDirectory=PDB_DIRECTORY):
-    # make sure directory names have a trailing slash
-    pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
-
-    try:
-        os.makedirs(pdbDirectory)
-    except:
-        pass
-    pdbFile = pdbDirectory + pdbCode + '.pdb'
-    if not os.path.exists(pdbFile):
-        PdbFile.downloadPdbFile(pdbDirectory, pdbCode)
-    return parsePdb(pdbCode, pdbFile)
-
-
-def parsePdb(pdbCode, pdbFile):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", PDBConstructionWarning)
-        return Bio.PDB.PDBParser().get_structure(pdbCode, pdbFile)
 
 
 # the westhofVector can be used to apply different weights to the bonding family classes
@@ -111,7 +90,7 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1
                     continue
 
                 if pdbCode not in pdbStructureDict:
-                    pdbStructureDict[pdbCode] = getPdbByCode(pdbCode)
+                    pdbStructureDict[pdbCode] = pdbtools.getPdbByCode(pdbCode)
 
                 model = pdbStructureDict[pdbCode][0]
 

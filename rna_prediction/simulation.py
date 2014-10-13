@@ -16,7 +16,8 @@ import sys
 import errno
 import string
 import pickle
-import dcatools
+from . import dcatools
+from . import pdbtools
 from os.path import splitext, basename, abspath
 
 
@@ -36,40 +37,6 @@ def deleteGlob(pattern, print_notice=True):
                 os.remove(f)
         except:
             pass
-
-
-def extractPOnly(filename):
-    def isValidAtom(atom):
-        if atom == "P":
-            return True
-        if atom == "OP1":
-            return True
-        if atom == "OP2":
-            return True
-        return False
-
-    p_only = ""
-    with open(filename, "r") as fd:
-        # only extract first chain
-        chain_id = None
-        for line in fd:
-            fields = line.split()
-            if fields[0] == "ATOM" and isValidAtom(fields[2]):
-                if chain_id is None:
-                    chain_id = fields[4]
-                elif chain_id != fields[4]:
-                    break
-                p_only += line
-        p_only += "TER\n"
-        return p_only
-
-
-def writePdb(filename, data, model=1, remark=None, append=False):
-    with open(filename, "a" if append else "w") as output_pdb_fd:
-        output_pdb_fd.write("MODEL %d\n" % (model))
-        output_pdb_fd.write("REMARK %s\n" % (remark))
-        output_pdb_fd.write(data)
-        output_pdb_fd.write("ENDMDL\n")
 
 
 def makeDirectory(directory):
@@ -1025,13 +992,13 @@ class RNAPrediction(object):
                 remark = "%s %s" % (description, scores[name]["line"])
 
                 # extract all P atoms from the pdb file
-                p_only = extractPOnly(fe)
+                p_only = pdbtools.extractPOnly(fe)
 
                 # append p only model to trajectory
-                writePdb("%s/assembly_p.pdb" % (dir_assembly), data=p_only, model=model, remark=remark, append=True)
+                pdbtools.writePdb("%s/assembly_p.pdb" % (dir_assembly), data=p_only, model=model, remark=remark, append=True)
 
                 # write p only model to temp file
-                writePdb("%s/%09d_p.pdb" % (dir_tmp, model), data=p_only, model=model, remark=remark)
+                pdbtools.writePdb("%s/%09d_p.pdb" % (dir_tmp, model), data=p_only, model=model, remark=remark)
 
                 # move original pdb to temp directory
                 shutil.move(fe, "%s/%09d.pdb" % (dir_tmp, model))
@@ -1089,7 +1056,7 @@ class RNAPrediction(object):
             native_p_only = "%s_p.pdb" % (self.config["native_pdb_file"][:-4])
             if not os.path.exists(native_p_only):
                 print "  creating p only native pdb file: %s" % (native_p_only)
-                writePdb(native_p_only, data=extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
+                pdbtools.writePdb(native_p_only, data=pdbtools.extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
             print "  caluculating rmsd values to native structure for all models..."
             sys.stdout.write("    ")
             self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "%s/assembly_p.pdb" % (dir_assembly), "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
