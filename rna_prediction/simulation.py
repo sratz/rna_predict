@@ -695,7 +695,7 @@ class RNAPrediction(object):
 
 
     def _parseCstNameAndFilename(self, constraints):
-        if constraints is None:
+        if constraints is None or constraints == "none":
             cst_name = "none"
             cst_file = None
         elif os.path.isfile(constraints):
@@ -860,7 +860,7 @@ class RNAPrediction(object):
 
 
     # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with createMotifs, it is distributed.
-    def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1):
+    def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1, motifsOverride=None):
         self.checkConfig()
         cst_name, cst_file = self._parseCstNameAndFilename(constraints)
         print "Assembly configuration:"
@@ -870,10 +870,33 @@ class RNAPrediction(object):
         print "    dry_run: %s" % (dry_run)
         print "    random_seed: %s" % (seed)
 
+        # Check if a different set of motifs should be used.
         dir_assembly = "predictions/%s/assembly" % (cst_name)
-        dir_motifs = "predictions/%s/motifs" % (cst_name)
+        if motifsOverride is not None:
+            override_name, override_file = self._parseCstNameAndFilename(motifsOverride)
+            dir_motifs = "predictions/%s/motifs" % (override_name)
+        else:
+            dir_motifs = "predictions/%s/motifs" % (cst_name)
+        print "    using motifs: %s" % (dir_motifs)
+
         checkFileExistence("%s/motif1.out" % (dir_motifs))
         checkFileExistence("preparation/cutpoints.cst")
+
+
+        # If an assembly was run before, perform sanity check to see if the motifs used last time match the ones that are going to be used now.
+        file_assembly_motif_override = "%s/MOTIF_OVERRIDE" % (dir_assembly)
+        if len(glob.glob("%s/*.out" % (dir_assembly))):
+            dir_motifs_last = "predictions/%s/motifs" % (cst_name)
+            if os.path.isfile(file_assembly_motif_override):
+                with open(file_assembly_motif_override, "r") as f:
+                    dir_motifs_last = f.read().strip()
+            if dir_motifs_last != dir_motifs:
+                raise SimulationException("Error: Motifs used last time don't match the current ones! %s <-> %s." % (dir_motifs_last, dir_motifs))
+
+        # In case of motifs override, put a hint .txt file in the assembly directory to indicate that non-matching motifs were used.
+        if motifsOverride is not None:
+            with open(file_assembly_motif_override, "w") as f:
+                f.write(dir_motifs)
 
         makeDirectory(dir_assembly)
 

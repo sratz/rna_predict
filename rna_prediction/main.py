@@ -94,6 +94,7 @@ USAGE
     group_assembly = parser.add_argument_group(title="options for the --assemble step")
     group_assembly.add_argument("--cycles-assembly", dest="cycles_assembly", help="number of cycles for assembly [default: %(default)s]", default=20000, type=int)
     group_assembly.add_argument("--nstruct-assembly", dest="nstruct_assembly", help="number of assembly structures to create [default: %(default)s]", default=50000, type=int)
+    group_assembly.add_argument("--override-motifs-cst", dest="motifs_cst", help="use motifs from a different constraints set [default: %(default)s]", const="none", nargs="?")
     group_simulaion = parser.add_argument_group(title="options for the --create-motifs and --assemble steps")
     group_simulaion.add_argument("--seed", dest="seed", help="force random seed (when multithreading, this will be incremented for each process) [default: %(default)s]", default=None, type=int)
     group_simulaion.add_argument("--use-native", dest="use_native", action="store_true", help="use native information for motif generation and assembly [default: %(default)s]")
@@ -164,7 +165,7 @@ USAGE
             if args.create_motifs:
                 p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct_motifs, cycles=args.cycles_motifs, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
             if args.assemble:
-                p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
+                p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads, motifsOverride=args.motifs_cst)
             if args.extract:
                 p.extract(constraints=args.cst)
             if args.evaluate:
