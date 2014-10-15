@@ -893,18 +893,18 @@ class RNAPrediction(object):
             if dir_motifs_last != dir_motifs:
                 raise SimulationException("Error: Motifs used last time don't match the current ones! %s <-> %s." % (dir_motifs_last, dir_motifs))
 
+        # Check if assembly constraints are available.
+        # Do NOT always try to create them here because that would cause a race condition when multiple assembly jobs are started in parallel!
+        assembly_cst = "%s/assembly.cst" % (dir_assembly)
+        if cst_file is not None:
+            checkFileExistence(assembly_cst, "Assembly cst file '%s' not found. Please run --prepare-cst step!" % (assembly_cst))
+
         # In case of motifs override, put a hint .txt file in the assembly directory to indicate that non-matching motifs were used.
         if motifsOverride is not None:
             with open(file_assembly_motif_override, "w") as f:
                 f.write(dir_motifs)
 
         makeDirectory(dir_assembly)
-
-        # Check if assembly constraints are available.
-        # Do NOT always try to create them here because that would cause a race condition when multiple assembly jobs are started in parallel!
-        assembly_cst = "%s/assembly.cst" % (dir_assembly)
-        if cst_file is not None:
-            checkFileExistence(assembly_cst, "Assembly cst file '%s' not found. Please run --prepare-cst step!" % (assembly_cst))
 
         commands = list()
 
