@@ -1231,6 +1231,7 @@ class RNAPrediction(object):
         print "    outputFileName: %s" % (outputFileName)
         print "    numberDcaPredictions: %d" % (numberDcaPredictions)
         print "    function: %s" % (cstFunction)
+        print "    filter: pdb: %s, threshold: %f" % (filterPdb, filterThreshold)
         checkFileExistence(dcaPredictionFileName)
 
         print "Parsing dca file..."
@@ -1245,6 +1246,9 @@ class RNAPrediction(object):
         distanceMap = dcatools.getContactDistanceMap()
         distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
 
+        if filterPdb:
+            filterPdbChain = pdbtools.parsePdb("", filterPdb)[0].child_list[0]
+
         print "Creating constraints:"
         predictionsUsed = 0
         with open(outputFileName, "w") as out:
@@ -1253,10 +1257,11 @@ class RNAPrediction(object):
                     print "Limit of %d used predictions reached. Stopping..." % (numberDcaPredictions)
                     break
 
-                # check if current dca contact should be used or filtered out
-                if dcatools.filterOutDcaContact(residueContact, filterPdb, filterThreshold):
-                    print "Prediction number: %d: FAILED filter, skipping..." % (i + 1)
-                    continue
+                if filterPdb:
+                    # check if current dca contact should be used or filtered out
+                    if dcatools.filterOutDcaContact(residueContact, filterPdbChain, filterThreshold):
+                        print "Prediction number: %d: FAILED filter, skipping..." % (i + 1)
+                        continue
 
                 print "Prediction number: %d: PASSED filter. Using as: %d" % (i + 1, predictionsUsed + 1)
 
