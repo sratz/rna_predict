@@ -217,15 +217,24 @@ def parseDcaData(dcaPredictionFileName, pdbMappingOverride=None):
     return dca
 
 
-# return True if contact is not realized
-# TODO: implement more stuff parameters?
-def filterOutDcaContact(contact, pdbChain, threshold):
+# use contact if realized minimum distance is smaller than a threshold
+def dcaFilterThresholdMinimumKeepBelow(threshold):
+    def f(average_heavy, minimum_heavy, minimum_pair):
+        print "Threshold filter: min_distance: %f, threshold: %f, keep below" % (minimum_heavy, threshold)
+        return minimum_heavy < threshold
+    return f
+
+# use contact if realized minimum distance is smaller than a threshold
+def dcaFilterThresholdMinimumKeepAbove(threshold):
+    def f(average_heavy, minimum_heavy, minimum_pair):
+        print "Threshold filter: min_distance: %f, threshold: %f, keep above" % (minimum_heavy, threshold)
+        return minimum_heavy > threshold
+    return f
+
+# return True if contact is to be used
+def useDcaContact(contact, pdbChain, dcaFilter):
     average_heavy, minimum_heavy, minimum_pair = getContactInformationInPdbChain(contact, pdbChain)
-    print "Threshold filter: min_distance: %f, threshold: %f" % (minimum_heavy, threshold)
-    # filter out contact if realized minimum distance is larger than the threshold
-    if minimum_heavy > threshold:
-        return True
-    return False
+    return dcaFilter(average_heavy, minimum_heavy, minimum_pair)
 
 
 # returns distance information about dca contact in a realized pdb chain

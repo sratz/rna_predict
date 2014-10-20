@@ -1248,6 +1248,10 @@ class RNAPrediction(object):
 
         if filterPdb:
             filterPdbChain = pdbtools.parsePdb("", filterPdb)[0].child_list[0]
+            if filterThreshold > 0:
+                dcaFilter = dcatools.dcaFilterThresholdMinimumKeepBelow(filterThreshold)
+            else:
+                dcaFilter = dcatools.dcaFilterThresholdMinimumKeepAbove(abs(filterThreshold))
 
         print "Creating constraints:"
         predictionsUsed = 0
@@ -1259,7 +1263,7 @@ class RNAPrediction(object):
 
                 if filterPdb:
                     # check if current dca contact should be used or filtered out
-                    if dcatools.filterOutDcaContact(residueContact, filterPdbChain, filterThreshold):
+                    if not dcatools.useDcaContact(residueContact, filterPdbChain, dcaFilter):
                         print "Prediction number: %d: FAILED filter, skipping..." % (i + 1)
                         continue
 
