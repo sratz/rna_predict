@@ -9,7 +9,6 @@ import os
 import warnings
 import Bio.PDB
 from Bio.PDB.PDBExceptions import PDBConstructionWarning
-from eSBMTools import PdbFile
 
 from sysconfig import SysConfig
 
@@ -51,6 +50,17 @@ def extractPOnly(filename):
         return p_only
 
 
+def downloadPdbFile(pdbCode, pdbDirectory=PDB_DIRECTORY):
+    import urllib2
+
+    # make sure directory names have a trailing slash
+    pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
+
+    response = urllib2.urlopen("http://www.rcsb.org/pdb/files/%s.pdb" % pdbCode.upper())
+    with open(pdbDirectory + pdbCode + ".pdb", "w") as f:
+        f.write(response.read())
+
+
 def getPdbByCode(pdbCode, pdbDirectory=PDB_DIRECTORY):
     # make sure directory names have a trailing slash
     pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
@@ -61,7 +71,7 @@ def getPdbByCode(pdbCode, pdbDirectory=PDB_DIRECTORY):
         pass
     pdbFile = pdbDirectory + pdbCode + '.pdb'
     if not os.path.exists(pdbFile):
-        PdbFile.downloadPdbFile(pdbDirectory, pdbCode)
+        downloadPdbFile(pdbCode, pdbDirectory)
     return parsePdb(pdbCode, pdbFile)
 
 
