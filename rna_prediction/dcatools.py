@@ -39,6 +39,15 @@ def getAtomsForRes(res, termPhosphate=False):
     elif res == "C":
         return atoms + ["N1", "C2", "O2", "N3", "C4", "N4", "C5", "C6"]
 
+def getAtomsForResSequence(sequence):
+    atoms = []
+    first = True
+    for res in sequence:
+        res = res.upper()
+        atoms.append((res, getAtomsForRes(res, termPhosphate=(not first))))
+        first = False
+    return atoms
+
 
 # the westhofVector can be used to apply different weights to the bonding family classes
 def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], forceRebuild=False):
@@ -209,37 +218,21 @@ def parseDcaData(dcaPredictionFileName, pdbMappingOverride=None):
             parts = line.split(" ")
             if pdbMapping is not None:
                 try:
-                    dca.append([pdbMapping[int(parts[0])], pdbMapping[int(parts[1])]])
+                    res1 = pdbMapping[int(parts[0])]
+                    res2 = pdbMapping[int(parts[1])]
                 except:
                     raise DcaException("Invalid PDB mapping. Could not access residue: %s" % (parts[:2]))
             else:
-                dca.append([int(parts[0]), int(parts[1])])
+                res1 = int(parts[0])
+                res2 = int(parts[1])
+
+            dca.append(DcaContact(res1, res2))
     return dca
-
-
-# use contact if realized minimum distance is smaller than a threshold
-def dcaFilterThresholdMinimumKeepBelow(threshold):
-    def f(average_heavy, minimum_heavy, minimum_pair):
-        print "Threshold filter: min_distance: %f, threshold: %f, keep below" % (minimum_heavy, threshold)
-        return minimum_heavy < threshold
-    return f
-
-# use contact if realized minimum distance is smaller than a threshold
-def dcaFilterThresholdMinimumKeepAbove(threshold):
-    def f(average_heavy, minimum_heavy, minimum_pair):
-        print "Threshold filter: min_distance: %f, threshold: %f, keep above" % (minimum_heavy, threshold)
-        return minimum_heavy > threshold
-    return f
-
-# return True if contact is to be used
-def useDcaContact(contact, pdbChain, dcaFilter):
-    average_heavy, minimum_heavy, minimum_pair = getContactInformationInPdbChain(contact, pdbChain)
-    return dcaFilter(average_heavy, minimum_heavy, minimum_pair)
 
 
 # returns distance information about dca contact in a realized pdb chain
 def getContactInformationInPdbChain(dcaContact, pdbChain):
-    res1, res2 = (pdbChain[dcaContact[0]], pdbChain[dcaContact[1]])
+    res1, res2 = (pdbChain[dcaContact.res1], pdbChain[dcaContact.res2])
     # calculate average distance
     average_heavy = np.linalg.norm(pdbtools.getCenterOfRes(res1) - pdbtools.getCenterOfRes(res2))
 
@@ -252,3 +245,102 @@ def getContactInformationInPdbChain(dcaContact, pdbChain):
                 minimum_heavy = dist
                 minimum_pair = [atom1, atom2]
     return (average_heavy, minimum_heavy, minimum_pair)
+
+
+# maps dca residue contacts to atom-atom constraints
+def buildCstInfoFromDcaContacts(dcaData, sequence, distanceMapMean, cstFunction, numberDcaPredictions):
+    atoms = getAtomsForResSequence(sequence)
+
+    cst_info = []
+    predictionsUsed = 0
+    for i, d in enumerate(dcaData):
+        if predictionsUsed >= numberDcaPredictions:
+            print "Limit of %d used predictions reached. Stopping..." % (numberDcaPredictions)
+            break
+
+        # print some information about the dca contact
+        print "Contact %d: %s" % (i + 1, d)
+
+        # skip contact completely?
+        if not d.useContact:
+            print "  Dca contact skipped."
+            continue
+        print "  Dca contact used (%d)." % (predictionsUsed + 1)
+        predictionsUsed += 1
+
+        # build atom-atom constraints
+        res1 = atoms[d.res1 - 1]
+        res2 = atoms[d.res2 - 1]
+        contactKey = res1[0] + res2[0]
+
+        for atom1 in res1[1]:
+            for atom2 in res2[1]:
+                atomContactKey = atom1 + '-' + atom2
+                if atomContactKey in distanceMapMean[contactKey]:
+                    distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
+                    print "[%s, %s] %s %s %s" % (d.res1, d.res2, contactKey, atomContactKey, distance)
+                    cst_info.append([atom1, d.res1, atom2, d.res2, d.getRosettaFunction(cstFunction)])
+    return cst_info
+
+
+class DcaContact(object):
+    def __init__(self, res1, res2, useContact=True, weight=1, potentialMin=6, potentialMax=26, energyBoost=2, function="FADE"):
+        self.res1 = res1
+        self.res2 = res2
+        self.useContact = useContact
+        self.weight = weight
+
+    def __str__(self):
+        return "[%s, %s], useContact=%s, weight=%f" % (self.res1, self.res2, self.useContact, self.weight)
+
+    def getRosettaFunction(self, function="FADE -100 26 20 -2 2"):
+        function = function.split()
+        for i in range(1, len(function) + 1):
+            try:
+                # TODO: make this float()?
+                function[i] = int(function[i])
+            except:
+                pass
+        if function[0] == "FADE":
+            return [function[0], function[1], function[2], function[3], function[4] * self.weight, function[5] * self.weight]
+        else:
+            raise DcaException("Not implemented! Only FADE function is recognized.")
+
+
+
+## DCA FILTERING
+
+# run dca data through a chain of filters
+def filterDcaData(dcaData, dcaFilterChain):
+    if dcaFilterChain is None:
+        return dcaData
+    for dcaFilter in dcaFilterChain:
+        if dcaFilter is not None:
+            for d in dcaData:
+                dcaFilter(d)
+
+
+# use contact if realized minimum distance in a single pdb is smaller than a threshold
+def dcaFilterThresholdMinimumKeepBelow(threshold, pdbChain):
+    return _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=True)
+
+# use contact if realized minimum distance is a single pdb is larger than a threshold
+def dcaFilterThresholdMinimumKeepAbove(threshold, pdbChain):
+    return _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=False)
+
+def _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=True):
+    def f(contact):
+        # do not touch contacts that are already disabled
+        if not contact.useContact:
+            return
+
+        # get contact information
+        average_heavy, minimum_heavy, minimum_pair = getContactInformationInPdbChain(contact, pdbChain)
+        print "Threshold filter: min_distance: %f, threshold: %f, keep %s" % (minimum_heavy, threshold, "below" if below else "above")
+
+        # set contact to disabled if filter failed
+        if (below and minimum_heavy >= threshold) or (not below and minimum_heavy <= threshold):
+            contact.useContact = False
+
+    # return filter function
+    return f

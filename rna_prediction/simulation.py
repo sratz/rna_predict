@@ -106,7 +106,7 @@ def parseCstFile(constraints_file):
             res1 = int(cols[1])
             atom_name2 = cols[2]
             res2 = int(cols[3])
-            cst_info.append( [ atom_name1, res1, atom_name2, res2, string.join( cols[4:] )] )
+            cst_info.append( [ atom_name1, res1, atom_name2, res2, cols[4:]] )
     return cst_info
 
 # TODO: Correcting atom names IS MOST LIKELY WRONG! It is commented out for now and can probably be removed completely.
@@ -740,7 +740,7 @@ class RNAPrediction(object):
             fid_cst.write( '[ atompairs ]\n' )
             for cst in cst_info:
                 if cst[1]-1 in motif_res_map.keys() and cst[3]-1 in motif_res_map.keys():
-                    fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1,cst[4]) )
+                    fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1," ".join(map(str, cst[4]))) )
             fid_cst.close()
             print 'Created: ', motif_cst_file
 
@@ -749,7 +749,7 @@ class RNAPrediction(object):
         shutil.copy("preparation/cutpoints.cst", assembly_cst)
         with open(assembly_cst, "a") as ft:
             for cst in cst_info:
-                ft.write('%s %d %s %d %s \n' % (cst[0], cst[1], cst[2], cst[3], cst[4]))
+                ft.write('%s %d %s %d %s \n' % (cst[0], cst[1], cst[2], cst[3], " ".join(map(str, cst[4]))))
         print 'Created: ', assembly_cst
 
 
@@ -1234,54 +1234,37 @@ class RNAPrediction(object):
         print "    filter: pdb: %s, threshold: %f" % (filterPdb, filterThreshold)
         checkFileExistence(dcaPredictionFileName)
 
+        # load dca contacts from file
         print "Parsing dca file..."
         dca = dcatools.parseDcaData(dcaPredictionFileName, pdbMappingOverride)
-        atoms = []
-        first = True
-        for res in self.config["sequence"]:
-            res = res.upper()
-            atoms.append((res, dcatools.getAtomsForRes(res, termPhosphate=(not first))))
-            first = False
 
-        distanceMap = dcatools.getContactDistanceMap()
-        distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
-
+        # prepare filter for dca data
         if filterPdb:
             filterPdbChain = pdbtools.parsePdb("", filterPdb)[0].child_list[0]
             if filterThreshold > 0:
-                dcaFilter = dcatools.dcaFilterThresholdMinimumKeepBelow(filterThreshold)
+                dcaFilter = dcatools.dcaFilterThresholdMinimumKeepBelow(filterThreshold, filterPdbChain)
             else:
-                dcaFilter = dcatools.dcaFilterThresholdMinimumKeepAbove(abs(filterThreshold))
+                dcaFilter = dcatools.dcaFilterThresholdMinimumKeepAbove(abs(filterThreshold), filterPdbChain)
+        else:
+            dcaFilter = None
 
+        # run dca data through filter
+        print "Filtering dca data:"
+        dcatools.filterDcaData(dcaData=dca, dcaFilterChain=[dcaFilter])
+
+        # map dca contacts to atom-atom constraints
         print "Creating constraints:"
-        predictionsUsed = 0
+        # load contact map for atom-atom contacts
+        distanceMap = dcatools.getContactDistanceMap()
+        distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
+
+        cst_info = dcatools.buildCstInfoFromDcaContacts(dca, sequence=self.config["sequence"], distanceMapMean=distanceMapMean, cstFunction=cstFunction, numberDcaPredictions=numberDcaPredictions)
+
+        # write to file
         with open(outputFileName, "w") as out:
-            for i, residueContact in enumerate(dca):
-                if predictionsUsed >= numberDcaPredictions:
-                    print "Limit of %d used predictions reached. Stopping..." % (numberDcaPredictions)
-                    break
+            for c in cst_info:
+                out.write("%s %d %s %d %s\n" % (c[0], c[1], c[2], c[3], " ".join(map(str, c[4]))))
 
-                if filterPdb:
-                    # check if current dca contact should be used or filtered out
-                    if not dcatools.useDcaContact(residueContact, filterPdbChain, dcaFilter):
-                        print "Prediction number: %d: FAILED filter, skipping..." % (i + 1)
-                        continue
-
-                print "Prediction number: %d: PASSED filter. Using as: %d" % (i + 1, predictionsUsed + 1)
-
-                predictionsUsed += 1
-
-                res1 = atoms[residueContact[0] - 1]
-                res2 = atoms[residueContact[1] - 1]
-                contactKey = res1[0] + res2[0]
-
-                for atom1 in res1[1]:
-                    for atom2 in res2[1]:
-                        atomContactKey = atom1 + '-' + atom2
-                        if atomContactKey in distanceMapMean[contactKey]:
-                            distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
-                            print "%s %s %s %s" % (residueContact, contactKey, atomContactKey, distance)
-                            out.write("%s %s %s %s %s\n" % (atom1, residueContact[0], atom2, residueContact[1], cstFunction))
 
     def editConstraints(self, constraints, outputFileName=None, cstFunction="FADE -100 26 20 -2 2"):
         ':type cstFunction:string'
