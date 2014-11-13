@@ -1,0 +1,23 @@
+#!/usr/bin/env zsh
+
+zmodload zsh/mathfunc
+
+count=$1
+numres=$2
+
+
+typeset -A contacts
+
+while (( $#contacts < count )); do
+  res1=$(( int(rand48() * numres) + 1 ))
+  res2=$res1
+  while (( res2 == res1 || res2 == res1 + 1 || res2 == res1 - 1 )); do
+    res2=$(( int(rand48() * numres) + 1 ))
+  done
+  typeset "contacts[$res1 $res2]"="$res1 $res2"
+done
+
+
+for c in ${(kno)contacts}; do
+  print -r - "$c" 1 1
+done
