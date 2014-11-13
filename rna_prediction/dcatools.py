@@ -169,8 +169,10 @@ def getMeanDistanceMapMean(distanceMap, meanCutoff=None, stdCutoff=None):
     return meanDistanceMap
 
 
-def createPdbMapping(mapping):
+def createPdbMappingFromString(mapping):
     # parse a range in the form of 1-7,80,100-120,8-9
+    if mapping == "":
+        return None
     try:
         pdbMapping = {}
         i = 1
@@ -191,13 +193,9 @@ def createPdbMapping(mapping):
         raise DcaException("Invalid pdb mapping string: %s" % (mapping))
 
 
-def parseDcaData(dcaPredictionFileName, pdbMappingOverride=None):
-    pdbMapping = None
-    if pdbMappingOverride is not None:
-        print "  %s pdbMapping (user): %s" % (" " if pdbMappingOverride is None else "*", pdbMappingOverride)
-        pdbMapping = createPdbMapping(pdbMappingOverride)
+# read a pdb mapping from dca file if present and return it as text
+def readPdbMappingFromFile(dcaPredictionFileName):
     pattern_parameter = re.compile(r"^#\s(\S+)\s+(.*)$")
-    dca = []
     with open(dcaPredictionFileName) as f:
         for line in f:
             line = line.strip()
@@ -208,11 +206,26 @@ def parseDcaData(dcaPredictionFileName, pdbMappingOverride=None):
                 m = pattern_parameter.match(line)
                 if m:
                     if m.group(1) == "pdb-mapping":
-                        # if pdbMapping is already set, it was overridden on invocation, skip this line!
-                        if pdbMapping is not None:
-                            continue
-                        print "  %s pdbMapping (file): %s" % (" " if pdbMapping is not None else "*", m.group(2))
-                        pdbMapping = createPdbMapping(m.group(2))
+                        return m.group(2)
+                continue
+            # we only allow comments on top, so no need to check the rest of the lines:
+            break
+    # return empty string here, to distinguish between None
+    return ""
+
+
+# TODO: do we really need all that mapping overriding stuff?
+# Does it make any sense to actually do it?
+def parseDcaData(dcaPredictionFileName, pdbMappingOverride=None):
+    # if pdbMappingOverride is None, read it from file
+    if pdbMappingOverride == None:
+        pdbMappingOverride = readPdbMappingFromFile(dcaPredictionFileName)
+    pdbMapping = createPdbMappingFromString(pdbMappingOverride)
+    dca = []
+    with open(dcaPredictionFileName) as f:
+        for line in f:
+            line = line.strip()
+            if len(line) == 0 or line[0] == "#":
                 continue
             # data line
             parts = line.split(" ")

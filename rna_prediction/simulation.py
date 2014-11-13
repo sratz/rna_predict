@@ -1276,6 +1276,11 @@ class RNAPrediction(object):
         print "    function: %s" % (cstFunction)
         print "    filter: pdb: %s, threshold: %f" % (filterPdb, filterThreshold)
         checkFileExistence(dcaPredictionFileName)
+        if pdbMappingOverride is not None:
+            print "    pdbMapping (override): %s" % (pdbMappingOverride)
+        else:
+            pdbMappingOverride = dcatools.readPdbMappingFromFile(dcaPredictionFileName)
+            print "    pdbMapping (file): %s" % (pdbMappingOverride)
 
         # load dca contacts from file
         print "Parsing dca file..."
