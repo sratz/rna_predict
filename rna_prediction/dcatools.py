@@ -248,24 +248,28 @@ def getContactInformationInPdbChain(dcaContact, pdbChain):
 
 
 # maps dca residue contacts to atom-atom constraints
-def buildCstInfoFromDcaContacts(dcaData, sequence, distanceMapMean, cstFunction, numberDcaPredictions):
+def buildCstInfoFromDcaContacts(dcaData, sequence, distanceMapMean, cstFunction, numberDcaPredictions, quiet=False):
     atoms = getAtomsForResSequence(sequence)
 
     cst_info = []
     predictionsUsed = 0
     for i, d in enumerate(dcaData):
         if predictionsUsed >= numberDcaPredictions:
-            print "Limit of %d used predictions reached. Stopping..." % (numberDcaPredictions)
+            if not quiet:
+                print "Limit of %d used predictions reached. Stopping..." % (numberDcaPredictions)
             break
 
         # print some information about the dca contact
-        print "Contact %d: %s" % (i + 1, d)
+        if not quiet:
+            print "Contact %d: %s" % (i + 1, d)
 
         # skip contact completely?
         if not d.useContact:
-            print "  Dca contact skipped."
+            if not quiet:
+                print "  Dca contact skipped."
             continue
-        print "  Dca contact used (%d)." % (predictionsUsed + 1)
+        if not quiet:
+            print "  Dca contact used (%d)." % (predictionsUsed + 1)
         predictionsUsed += 1
 
         # build atom-atom constraints
@@ -278,7 +282,8 @@ def buildCstInfoFromDcaContacts(dcaData, sequence, distanceMapMean, cstFunction,
                 atomContactKey = atom1 + '-' + atom2
                 if atomContactKey in distanceMapMean[contactKey]:
                     distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
-                    print "[%s, %s] %s %s %s" % (d.res1, d.res2, contactKey, atomContactKey, distance)
+                    if not quiet:
+                        print "[%s, %s] %s %s %s" % (d.res1, d.res2, contactKey, atomContactKey, distance)
                     cst_info.append([atom1, d.res1, atom2, d.res2, d.getRosettaFunction(cstFunction)])
     return cst_info
 
@@ -311,13 +316,13 @@ class DcaContact(object):
 ## DCA FILTERING
 
 # run dca data through a chain of filters
-def filterDcaData(dcaData, dcaFilterChain):
+def filterDcaData(dcaData, dcaFilterChain, quiet=False):
     if dcaFilterChain is None:
         return dcaData
     for dcaFilter in dcaFilterChain:
         if dcaFilter is not None:
             for d in dcaData:
-                dcaFilter(d)
+                dcaFilter(d, quiet)
 
 
 # use contact if realized minimum distance in a single pdb is smaller than a threshold
@@ -329,14 +334,15 @@ def dcaFilterThresholdMinimumKeepAbove(threshold, pdbChain):
     return _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=False)
 
 def _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=True):
-    def f(contact):
+    def f(contact, quiet):
         # do not touch contacts that are already disabled
         if not contact.useContact:
             return
 
         # get contact information
         average_heavy, minimum_heavy, minimum_pair = getContactInformationInPdbChain(contact, pdbChain)
-        print "Threshold filter: min_distance: %f, threshold: %f, keep %s" % (minimum_heavy, threshold, "below" if below else "above")
+        if not quiet:
+            print "Threshold filter: min_distance: %f, threshold: %f, keep %s" % (minimum_heavy, threshold, "below" if below else "above")
 
         # set contact to disabled if filter failed
         if (below and minimum_heavy >= threshold) or (not below and minimum_heavy <= threshold):
