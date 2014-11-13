@@ -1,0 +1,42 @@
+#!/usr/bin/env zsh
+
+setopt nullglob
+
+for i in "$@"; do
+  echo $i
+  csts=($i/constraints/*.cst)
+  csts=(${(@)${(@)csts##*/}%.cst})
+  mkdir -p $i/preparation
+  mkdir -p $i/predictions/none/motifs
+  files=($i/stems_and_motifs/motif*.out)
+  (( $#files )) && mv $files $i/predictions/none/motifs/
+  files=($i/stems_and_motifs/*)
+  (( $#files )) && mv $i/stems_and_motifs/* $i/preparation/
+  for cst in $csts[@]; do
+    target=$cst
+    if [[ $cst == default ]]; then
+      target=none
+    fi
+    mkdir -p $i/predictions/$target/{assembly,motifs,output}
+    assembly_files=($i/assembly/${cst}*.out)
+    for f in $assembly_files; do
+      mv $f $i/predictions/$target/assembly/assembly${${f##*/}#${cst}}
+    done
+    [[ -f $i/assembly/${cst}.pdb ]] && mv $i/assembly/${cst}.pdb $i/predictions/$target/assembly/assembly_p.pdb
+    output_files=($i/output/${cst}*.pdb)
+    for f in $output_files; do
+      mv $f $i/predictions/$target/output/cluster${${f##*/}#${cst}}
+    done
+    [[ -f $i/output/${cst}.dat ]] && mv $i/output/${cst}.dat $i/predictions/$target/output/evaldata.dat
+    [[ -f $i/output/${cst}.log ]] && mv $i/output/${cst}.log $i/predictions/$target/output/clusters.log
+
+    if [[ -d $i/temp/$cst ]]; then
+      mv $i/temp/$cst $i/predictions/$target/temp
+    fi
+  done
+  [[ -d $i/temp ]] && rmdir $i/temp
+  [[ -d $i/assembly ]] && rmdir $i/assembly
+  [[ -d $i/output ]] && rmdir $i/output
+  [[ -d $i/stems_and_motifs ]] && rmdir $i/stems_and_motifs
+  [[ -f $i/constraints/default.cst ]] && rm $i/constraints/default.cst
+done
