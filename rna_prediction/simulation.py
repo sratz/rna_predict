@@ -1264,6 +1264,7 @@ class RNAPrediction(object):
         return outputFileName
 
 
+    # TODO: use parseFilterLine function and a single --filter argument instead of --filter-pdb and --filter-threshold
     def makeConstraints(self, pdbMappingOverride=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterPdb=None, filterThreshold=0):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()

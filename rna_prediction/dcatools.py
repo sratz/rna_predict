@@ -325,6 +325,34 @@ def filterDcaData(dcaData, dcaFilterChain, quiet=False):
                 dcaFilter(d, quiet)
 
 
+# parses a text string and turns it into a filter chain
+# multiple filters are separated b "," and their fields are separated using ":"
+# example: threshold:8.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1
+# TODO: document filter format
+def parseFilterLine(line, simulation):
+    filterChain = []
+
+    # filters are split by ","
+    for filtertext in line.split(","):
+        # filter fields are split by ":"
+        fields = filtertext.split(":")
+        if fields[0] == "none":
+            continue
+        elif fields[0] == "threshold":
+            threshold = float(fields[1])
+            cst_name = fields[2]
+            model_kind = fields[3]
+            model_number = int(fields[4])
+            pdbfile = simulation.getModels(cst_name, [model_number], model_kind)[0]["pdbfile"]
+            filterPdbChain = pdbtools.parsePdb("", pdbfile)[0].child_list[0]
+            if threshold > 0:
+                dcaFilter = dcaFilterThresholdMinimumKeepBelow(threshold, filterPdbChain)
+            else:
+                dcaFilter = dcaFilterThresholdMinimumKeepAbove(abs(threshold), filterPdbChain)
+        filterChain.append(dcaFilter)
+
+    return filterChain
+
 # use contact if realized minimum distance in a single pdb is smaller than a threshold
 def dcaFilterThresholdMinimumKeepBelow(threshold, pdbChain):
     return _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=True)
