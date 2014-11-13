@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+mapping=$1
+shift 1
+
+for i in "$@"; do
+  data=$(<$i)
+  {
+    echo "$mapping"
+    echo "$data"
+  } > "$i"
+done
