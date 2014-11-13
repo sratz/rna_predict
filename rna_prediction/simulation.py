@@ -1200,6 +1200,48 @@ class RNAPrediction(object):
                 comparisons.append("%.2f" % (min_rmsd * 10))
             printComparisonLine(cst_name, comparisons)
 
+
+    # retrieve a list for models by kind:
+    # "model": internal numbering / order in which they were extracted from rosetta data
+    # "top": number by score
+    # "cluster": model representing the nth cluster
+    def getModels(self, constraints, numbers, kind="model"):
+        cst_name, cst_file = self._parseCstNameAndFilename(constraints)
+
+        dir_output = "predictions/%s/output" % (cst_name)
+        dir_tmp = "predictions/%s/temp" % (cst_name)
+
+        with open("predictions/%s/output/evaldata.dat" % (cst_name), "r") as f:
+            evalData = pickle.load(f)
+
+        # initialize list
+        models_sorted = None
+
+        results = []
+
+        for number in numbers:
+            # decide which model we want
+            if kind == "cluster":
+                model = evalData["clusters"][number]["primary_model"]
+            elif kind == "model":
+                model = number
+            elif kind == "top":
+                # do we need to create a sorted list?
+                if models_sorted is None:
+                    models_sorted = sorted(evalData["models"].items(), key=lambda x: x[1]["score"])
+                model = models_sorted[number - 1][0]
+
+            m = evalData["models"][model]
+
+            # add the model number and pdb paths to the model dict
+            m["model"] = model
+            m["pdbfile"] = "%s/%09d.pdb" % (dir_tmp, model)
+            m["pdbfile_p"] = "%s/%09d_p.pdb" % (dir_tmp, model)
+            results.append(m)
+
+        return results
+
+
     # create a reasonable output filename from
     # output format uses placeholders for input name, number of predictions, and function
     def _createConstraintsOutputFilename(self, inputFileName, outputFileName, cstFunction, numberDcaPredictions=None, outputFormat="%n_%f"):
