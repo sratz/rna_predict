@@ -973,6 +973,7 @@ class RNAPrediction(object):
         dir_assembly = "predictions/%s/assembly" % (cst_name)
         dir_output = "predictions/%s/output" % (cst_name)
         dir_tmp = "predictions/%s/temp" % (cst_name)
+        file_evaldata = "%s/evaldata.dat" % (dir_output)
 
         if not os.path.isdir("predictions/%s" % (cst_name)):
             raise SimulationException("No prediction directory for constraint '%s' found! Maybe you should assemble first?" % (cst_name))
@@ -1040,7 +1041,7 @@ class RNAPrediction(object):
                 evalData["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
 
         # save evaluation data to file
-        with open("%s/evaldata.dat" % (dir_output), "w") as f:
+        with open(file_evaldata, "w") as f:
             pickle.dump(evalData, f)
 
 
@@ -1056,17 +1057,17 @@ class RNAPrediction(object):
         dir_assembly = "predictions/%s/assembly" % (cst_name)
         dir_output = "predictions/%s/output" % (cst_name)
         dir_tmp = "predictions/%s/temp" % (cst_name)
+        file_evaldata = "%s/evaldata.dat" % (dir_output)
 
         # load evaluation data and check if extraction step was run before
-        evalDataFilename = "%s/evaldata.dat" % (dir_output)
         try:
-            with open(evalDataFilename, "r") as f:
+            with open(file_evaldata, "r") as f:
                 evalData = pickle.load(f)
             evalData["models"][1]["score"]
         except KeyError:
-            raise SimulationException("Broken data file %s. Try running --extract again" % (evalDataFilename))
+            raise SimulationException("Broken data file %s. Try running --extract again" % (file_evaldata))
         except:
-            raise SimulationException("Data file %s for constraint not found. Did you forget to run --extract?" % (evalDataFilename))
+            raise SimulationException("Data file %s for constraint not found. Did you forget to run --extract?" % (file_evaldata))
 
         if not os.path.isdir(dir_tmp) or not os.path.isfile("%s/%09d_p.pdb" % (dir_tmp, len(evalData["models"]))):
             raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))
@@ -1160,7 +1161,7 @@ class RNAPrediction(object):
                 break
 
         # save evaluation data
-        with open(evalDataFilename, "w") as f:
+        with open(file_evaldata, "w") as f:
             pickle.dump(evalData, f)
 
 
