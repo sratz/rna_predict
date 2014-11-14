@@ -915,7 +915,6 @@ class RNAPrediction(object):
                    "-cycles", "%d" % (cycles),
                    "-nstruct", "%d" % (nstruct),
                    "-params_file", "preparation/sequence.params",
-                   "-cst_file", assembly_cst,
                    "-close_loops",
                    "-in:file:silent"]
 
@@ -924,6 +923,9 @@ class RNAPrediction(object):
 
         for i in range(len(self.config["motifs"])):
             command += ["%s/motif%d.out" % (dir_motifs, i+1)]
+
+        if cst_file is not None:
+            command += ["-cst_file", assembly_cst]
 
         chunk_res = []
         for n in range( len(self.config["stems"])  ):
