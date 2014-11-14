@@ -216,3 +216,45 @@ if __name__ == '__main__':
         plt.show()
 
 
+    # plot native rmsd over rosetta score
+    # usage: rna_tools rmsdscore <cst> <max_models> [output_image]
+    if sys.argv[1] == "rmsdscore":
+        sim = RNAPrediction(SysConfig(), ".")
+
+        cst = sys.argv[2]
+        number = int(sys.argv[3])
+        save = sys.argv[4] if len(sys.argv) >= 5 else None
+
+        models = sim.getModels(cst, range(1, number), "top")
+
+        # TODO: this only works for max 10 clusters so far
+        colors = ['w', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF', '#ff6600', '#006000', '#600060', '#F7C2CA']
+
+        models_c = []
+        plots = []
+        descs = []
+
+        plt.figure(figsize=(14,8))
+
+        # cluster0
+        models_c.append([m for m in models if "cluster" not in m])
+        descs.append("no cluster")
+
+        # cluster1-10
+        for i in range(1,11):
+            models_c.append([m for m in models if "cluster" in m and m["cluster"] == i])
+            descs.append("cluster %d" % i)
+
+
+        # create plots
+        for i in range(0,11):
+            plots.append(plt.scatter([x["score"] for x in models_c[i]], [x["native_rmsd"] for x in models_c[i]], s=50, c=colors[i]))
+
+        plt.title(sim.config["name"])
+        plt.xlabel("rosetta score")
+        plt.ylabel("native rmsd / nm")
+        plt.legend(plots, descs, loc="upper right", prop={'size':12})
+        if save:
+            print "saving to %s" % save
+            plt.savefig(save, bbox_inches="tight")
+        plt.show()
