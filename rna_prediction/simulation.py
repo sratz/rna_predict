@@ -978,6 +978,10 @@ class RNAPrediction(object):
         if not os.path.isdir("predictions/%s" % (cst_name)):
             raise SimulationException("No prediction directory for constraint '%s' found! Maybe you should assemble first?" % (cst_name))
 
+        files_assembly = glob.glob("%s/assembly_*.out" % (dir_assembly))
+        if len(files_assembly) == 0:
+            raise SimulationException("No assembly files for constraint '%s' found! Maybe you should assemble first?" % (cst_name))
+
         # cleanup
         deleteGlob("%s/assembly_p.pdb" % (dir_assembly))
         deleteGlob(dir_output)
@@ -992,7 +996,7 @@ class RNAPrediction(object):
         model = 0
 
         # loop over all out files matching the constraint
-        for f in sorted(glob.glob("%s/assembly_*.out" % (dir_assembly)), key=natural_sort_key):
+        for f in sorted(files_assembly, key=natural_sort_key):
             print "  processing rosetta silent file: %s..." % (f)
 
             description = splitext(basename(f))[0]
