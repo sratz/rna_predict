@@ -882,6 +882,7 @@ class RNAPrediction(object):
         checkFileExistence("%s/motif1.out" % (dir_motifs))
         checkFileExistence("preparation/cutpoints.cst")
 
+        makeDirectory(dir_assembly)
 
         # If an assembly was run before, perform sanity check to see if the motifs used last time match the ones that are going to be used now.
         file_assembly_motif_override = "%s/MOTIF_OVERRIDE" % (dir_assembly)
@@ -903,8 +904,6 @@ class RNAPrediction(object):
         if motifsOverride is not None:
             with open(file_assembly_motif_override, "w") as f:
                 f.write(dir_motifs)
-
-        makeDirectory(dir_assembly)
 
         commands = list()
 
