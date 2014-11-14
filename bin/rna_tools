@@ -99,31 +99,41 @@ if __name__ == '__main__':
         else:
             dca_mode = False
 
-        sim = RNAPrediction(SysConfig(), ".")
-        pdb = pdbtools.parsePdb("foo", sys.argv[2])
-        chain = pdb[0].child_list[0]
-
-        if dca_mode:
-            bins = np.linspace(0, 60, 60)
-        else:
-            bins = np.linspace(0, 60, 180)
-
+        comparison_pdb = sys.argv[2]
         sources = sys.argv[3:]
 
+        sim = RNAPrediction(SysConfig(), ".")
+        pdb = pdbtools.parsePdb("foo", comparison_pdb)
+        chain = pdb[0].child_list[0]
+
+        print "Comparison PDB: %s" % (comparison_pdb)
+
+        if dca_mode:
+            print "Mode: residue-residue"
+            bins = np.linspace(0, 60, 60)
+        else:
+            print "Mode: atom-atom"
+            bins = np.linspace(0, 60, 180)
+
         for arg in sources:
+            print "Processing: %s" % (arg)
             if arg.startswith("filter:"):
                 title = arg
                 _, dca_file, filtertext = arg.split(":", 2)
+                print "  Applying filters: %s" % (filtertext)
                 dca = dcatools.parseDcaData(dca_file)
                 dcaFilterChain = dcatools.parseFilterLine(filtertext, sim)
                 dcatools.filterDcaData(dcaData=dca, dcaFilterChain=dcaFilterChain, quiet=True)
 
                 if not dca_mode:
+                    print "  Mapping to atom-atom."
                     distanceMap = dcatools.getContactDistanceMap()
                     distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
                     cst_info = dcatools.buildCstInfoFromDcaContacts(dca, sequence=sim.config["sequence"], distanceMapMean=distanceMapMean, cstFunction="FADE -100 26 20 -2 2", numberDcaPredictions=100, quiet=True)
             else:
                 title = splitext(basename(arg))[0]
+                print "  Reading file directly."
+
 
                 if dca_mode:
                     dca = dcatools.parseDcaData(arg)
@@ -142,23 +152,20 @@ if __name__ == '__main__':
                     average_heavy, minimum_heavy, minimum_pair = dcatools.getContactInformationInPdbChain(d, chain)
                     dists.append(minimum_heavy)
             else:
-                average = 0
                 for cst in cst_info:
                     atom1, res1, atom2, res2, fuction = cst
                     try:
                         dist = np.linalg.norm(chain[res1][atom1].coord - chain[res2][atom2].coord)
                         dists.append(dist)
-                        average += dist
                         #print atom1, res1, atom2, res2, "   distance:", dist
                     except:
                         print atom1, res1, atom2, res2, "   NOT FOUND"
 
-                average = average / len(cst_info)
-                print "average distance:", average
+            print "  Average distance:", np.average(dists)
 
             plt.hist(dists, bins, alpha=0.6, label=title)
         plt.legend()
-        plt.title("Constraints Quality " + os.path.basename(os.getcwd()))
+        plt.title("%s Constraints Quality %s" % ("Residue-Residue" if dca_mode else "Atom-Atom", os.path.basename(os.getcwd())))
         plt.xlabel(u"Native distance / Å")
         plt.ylabel("Number of contraints")
         plt.show()
