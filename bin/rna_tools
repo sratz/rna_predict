@@ -263,81 +263,96 @@ if __name__ == '__main__':
 
     # align pdb files and plot distance for each atom/residue in the sequence
     if sys.argv[1] == "seqdist":
-        pdb1 = sys.argv[2]
-        pdb2 = sys.argv[3]
+        pdb_ref = sys.argv[2]
 
-        pdb1 = pdbtools.parsePdb("foo", pdb1)
-        chain1 = pdb1[0].child_list[0]
-        pdb2 = pdbtools.parsePdb("foo", pdb2)
-        chain2 = pdb2[0].child_list[0]
+        pdbs_sample = sys.argv[3:]
 
+        pdb_ref = pdbtools.parsePdb("foo", pdb_ref)
+        chain_ref = pdb_ref[0].child_list[0]
+
+        pdbs_sample = [pdbtools.parsePdb(i, i) for i in pdbs_sample]
+        chains_sample = [i[0].child_list[0] for i in pdbs_sample]
 
         sim = RNAPrediction(SysConfig(), ".")
+        print sim.config["sequence"]
+        print sim.config["secstruc"]
 
-
-        ref_atoms = []
-        ref_res = []
-        sample_atoms = []
-        sample_res = []
-
-        for res1 in chain1:
-            if res1.id not in chain2:
-                print "skipping %s" % res1
-                continue
-
-            res2 = chain2[res1.id]
-
-            ref_res.append(res1)
-            sample_res.append(res2)
-
-            for atom1 in res1:
-                if atom1.id not in res2:
-                    print "  skipping %s" % atom1
-                    continue
-
-                atom2 = res2[atom1.id]
-
-                ref_atoms.append(atom1)
-                sample_atoms.append(atom2)
-
-
-        super_imposer = Bio.PDB.Superimposer()
-        super_imposer.set_atoms(ref_atoms, sample_atoms)
-        super_imposer.apply(sample_atoms)
-
-        dists_atom = []
-        for atom1, atom2 in itertools.izip(ref_atoms, sample_atoms):
-            dist = np.linalg.norm(atom1.coord - atom2.coord)
-            dists_atom.append(dist)
-
-
-        print super_imposer.rms
-
-
-        dists_res = []
-        for res1, res2 in itertools.izip(ref_res, sample_res):
-            dist = np.linalg.norm(pdbtools.getCenterOfRes(res1) - pdbtools.getCenterOfRes(res2))
-            dists_res.append(dist)
-
-
-
+        plt.figure(figsize=(14,8))
         ax = plt.gca()
 
-        x_values = np.arange(1, len(dists_res) + 1)
-        x_labels = ["%d\n%s" % (i + 1, x) for i, x in enumerate(sim.config["sequence"])]
+        plt.title("Residue Distances %s" % (sim.config["name"]))
+        plt.xlabel("Residue")
+        plt.ylabel(u"Distance to Native Structure in / Å")
 
-        y_min = 0
-        y_max = max(dists_res) * 1.025
+        x_values = np.arange(1, len(sim.config["sequence"]) + 1)
+        x_labels = ["%s\n%s" % ("\n".join(list("%.2d" % (i + 1))), x) for i, x in enumerate(sim.config["sequence"])]
         x_min = 0.5
         x_max = len(x_values) + 0.5
         plt.xlim([x_min, x_max])
-        plt.ylim([y_min, y_max])
-
-
-        #plt.plot(dists_atom)
         plt.xticks(x_values, x_labels)
-        plt.plot(x_values, dists_res, "-o")
-        plt.plot((x_min, x_max), (super_imposer.rms, super_imposer.rms), color=ax.lines[-1].get_color())
+
+        y_min = 0
+        y_max = 0 # y limits will be set later when we know the final size
+
+
+        for chain_sample in chains_sample:
+
+            ref_atoms = []
+            ref_res = []
+            sample_atoms = []
+            sample_res = []
+
+            for res1 in chain_ref:
+                if res1.id not in chain_sample:
+                    print "skipping %s" % res1
+                    continue
+
+                res2 = chain_sample[res1.id]
+
+                ref_res.append(res1)
+                sample_res.append(res2)
+
+                for atom1 in res1:
+                    if atom1.id not in res2:
+                        print "  skipping %s" % atom1
+                        continue
+
+                    atom2 = res2[atom1.id]
+
+                    ref_atoms.append(atom1)
+                    sample_atoms.append(atom2)
+
+
+            super_imposer = Bio.PDB.Superimposer()
+            super_imposer.set_atoms(ref_atoms, sample_atoms)
+            super_imposer.apply(sample_atoms)
+
+            dists_atom = []
+            for atom1, atom2 in itertools.izip(ref_atoms, sample_atoms):
+                dist = np.linalg.norm(atom1.coord - atom2.coord)
+                dists_atom.append(dist)
+
+
+            print super_imposer.rms
+
+
+            dists_res = []
+            for res1, res2 in itertools.izip(ref_res, sample_res):
+                dist = np.linalg.norm(pdbtools.getCenterOfRes(res1) - pdbtools.getCenterOfRes(res2))
+                dists_res.append(dist)
+
+
+
+            #plt.plot(dists_atom)
+            print chain_sample.parent.parent.__dict__
+            plt.plot(x_values, dists_res, "-o", label=chain_sample.parent.parent.id)
+            plt.plot((x_min, x_max), (super_imposer.rms, super_imposer.rms), "--", color=ax.lines[-1].get_color())
+
+            y_max = max(y_max, max(dists_res))
+
+        y_max = y_max * 1.025
+
+        plt.ylim([y_min, y_max])
 
         hatch = ""
         last_x = ""
@@ -353,8 +368,11 @@ if __name__ == '__main__':
                 start_i = i
             last_x = x
 
+        plt.legend( prop={'size':12})
+
+        save = "foo.png"
+        print "saving to %s" % save
+        plt.savefig(save, bbox_inches="tight")
         plt.show()
 
 
-        print sim.config["sequence"]
-        print sim.config["secstruc"]
