@@ -319,17 +319,39 @@ if __name__ == '__main__':
             dist = np.linalg.norm(pdbtools.getCenterOfRes(res1) - pdbtools.getCenterOfRes(res2))
             dists_res.append(dist)
 
+
+
+        ax = plt.gca()
+
+        x_values = np.arange(1, len(dists_res) + 1)
+        x_labels = ["%d\n%s" % (i + 1, x) for i, x in enumerate(sim.config["sequence"])]
+
+        y_min = 0
+        y_max = max(dists_res) * 1.025
+        x_min = 0.5
+        x_max = len(x_values) + 0.5
+        plt.xlim([x_min, x_max])
+        plt.ylim([y_min, y_max])
+
+
         #plt.plot(dists_atom)
-        plt.xticks(range(0,len(dists_res)))
-        plt.plot(dists_res)
+        plt.xticks(x_values, x_labels)
+        plt.plot(x_values, dists_res, "-o")
+        plt.plot((x_min, x_max), (super_imposer.rms, super_imposer.rms), color=ax.lines[-1].get_color())
 
-
+        hatch = ""
+        last_x = ""
+        start_i = 0
         for i, x in enumerate(sim.config["secstruc"]):
-            if x == ".":
-                color = "red"
-            else:
-                color = "blue"
-            plt.plot((i, i + 1), (super_imposer.rms, super_imposer.rms), color=color, lw="5")
+            if x != last_x and last_x != "" :
+                if last_x != ".":
+                    if last_x == "(":
+                        hatch = "//"
+                    elif last_x == ")":
+                        hatch = "\\\\"
+                    plt.fill_between([start_i + 0.5, i + 0.5], y_min, y_max, hatch=hatch, color="black", alpha=0.15)
+                start_i = i
+            last_x = x
 
         plt.show()
 
