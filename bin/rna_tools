@@ -7,6 +7,7 @@ Created on Sep 22, 2014
 @author: sra
 '''
 
+import Bio.PDB
 import itertools
 import pprint
 import sys
@@ -259,3 +260,79 @@ if __name__ == '__main__':
             print "saving to %s" % save
             plt.savefig(save, bbox_inches="tight")
         plt.show()
+
+    # align pdb files and plot distance for each atom/residue in the sequence
+    if sys.argv[1] == "seqdist":
+        pdb1 = sys.argv[2]
+        pdb2 = sys.argv[3]
+
+        pdb1 = pdbtools.parsePdb("foo", pdb1)
+        chain1 = pdb1[0].child_list[0]
+        pdb2 = pdbtools.parsePdb("foo", pdb2)
+        chain2 = pdb2[0].child_list[0]
+
+
+        sim = RNAPrediction(SysConfig(), ".")
+
+
+        ref_atoms = []
+        ref_res = []
+        sample_atoms = []
+        sample_res = []
+
+        for res1 in chain1:
+            if res1.id not in chain2:
+                print "skipping %s" % res1
+                continue
+
+            res2 = chain2[res1.id]
+
+            ref_res.append(res1)
+            sample_res.append(res2)
+
+            for atom1 in res1:
+                if atom1.id not in res2:
+                    print "  skipping %s" % atom1
+                    continue
+
+                atom2 = res2[atom1.id]
+
+                ref_atoms.append(atom1)
+                sample_atoms.append(atom2)
+
+
+        super_imposer = Bio.PDB.Superimposer()
+        super_imposer.set_atoms(ref_atoms, sample_atoms)
+        super_imposer.apply(sample_atoms)
+
+        dists_atom = []
+        for atom1, atom2 in itertools.izip(ref_atoms, sample_atoms):
+            dist = np.linalg.norm(atom1.coord - atom2.coord)
+            dists_atom.append(dist)
+
+
+        print super_imposer.rms
+
+
+        dists_res = []
+        for res1, res2 in itertools.izip(ref_res, sample_res):
+            dist = np.linalg.norm(pdbtools.getCenterOfRes(res1) - pdbtools.getCenterOfRes(res2))
+            dists_res.append(dist)
+
+        #plt.plot(dists_atom)
+        plt.xticks(range(0,len(dists_res)))
+        plt.plot(dists_res)
+
+
+        for i, x in enumerate(sim.config["secstruc"]):
+            if x == ".":
+                color = "red"
+            else:
+                color = "blue"
+            plt.plot((i, i + 1), (super_imposer.rms, super_imposer.rms), color=color, lw="5")
+
+        plt.show()
+
+
+        print sim.config["sequence"]
+        print sim.config["secstruc"]
