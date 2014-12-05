@@ -331,6 +331,7 @@ if __name__ == '__main__':
             for atom1, atom2 in itertools.izip(ref_atoms, sample_atoms):
                 dist = np.linalg.norm(atom1.coord - atom2.coord)
                 dists_atom.append(dist)
+                atom2.set_bfactor(dist)
 
 
             print super_imposer.rms
