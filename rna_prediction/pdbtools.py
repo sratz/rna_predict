@@ -4,6 +4,7 @@ Created on Oct 13, 2014
 @author: sebastian
 '''
 
+import itertools
 import numpy as np
 import os
 import warnings
@@ -98,3 +99,62 @@ def getCenterOfRes(res):
     for atom in filterAtoms(res, heavyOnly=True):
         coords.append(atom.coord)
     return np.mean(coords, axis=0)
+
+
+def alignStructure(refPdb, movingPdb, assignBFactors=True):
+    '''Aligns movingPdb to refPdb. Returns (resDists, atomDists, rmsd, transformationMatrix)'''
+    chain_ref = refPdb[0].child_list[0]
+    chain_sample = movingPdb[0].child_list[0]
+
+    ref_atoms = []
+    ref_res = []
+    sample_atoms = []
+    sample_res = []
+
+    for res1 in chain_ref:
+        if res1.id not in chain_sample:
+            print "skipping %s" % res1
+            continue
+
+        res2 = chain_sample[res1.id]
+
+        ref_res.append(res1)
+        sample_res.append(res2)
+
+        for atom1 in res1:
+            if atom1.id not in res2:
+                print "  skipping %s" % atom1
+                continue
+
+            atom2 = res2[atom1.id]
+
+            ref_atoms.append(atom1)
+            sample_atoms.append(atom2)
+
+
+    super_imposer = Bio.PDB.Superimposer()
+    super_imposer.set_atoms(ref_atoms, sample_atoms)
+    super_imposer.apply(movingPdb)
+
+    # in case we want to assign b-factors to the moving structure, set them all to 0 before.
+    if assignBFactors:
+        for res in chain_sample:
+            for atom in res:
+                atom.set_bfactor(0)
+
+    dists_atom = []
+    for atom1, atom2 in itertools.izip(ref_atoms, sample_atoms):
+        dist = np.linalg.norm(atom1.coord - atom2.coord)
+        dists_atom.append(dist)
+        if assignBFactors:
+            atom2.set_bfactor(dist)
+
+    print super_imposer.rotran
+    print super_imposer.rms
+
+    dists_res = []
+    for res1, res2 in itertools.izip(ref_res, sample_res):
+        dist = np.linalg.norm(getCenterOfRes(res1) - getCenterOfRes(res2))
+        dists_res.append(dist)
+
+    return (dists_res, dists_atom, super_imposer.rms, super_imposer.rotran)

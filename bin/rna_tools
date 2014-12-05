@@ -263,117 +263,70 @@ if __name__ == '__main__':
 
     # align pdb files and plot distance for each atom/residue in the sequence
     if sys.argv[1] == "seqdist":
+        saveplot = False
+        plot = True
+
+        if sys.argv[2] == "--saveplot":
+            saveplot = True
+            sys.argv.pop(2)
+
         pdb_ref_filename = sys.argv[2]
-
         pdbs_sample_filenames = sys.argv[3:]
-
         pdb_ref = pdbtools.parsePdb("foo", pdb_ref_filename)
-        chain_ref = pdb_ref[0].child_list[0]
-
         pdbs_sample = [pdbtools.parsePdb(i, i) for i in pdbs_sample_filenames]
 
         sim = RNAPrediction(SysConfig(), ".")
         print sim.config["sequence"]
         print sim.config["secstruc"]
 
-        plt.figure(figsize=(14,8))
-        ax = plt.gca()
+        if plot:
+            plt.figure(figsize=(14,8))
+            ax = plt.gca()
 
-        plt.title("Residue Distances %s" % (sim.config["name"]))
-        plt.xlabel("Residue")
-        plt.ylabel(u"Distance to Native Structure in / Å")
+            plt.title("Residue Distances %s" % (sim.config["name"]))
+            plt.xlabel("Residue")
+            plt.ylabel(u"Distance to Native Structure in / Å")
 
-        x_values = np.arange(1, len(sim.config["sequence"]) + 1)
-        x_labels = ["%s\n%s" % ("\n".join(list("%.2d" % (i + 1))), x) for i, x in enumerate(sim.config["sequence"])]
-        x_min = 0.5
-        x_max = len(x_values) + 0.5
-        plt.xlim([x_min, x_max])
-        plt.xticks(x_values, x_labels)
+            x_values = np.arange(1, len(sim.config["sequence"]) + 1)
+            x_labels = ["%s\n%s" % ("\n".join(list("%.2d" % (i + 1))), x) for i, x in enumerate(sim.config["sequence"])]
+            x_min = 0.5
+            x_max = len(x_values) + 0.5
+            plt.xlim([x_min, x_max])
+            plt.xticks(x_values, x_labels)
 
-        y_min = 0
-        y_max = 0 # y limits will be set later when we know the final size
+            y_min = 0
+            y_max = 0 # y limits will be set later when we know the final size
 
+            for pdb_sample in pdbs_sample:
 
-        for pdb_sample in pdbs_sample:
-            chain_sample = pdb_sample[0].child_list[0]
+                dists_res, dists_atom, rmsd, rotran = pdbtools.alignStructure(pdb_ref, pdb_sample, assignBFactors=True)
+                plt.plot(x_values, dists_res, "-o", label=pdb_sample.id)
+                plt.plot((x_min, x_max), (rmsd, rmsd), "--", color=ax.lines[-1].get_color())
+                y_max = max(y_max, max(dists_res))
 
-            ref_atoms = []
-            ref_res = []
-            sample_atoms = []
-            sample_res = []
+            y_max = y_max * 1.025
 
-            for res1 in chain_ref:
-                if res1.id not in chain_sample:
-                    print "skipping %s" % res1
-                    continue
+            plt.ylim([y_min, y_max])
 
-                res2 = chain_sample[res1.id]
+            hatch = ""
+            last_x = ""
+            start_i = 0
+            for i, x in enumerate(sim.config["secstruc"]):
+                if x != last_x and last_x != "" :
+                    if last_x != ".":
+                        if last_x == "(":
+                            hatch = "//"
+                        elif last_x == ")":
+                            hatch = "\\\\"
+                        plt.fill_between([start_i + 0.5, i + 0.5], y_min, y_max, hatch=hatch, color="black", alpha=0.15)
+                    start_i = i
+                last_x = x
 
-                ref_res.append(res1)
-                sample_res.append(res2)
+            plt.legend(prop={'size':12})
 
-                for atom1 in res1:
-                    if atom1.id not in res2:
-                        print "  skipping %s" % atom1
-                        continue
+            if saveplot:
+                save = "foo.png"
+                print "saving to %s" % save
+                plt.savefig(save, bbox_inches="tight")
 
-                    atom2 = res2[atom1.id]
-
-                    ref_atoms.append(atom1)
-                    sample_atoms.append(atom2)
-
-
-            super_imposer = Bio.PDB.Superimposer()
-            super_imposer.set_atoms(ref_atoms, sample_atoms)
-            super_imposer.apply(pdb_sample)
-
-            dists_atom = []
-            for atom1, atom2 in itertools.izip(ref_atoms, sample_atoms):
-                dist = np.linalg.norm(atom1.coord - atom2.coord)
-                dists_atom.append(dist)
-                atom2.set_bfactor(dist)
-
-
-            print super_imposer.rms
-
-
-            dists_res = []
-            for res1, res2 in itertools.izip(ref_res, sample_res):
-                dist = np.linalg.norm(pdbtools.getCenterOfRes(res1) - pdbtools.getCenterOfRes(res2))
-                dists_res.append(dist)
-
-
-
-            #plt.plot(dists_atom)
-            print chain_sample.parent.parent.__dict__
-            plt.plot(x_values, dists_res, "-o", label=chain_sample.parent.parent.id)
-            plt.plot((x_min, x_max), (super_imposer.rms, super_imposer.rms), "--", color=ax.lines[-1].get_color())
-
-            y_max = max(y_max, max(dists_res))
-
-        y_max = y_max * 1.025
-
-        plt.ylim([y_min, y_max])
-
-        hatch = ""
-        last_x = ""
-        start_i = 0
-        for i, x in enumerate(sim.config["secstruc"]):
-            if x != last_x and last_x != "" :
-                if last_x != ".":
-                    if last_x == "(":
-                        hatch = "//"
-                    elif last_x == ")":
-                        hatch = "\\\\"
-                    plt.fill_between([start_i + 0.5, i + 0.5], y_min, y_max, hatch=hatch, color="black", alpha=0.15)
-                start_i = i
-            last_x = x
-
-        plt.legend( prop={'size':12})
-
-        save = "foo.png"
-        print "saving to %s" % save
-        plt.savefig(save, bbox_inches="tight")
-        plt.show()
-
-
+            plt.show()
