@@ -263,15 +263,14 @@ if __name__ == '__main__':
 
     # align pdb files and plot distance for each atom/residue in the sequence
     if sys.argv[1] == "seqdist":
-        pdb_ref = sys.argv[2]
+        pdb_ref_filename = sys.argv[2]
 
-        pdbs_sample = sys.argv[3:]
+        pdbs_sample_filenames = sys.argv[3:]
 
-        pdb_ref = pdbtools.parsePdb("foo", pdb_ref)
+        pdb_ref = pdbtools.parsePdb("foo", pdb_ref_filename)
         chain_ref = pdb_ref[0].child_list[0]
 
-        pdbs_sample = [pdbtools.parsePdb(i, i) for i in pdbs_sample]
-        chains_sample = [i[0].child_list[0] for i in pdbs_sample]
+        pdbs_sample = [pdbtools.parsePdb(i, i) for i in pdbs_sample_filenames]
 
         sim = RNAPrediction(SysConfig(), ".")
         print sim.config["sequence"]
@@ -295,7 +294,8 @@ if __name__ == '__main__':
         y_max = 0 # y limits will be set later when we know the final size
 
 
-        for chain_sample in chains_sample:
+        for pdb_sample in pdbs_sample:
+            chain_sample = pdb_sample[0].child_list[0]
 
             ref_atoms = []
             ref_res = []
@@ -325,7 +325,7 @@ if __name__ == '__main__':
 
             super_imposer = Bio.PDB.Superimposer()
             super_imposer.set_atoms(ref_atoms, sample_atoms)
-            super_imposer.apply(sample_atoms)
+            super_imposer.apply(pdb_sample)
 
             dists_atom = []
             for atom1, atom2 in itertools.izip(ref_atoms, sample_atoms):
