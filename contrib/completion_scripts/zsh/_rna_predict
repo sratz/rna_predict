@@ -1,5 +1,14 @@
 #compdef rna_predict
 
+local context state state_descr line
+typeset -A opt_args
+
+local filters contexts suf ostate
+contexts=()
+filters=(threshold none)
+suf=()
+
+
 typeset -a prepare_args
 typeset -a motifs_args
 typeset -a assemble_args
@@ -58,7 +67,7 @@ if (( words[(I)--make-constraints] )); then
   make_constraints_args=(
     '--dca-file=[dca file to use as input (default: dca/dca.txt)]:dca file:_files'
     '--dca-count=[maximum number o dca predictions to use (default: 100)]: :_guard "[0-9]#" "limit"'
-    '--filter=[run dca contacts though (a) filter(s). For syntax information refer to the documentation.]:filter: '
+    '--filter=[run dca contacts though (a) filter(s). For syntax information refer to the documentation.]:filter:->filter'
   )
 fi
 
@@ -95,3 +104,42 @@ _arguments -s -w \
   $make_constraints_args \
   $makeedit_constraints_args \
   '*:directory:_path_files -/'
+
+while (( $#state )); do
+  case "$state[1]" in
+    (filter)
+      compset -P '*,'
+      if [[ ! -prefix *: ]]; then
+        _wanted values expl 'filter' compadd -qS: -a filters
+      else
+        if compset -P threshold:; then
+          contexts=(threshold cst model_kind model_number)
+        elif compset -P none:; then
+          contexts=()
+        fi
+      fi
+      if (( $#contexts )); then
+        for ostate in $contexts; do
+	      compset -P '[^:]#:' || break
+	    done
+	    suf=()
+	    compset -S ':*' || suf=( -qS: )
+	    [[ $ostate = $contexts[-1] ]] && suf=()
+	    state+=( "$ostate" )
+      fi
+      ;;
+    (threshold)
+      _guard '[0-9.]#' 'threshold'
+      ;;
+    (cst)
+      _wanted values expl 'constraints' _files $suf -W '(constraints)' -g '*.cst'
+      ;;
+    (model_kind)
+      _wanted values expl 'model kind' compadd $suf cluster model top
+      ;;
+    (model_number)
+      _guard '[0-9]#' 'model number'
+      ;;
+  esac
+  shift state
+ done
