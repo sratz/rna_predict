@@ -1271,7 +1271,7 @@ class RNAPrediction(object):
 
 
     # TODO: use parseFilterLine function and a single --filter argument instead of --filter-pdb and --filter-threshold
-    def makeConstraints(self, pdbMappingOverride=None, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterPdb=None, filterThreshold=0):
+    def makeConstraints(self, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterPdb=None, filterThreshold=0):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
         outputFileName = self._createConstraintsOutputFilename(dcaPredictionFileName, outputFileName, cstFunction, numberDcaPredictions, "%d%n_%f")
@@ -1282,15 +1282,9 @@ class RNAPrediction(object):
         print "    function: %s" % (cstFunction)
         print "    filter: pdb: %s, threshold: %f" % (filterPdb, filterThreshold)
         checkFileExistence(dcaPredictionFileName)
-        if pdbMappingOverride is not None:
-            print "    pdbMapping (override): %s" % (pdbMappingOverride)
-        else:
-            pdbMappingOverride = dcatools.readPdbMappingFromFile(dcaPredictionFileName)
-            print "    pdbMapping (file): %s" % (pdbMappingOverride)
 
         # load dca contacts from file
-        print "Parsing dca file..."
-        dca = dcatools.parseDcaData(dcaPredictionFileName, pdbMappingOverride)
+        dca = dcatools.parseDcaData(dcaPredictionFileName)
 
         # prepare filter for dca data
         if filterPdb:

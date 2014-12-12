@@ -171,7 +171,7 @@ def getMeanDistanceMapMean(distanceMap, meanCutoff=None, stdCutoff=None):
 
 def createPdbMappingFromString(mapping):
     # parse a range in the form of 1-7,80,100-120,8-9
-    if mapping == "":
+    if mapping is None or mapping == "":
         return None
     try:
         pdbMapping = {}
@@ -210,17 +210,20 @@ def readPdbMappingFromFile(dcaPredictionFileName):
                 continue
             # we only allow comments on top, so no need to check the rest of the lines:
             break
-    # return empty string here, to distinguish between None
-    return ""
+    return None
 
 
-# TODO: do we really need all that mapping overriding stuff?
-# Does it make any sense to actually do it?
-def parseDcaData(dcaPredictionFileName, pdbMappingOverride=None):
-    # if pdbMappingOverride is None, read it from file
-    if pdbMappingOverride == None:
-        pdbMappingOverride = readPdbMappingFromFile(dcaPredictionFileName)
-    pdbMapping = createPdbMappingFromString(pdbMappingOverride)
+# reads a dca file and adjusts the sequence numbers to match the alignment of the pdb file
+def parseDcaData(dcaPredictionFileName):
+    print "Parsing dca file %s..." % (dcaPredictionFileName)
+    # read pdb mapping from file
+    pdbMappingText = readPdbMappingFromFile(dcaPredictionFileName)
+    pdbMapping = createPdbMappingFromString(pdbMappingText)
+    print "pdb-mapping: %s" % (pdbMappingText)
+
+    if pdbMappingText is None:
+        print "Warning: no pdb-mapping found in header of dca file %s, assuming '1-N'" %(dcaPredictionFileName)
+
     dca = []
     with open(dcaPredictionFileName) as f:
         for line in f:
