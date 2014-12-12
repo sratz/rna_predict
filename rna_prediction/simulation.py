@@ -1270,8 +1270,7 @@ class RNAPrediction(object):
         return outputFileName
 
 
-    # TODO: use parseFilterLine function and a single --filter argument instead of --filter-pdb and --filter-threshold
-    def makeConstraints(self, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterPdb=None, filterThreshold=0):
+    def makeConstraints(self, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterText=None):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
         outputFileName = self._createConstraintsOutputFilename(dcaPredictionFileName, outputFileName, cstFunction, numberDcaPredictions, "%d%n_%f")
@@ -1280,25 +1279,17 @@ class RNAPrediction(object):
         print "    outputFileName: %s" % (outputFileName)
         print "    numberDcaPredictions: %d" % (numberDcaPredictions)
         print "    function: %s" % (cstFunction)
-        print "    filter: pdb: %s, threshold: %f" % (filterPdb, filterThreshold)
+        print "    filter: %s" % (filterText) # TODO: make filters a class and add a __str__ representation
         checkFileExistence(dcaPredictionFileName)
 
         # load dca contacts from file
         dca = dcatools.parseDcaData(dcaPredictionFileName)
 
-        # prepare filter for dca data
-        if filterPdb:
-            filterPdbChain = pdbtools.parsePdb("", filterPdb)[0].child_list[0]
-            if filterThreshold > 0:
-                dcaFilter = dcatools.dcaFilterThresholdMinimumKeepBelow(filterThreshold, filterPdbChain)
-            else:
-                dcaFilter = dcatools.dcaFilterThresholdMinimumKeepAbove(abs(filterThreshold), filterPdbChain)
-        else:
-            dcaFilter = None
-
-        # run dca data through filter
-        print "Filtering dca data:"
-        dcatools.filterDcaData(dcaData=dca, dcaFilterChain=[dcaFilter])
+        # filter dca data
+        if filter is not None:
+            print "Filtering dca data:"
+            dcaFilterChain = dcatools.parseFilterLine(filterText, self)
+            dcatools.filterDcaData(dcaData=dca, dcaFilterChain=dcaFilterChain)
 
         # map dca contacts to atom-atom constraints
         print "Creating constraints:"
