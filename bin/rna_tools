@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os.path
 from os.path import basename, splitext
-import tempfile
 
 from rna_prediction import dcatools
 from rna_prediction import pdbtools
@@ -266,14 +265,9 @@ if __name__ == '__main__':
     if sys.argv[1] == "seqdist":
         saveplot = False
         plot = True
-        pymol = False
 
         if sys.argv[2] == "--saveplot":
             saveplot = True
-            sys.argv.pop(2)
-        elif sys.argv[2] == "--pymol":
-            plot = False
-            pymol = True
             sys.argv.pop(2)
 
         pdb_ref_filename = sys.argv[2]
@@ -336,29 +330,3 @@ if __name__ == '__main__':
                 plt.savefig(save, bbox_inches="tight")
 
             plt.show()
-
-        elif pymol:
-            import pymol
-            pymol.finish_launching()
-            pymol.cmd.load(pdb_ref_filename, "native")
-            pymol.cmd.color("white", "native")
-
-            for pdb_sample_filename, pdb_sample in itertools.izip(pdbs_sample_filenames, pdbs_sample):
-                name = splitext(basename(pdb_sample_filename))[0]
-                tmp_filename = tempfile.mktemp(suffix=".pdb")
-                dists_res, dists_atom, rmsd, rotran = pdbtools.alignStructure(pdb_ref, pdb_sample, assignBFactors=True)
-                io = Bio.PDB.PDBIO()
-                io.set_structure(pdb_sample)
-                io.save(tmp_filename)
-                pymol.cmd.load(tmp_filename, name)
-                os.remove(tmp_filename)
-#                 print rotran[0][0][0]
-#                 pymol.cmd.transform_selection(name,
-#                                               [rotran[0][0][0], rotran[0][1][0], rotran[0][2][0], rotran[1][0],
-#                                                rotran[0][1][0], rotran[0][1][1], rotran[0][2][1], rotran[1][1],
-#                                                rotran[0][2][0], rotran[0][2][1], rotran[0][2][2], rotran[1][2],
-#                                                0, 0, 0, 1],
-#                                               homogenous=1)
-                pymol.cmd.spectrum("b", "green_red", name, 0, 20)
-
-            pymol.cmd.show("cartoon")
