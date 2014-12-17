@@ -266,9 +266,10 @@ def getContactInformationInPdbChain(dcaContact, pdbChain):
 # maps dca residue contacts to atom-atom constraints
 # mode: mapping mode, can be:
 #       - allAtomWesthof
+#       - pOnly
 def buildCstInfoFromDcaContacts(dcaData, sequence, mappingMode, cstFunction, numberDcaPredictions, quiet=False):
     mappingMode = mappingMode.lower()
-    if mappingMode not in ["allatomwesthof"]:
+    if mappingMode not in ["allatomwesthof", "ponly"]:
         raise DcaException("buildCstInfo: Invalid mapping mode given: %s" % (mappingMode))
 
     if mappingMode == "allatomwesthof":
@@ -313,6 +314,14 @@ def buildCstInfoFromDcaContacts(dcaData, sequence, mappingMode, cstFunction, num
                         if not quiet:
                             print "[%s, %s] %s %s %s" % (d.res1, d.res2, contactKey, atomContactKey, distance)
                         cst_info.append([atom1, d.res1, atom2, d.res2, d.getRosettaFunction(cstFunction)])
+        elif mappingMode == "ponly":
+            # TODO: rosetta does not add P atoms for the first residue, so just skip those?
+            if d.res1 == 1 or d.res2 == 1:
+                continue
+            atomContactKey = "P-P"
+            if not quiet:
+                print "[%s, %s] %s %s" % (d.res1, d.res2, contactKey, atomContactKey)
+            cst_info.append(["P", d.res1, "P", d.res2, d.getRosettaFunction(cstFunction)])
     return cst_info
 
 
