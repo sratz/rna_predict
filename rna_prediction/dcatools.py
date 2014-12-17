@@ -264,7 +264,18 @@ def getContactInformationInPdbChain(dcaContact, pdbChain):
 
 
 # maps dca residue contacts to atom-atom constraints
-def buildCstInfoFromDcaContacts(dcaData, sequence, distanceMapMean, cstFunction, numberDcaPredictions, quiet=False):
+# mode: mapping mode, can be:
+#       - allAtomWesthof
+def buildCstInfoFromDcaContacts(dcaData, sequence, mappingMode, cstFunction, numberDcaPredictions, quiet=False):
+    mappingMode = mappingMode.lower()
+    if mappingMode not in ["allatomwesthof"]:
+        raise DcaException("buildCstInfo: Invalid mapping mode given: %s" % (mappingMode))
+
+    if mappingMode == "allatomwesthof":
+        # load contact map for atom-atom contacts
+        distanceMap = getContactDistanceMap()
+        distanceMapMean = getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
+
     atoms = getAtomsForResSequence(sequence)
 
     cst_info = []
@@ -293,14 +304,15 @@ def buildCstInfoFromDcaContacts(dcaData, sequence, distanceMapMean, cstFunction,
         res2 = atoms[d.res2 - 1]
         contactKey = res1[0] + res2[0]
 
-        for atom1 in res1[1]:
-            for atom2 in res2[1]:
-                atomContactKey = atom1 + '-' + atom2
-                if atomContactKey in distanceMapMean[contactKey]:
-                    distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
-                    if not quiet:
-                        print "[%s, %s] %s %s %s" % (d.res1, d.res2, contactKey, atomContactKey, distance)
-                    cst_info.append([atom1, d.res1, atom2, d.res2, d.getRosettaFunction(cstFunction)])
+        if mappingMode == "allatomwesthof":
+            for atom1 in res1[1]:
+                for atom2 in res2[1]:
+                    atomContactKey = atom1 + '-' + atom2
+                    if atomContactKey in distanceMapMean[contactKey]:
+                        distance = distanceMapMean[contactKey][atomContactKey][0] / 10.0
+                        if not quiet:
+                            print "[%s, %s] %s %s %s" % (d.res1, d.res2, contactKey, atomContactKey, distance)
+                        cst_info.append([atom1, d.res1, atom2, d.res2, d.getRosettaFunction(cstFunction)])
     return cst_info
 
 

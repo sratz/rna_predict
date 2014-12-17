@@ -106,6 +106,7 @@ USAGE
     group_makecst = parser.add_argument_group(title="options for --make-constraints")
     group_makecst.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
     group_makecst.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
+    group_makecst.add_argument("--mapping-mode", dest="mapping_mode", help="mapping mode to use for constraints creation [default: %(default)s", default="allAtomWesthof")
     group_makecst.add_argument("--filter", dest="filter", help="run dca contacts though (a) filter(s). For syntax information refer to the documentation. [default: %(default)s", default=None)
     group_editmakecst = parser.add_argument_group(title="options for --make-constraints, --edit-constraints")
     group_editmakecst.add_argument("--cst-function", dest="cst_function", help="rosetta function to use for the constraints [default: '%(default)s']", default="FADE -100 26 20 -2 2")
@@ -155,7 +156,7 @@ USAGE
             if args.prepare_cst:
                 p.prepareCst(constraints=args.cst)
             if args.make_constraints:
-                p.makeConstraints(dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function, filterText=args.filter)
+                p.makeConstraints(dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function, filterText=args.filter, mappingMode=args.mapping_mode)
             if args.edit_constraints:
                 p.editConstraints(constraints=args.cst, outputFileName=args.cst_out_file,cstFunction=args.cst_function)
             if args.create_helices:

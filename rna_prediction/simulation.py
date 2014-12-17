@@ -1250,6 +1250,7 @@ class RNAPrediction(object):
 
     # create a reasonable output filename from
     # output format uses placeholders for input name, number of predictions, and function
+    # TODO: include mappingMode?
     def _createConstraintsOutputFilename(self, inputFileName, outputFileName, cstFunction, numberDcaPredictions=None, outputFormat="%n_%f"):
         sourceBasename = splitext(basename(inputFileName))[0]
         cstFunctionUnderscore = cstFunction.replace(" ", "_")
@@ -1270,7 +1271,7 @@ class RNAPrediction(object):
         return outputFileName
 
 
-    def makeConstraints(self, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterText=None):
+    def makeConstraints(self, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterText=None, mappingMode="allAtomWesthof"):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.checkConfig()
         outputFileName = self._createConstraintsOutputFilename(dcaPredictionFileName, outputFileName, cstFunction, numberDcaPredictions, "%d%n_%f")
@@ -1278,6 +1279,7 @@ class RNAPrediction(object):
         print "    dcaPredictionFileName: %s" % (dcaPredictionFileName)
         print "    outputFileName: %s" % (outputFileName)
         print "    numberDcaPredictions: %d" % (numberDcaPredictions)
+        print "    mode: %s" % (mappingMode)
         print "    function: %s" % (cstFunction)
         print "    filter: %s" % (filterText) # TODO: make filters a class and add a __str__ representation
         checkFileExistence(dcaPredictionFileName)
@@ -1291,13 +1293,10 @@ class RNAPrediction(object):
             dcaFilterChain = dcatools.parseFilterLine(filterText, self)
             dcatools.filterDcaData(dcaData=dca, dcaFilterChain=dcaFilterChain)
 
-        # map dca contacts to atom-atom constraints
+        # create constraints
         print "Creating constraints:"
-        # load contact map for atom-atom contacts
-        distanceMap = dcatools.getContactDistanceMap()
-        distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
 
-        cst_info = dcatools.buildCstInfoFromDcaContacts(dca, sequence=self.config["sequence"], distanceMapMean=distanceMapMean, cstFunction=cstFunction, numberDcaPredictions=numberDcaPredictions)
+        cst_info = dcatools.buildCstInfoFromDcaContacts(dca, sequence=self.config["sequence"], mappingMode=mappingMode, cstFunction=cstFunction, numberDcaPredictions=numberDcaPredictions)
 
         # write to file
         with open(outputFileName, "w") as out:
