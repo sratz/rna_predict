@@ -1286,7 +1286,7 @@ class RNAPrediction(object):
         dca = dcatools.parseDcaData(dcaPredictionFileName)
 
         # filter dca data
-        if filter is not None:
+        if filterText is not None:
             print "Filtering dca data:"
             dcaFilterChain = dcatools.parseFilterLine(filterText, self)
             dcatools.filterDcaData(dcaData=dca, dcaFilterChain=dcaFilterChain)
