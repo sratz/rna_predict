@@ -18,6 +18,7 @@ import string
 import pickle
 from . import dcatools
 from . import pdbtools
+from utils import readFileLineByLine
 from os.path import splitext, basename, abspath
 
 
@@ -299,8 +300,11 @@ class RNAPrediction(object):
         print "Preparation:"
 
         # Read in files
-        lines = open( fasta_file ).readlines()
-        self.config["sequence"] = lines[1][:-1].lower()
+        for line in readFileLineByLine(fasta_file):
+            if line[0] == ">":
+                continue
+            self.config["sequence"] = line.lower()
+            break
         print self.config["sequence"]
         numres = len( self.config["sequence"] )
 
@@ -308,8 +312,7 @@ class RNAPrediction(object):
         self.config["data_info"] = []
         if data_file != None:
             self.config["backbone_burial_info"] = []
-            lines = open( data_file ).readlines()
-            for line in lines:
+            for line in readFileLineByLine(data_file):
                 if len( line ) > 6 and line[:6]=='EXPOSE':
                     cols = string.split( line )
                     for i in range( len(cols)/3 ):
@@ -325,9 +328,8 @@ class RNAPrediction(object):
         complement = {'a':['u'], 'u':['a','g'], 'c':['g'], 'g':['c','u']};
 
         # Parse out stems
-        lines = open( params_file ).readlines()
         cutpoints_original = []
-        for line in lines:
+        for line in readFileLineByLine(params_file):
             if line[:4] == 'STEM':
                 cols = string.split( line )
                 for i in range( len( cols )):
@@ -341,7 +343,7 @@ class RNAPrediction(object):
                         assert ( self.config["sequence"][res1] in complement[ self.config["sequence"][res2] ] )
             elif line.count( '(' ) > 0:         #maybe dot/bracket notation (((...)))
                 print line
-                self.config["secstruc"] = line[:-1]
+                self.config["secstruc"] = line
                 left_brackets = []
                 for i in range( len(line) ):
                     if line[i] == '(':  left_brackets.append( i )
@@ -356,7 +358,7 @@ class RNAPrediction(object):
                 assert( len (left_brackets) == 0 )
             else:
                 try:
-                    cols = string.split( line[:-1] )
+                    cols = string.split( line )
                     res1 = int( cols[ 0 ] ) - 1
                     res2 = int( cols[ 1 ] ) - 1
                     pair_map[ res1 ] = res2
