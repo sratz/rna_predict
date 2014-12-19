@@ -98,9 +98,7 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
 
 def parseCstFile(constraints_file):
     cst_info = []
-    with open(constraints_file) as c:
-        lines = c.readlines()
-    for line in lines:
+    for line in readFileLineByLine(constraints_file):
         if len(line) > 6 and line[0] != '[':
             cols = string.split(line)
             atom_name1 = cols[0]
@@ -1006,11 +1004,10 @@ class RNAPrediction(object):
             # read out file and store a dict of the scores and the full score line
             scores = dict()
             score_regex = re.compile("^SCORE:\s+([-0-9.]+)\s.*(S_\d+)$")
-            with open(f, "r") as fd:
-                for line in fd:
-                    m = score_regex.match(line)
-                    if m:
-                        scores[m.group(2)]={"line": line.rstrip(), "score": float(m.group(1))}
+            for line in readFileLineByLine(f):
+                m = score_regex.match(line)
+                if m:
+                    scores[m.group(2)]={"line": line.rstrip(), "score": float(m.group(1))}
 
 
             # delete any pdb files if existing
@@ -1100,12 +1097,11 @@ class RNAPrediction(object):
             print "  caluculating rmsd values to native structure for all models..."
             sys.stdout.write("    ")
             self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "%s/assembly_p.pdb" % (dir_assembly), "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
-            with open(filename_rmsd, "r") as r:
-                for line in r:
-                    if not re.match(r"^[\s\d-]", line):
-                        continue
-                    model, native_rmsd = line.split()
-                    evalData["models"][int(float(model))]["native_rmsd"] = float(native_rmsd)
+            for line in readFileLineByLine(filename_rmsd):
+                if not re.match(r"^[\s\d-]", line):
+                    continue
+                model, native_rmsd = line.split()
+                evalData["models"][int(float(model))]["native_rmsd"] = float(native_rmsd)
             deleteGlob(filename_rmsd, print_notice=False)
 
         # cluster counter
@@ -1127,13 +1123,12 @@ class RNAPrediction(object):
             for c in range(cluster):
                 # calculate rmsd between cluster and pdb
                 self.executeCommand(["g_rms", "-quiet", "-s", "%s/cluster_%d_p.pdb" % (dir_output, c + 1), "-f", filename_pdb_p, "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True, print_commands=False)
-                with open(filename_rmsd, "r") as r:
-                    for line in r:
-                        pass
-                    new_rmsd = float(line.split()[1])
-                    if new_rmsd < rmsd_to_cluster_primary:
-                        rmsd_to_cluster_primary = new_rmsd
-                        matches_cluster = c + 1
+                for line in readFileLineByLine(filename_rmsd):
+                    pass
+                new_rmsd = float(line.split()[1])
+                if new_rmsd < rmsd_to_cluster_primary:
+                    rmsd_to_cluster_primary = new_rmsd
+                    matches_cluster = c + 1
                 deleteGlob(filename_rmsd, print_notice=False)
 
             if matches_cluster == 0:
@@ -1319,8 +1314,7 @@ class RNAPrediction(object):
             raise SimulationException("Input and output filename cannot be the same")
 
         pattern = re.compile(r"^(\S+\s+\d+\s+\S+\s+\d+)\s+(\S+)\s+.+$")
-        with open(inputFileName, "r") as inputFd:
-            with open(outputFileName, "w") as outputFd:
-                for line in inputFd:
-                    m = pattern.match(line)
-                    outputFd.write("%s %s\n" % (m.group(1), cstFunction))
+        with open(outputFileName, "w") as outputFd:
+            for line in readFileLineByLine(inputFileName):
+                m = pattern.match(line)
+                outputFd.write("%s %s\n" % (m.group(1), cstFunction))

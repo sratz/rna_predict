@@ -7,6 +7,7 @@ import re
 
 from . import pdbtools
 from sysconfig import SysConfig
+from utils import readFileLineByLine
 
 
 '''
@@ -85,8 +86,8 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1
             residues = []
 
             # read the structures for the 12 edge-to-edge bonding families
-            for line in open(structureDirectory + nt1 + '-' + nt2 + '.txt'):
-                fields = line.strip().split(" ")
+            for line in readFileLineByLine(structureDirectory + nt1 + '-' + nt2 + '.txt'):
+                fields = line.split(" ")
                 if fields[0] != "-":
                     pdbCodes.append(fields[0].upper())
                     residues.append((int(fields[1]), int(fields[2])))
@@ -196,20 +197,16 @@ def createPdbMappingFromString(mapping):
 # read a pdb mapping from dca file if present and return it as text
 def readPdbMappingFromFile(dcaPredictionFileName):
     pattern_parameter = re.compile(r"^#\s(\S+)\s+(.*)$")
-    with open(dcaPredictionFileName) as f:
-        for line in f:
-            line = line.strip()
-            if len(line) == 0:
-                continue
-            if line[0] == "#":
-                # comment / parameter line
-                m = pattern_parameter.match(line)
-                if m:
-                    if m.group(1) == "pdb-mapping":
-                        return m.group(2)
-                continue
-            # we only allow comments on top, so no need to check the rest of the lines:
-            break
+    for line in readFileLineByLine(dcaPredictionFileName):
+        if line[0] == "#":
+            # comment / parameter line
+            m = pattern_parameter.match(line)
+            if m:
+                if m.group(1) == "pdb-mapping":
+                    return m.group(2)
+            continue
+        # we only allow comments on top, so no need to check the rest of the lines:
+        break
     return None
 
 
@@ -225,24 +222,22 @@ def parseDcaData(dcaPredictionFileName):
         print "Warning: no pdb-mapping found in header of dca file %s, assuming '1-N'" %(dcaPredictionFileName)
 
     dca = []
-    with open(dcaPredictionFileName) as f:
-        for line in f:
-            line = line.strip()
-            if len(line) == 0 or line[0] == "#":
-                continue
-            # data line
-            parts = line.split(" ")
-            if pdbMapping is not None:
-                try:
-                    res1 = pdbMapping[int(parts[0])]
-                    res2 = pdbMapping[int(parts[1])]
-                except:
-                    raise DcaException("Invalid PDB mapping. Could not access residue: %s" % (parts[:2]))
-            else:
-                res1 = int(parts[0])
-                res2 = int(parts[1])
+    for line in readFileLineByLine(dcaPredictionFileName):
+        if line[0] == "#":
+            continue
+        # data line
+        parts = line.split(" ")
+        if pdbMapping is not None:
+            try:
+                res1 = pdbMapping[int(parts[0])]
+                res2 = pdbMapping[int(parts[1])]
+            except:
+                raise DcaException("Invalid PDB mapping. Could not access residue: %s" % (parts[:2]))
+        else:
+            res1 = int(parts[0])
+            res2 = int(parts[1])
 
-            dca.append(DcaContact(res1, res2))
+        dca.append(DcaContact(res1, res2))
     return dca
 
 

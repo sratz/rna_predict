@@ -12,6 +12,7 @@ import Bio.PDB
 from Bio.PDB.PDBExceptions import PDBConstructionWarning
 
 from sysconfig import SysConfig
+from utils import readFileLineByLine
 
 
 PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
@@ -36,19 +37,18 @@ def extractPOnly(filename):
         return False
 
     p_only = ""
-    with open(filename, "r") as fd:
-        # only extract first chain
-        chain_id = None
-        for line in fd:
-            fields = line.split()
-            if fields[0] == "ATOM" and isValidAtom(fields[2]):
-                if chain_id is None:
-                    chain_id = fields[4]
-                elif chain_id != fields[4]:
-                    break
-                p_only += line
-        p_only += "TER\n"
-        return p_only
+    # only extract first chain
+    chain_id = None
+    for line in readFileLineByLine(filename):
+        fields = line.split()
+        if fields[0] == "ATOM" and isValidAtom(fields[2]):
+            if chain_id is None:
+                chain_id = fields[4]
+            elif chain_id != fields[4]:
+                break
+            p_only += line + "\n"
+    p_only += "TER\n"
+    return p_only
 
 
 def downloadPdbFile(pdbCode, pdbDirectory=PDB_DIRECTORY):
