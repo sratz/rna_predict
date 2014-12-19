@@ -690,10 +690,9 @@ class RNAPrediction(object):
         #       out of the way before running the next command.
         #       Just disable multithreading here (not really needed with stem generation anyways)?
         for i in range(len(self.config["stems"])):
-            with open("preparation/stem%d.fasta" % (i + 1), "r") as f:
-                l = f.readlines()
-                sequence = l[1].strip()
-                shutil.move("%s.pdb" % (sequence), "preparation/stem%d.pdb" % (i + 1))
+            sequence = [self.config["sequence"][j[0]] for j in self.config["stems"][i]]
+            sequence += [self.config["sequence"][j[1]] for j in reversed(self.config["stems"][i])]
+            shutil.move("%s.pdb" % ("".join(sequence)), "preparation/stem%d.pdb" % (i + 1))
 
 
     def _parseCstNameAndFilename(self, constraints):
