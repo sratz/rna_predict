@@ -300,7 +300,7 @@ class RNAPrediction(object):
 
         # Read in files
         lines = open( fasta_file ).readlines()
-        self.config["sequence"] = lines[1][:-1]
+        self.config["sequence"] = lines[1][:-1].lower()
         print self.config["sequence"]
         numres = len( self.config["sequence"] )
 
