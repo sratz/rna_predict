@@ -333,7 +333,9 @@ class RNAPrediction(object):
                         pair_map[res1] = res2
                         pair_map[res2] = res1
                         all_pairs.append([res1, res2])
-                        assert (self.config["sequence"][res1] in complement[self.config["sequence"][res2]])
+                        # check if the secondary structure watson-crick pair is allowed
+                        if not self.config["sequence"][res1] in complement[self.config["sequence"][res2]]:
+                            basepair_mismatch += [[res1, res2]]
             elif line.count('(') > 0:  # maybe dot/bracket notation (((...)))
                 print line
                 self.config["secstruc"] = line
@@ -353,16 +355,15 @@ class RNAPrediction(object):
                             basepair_mismatch += [[res1, res2]]
                 assert (len(left_brackets) == 0)
             else:
-                try:
-                    cols = string.split(line)
-                    res1 = int(cols[0]) - 1
-                    res2 = int(cols[1]) - 1
-                    pair_map[res1] = res2
-                    pair_map[res2] = res1
-                    all_pairs.append([res1, res2])
-                    assert (self.config["sequence"][res1] in complement[self.config["sequence"][res2]])
-                except:
-                    continue
+                cols = string.split(line)
+                res1 = int(cols[0]) - 1
+                res2 = int(cols[1]) - 1
+                pair_map[res1] = res2
+                pair_map[res2] = res1
+                all_pairs.append([res1, res2])
+                # check if the secondary structure watson-crick pair is allowed
+                if not self.config["sequence"][res1] in complement[self.config["sequence"][res2]]:
+                    basepair_mismatch += [[res1, res2]]
 
             if line[:13] == 'CUTPOINT_OPEN':
                 cutpoints_original = map(lambda x: int(x), string.split(line[14:]))
