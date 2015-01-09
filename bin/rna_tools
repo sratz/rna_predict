@@ -108,6 +108,7 @@ if __name__ == '__main__':
         chain = pdb[0].child_list[0]
 
         print "Comparison PDB: %s" % (comparison_pdb)
+        plt.figure(figsize=(14,8))
 
         if dca_mode:
             print "Mode: residue-residue"
@@ -169,6 +170,7 @@ if __name__ == '__main__':
         plt.title("%s Constraints Quality %s" % ("Residue-Residue" if dca_mode else "Atom-Atom", os.path.basename(os.getcwd())))
         plt.xlabel(u"Native distance / Å")
         plt.ylabel("Number of contraints")
+        plt.savefig("/tmp/rna_tools_quality_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
         plt.show()
 
 
@@ -214,6 +216,7 @@ if __name__ == '__main__':
         plt.title(sys.argv[2])
         plt.xlabel("DCA Prediction Number")
         plt.ylabel(u"Distance / Å")
+        plt.savefig("/tmp/rna_tools_checkcontacts_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
         plt.show()
 
 
@@ -222,7 +225,6 @@ if __name__ == '__main__':
     if sys.argv[1] == "rmsdscore":
         cst = sys.argv[2]
         number = int(sys.argv[3])
-        save = sys.argv[4] if len(sys.argv) >= 5 else None
 
 
         sim = RNAPrediction(SysConfig(), ".")
@@ -256,20 +258,11 @@ if __name__ == '__main__':
         plt.xlabel("native rmsd / nm")
         plt.ylabel("rosetta score")
         plt.legend(plots, descs, loc="upper right", prop={'size':12})
-        if save:
-            print "saving to %s" % save
-            plt.savefig(save, bbox_inches="tight")
+        plt.savefig("/tmp/rna_tools_rmsdscore_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
         plt.show()
 
     # align pdb files and plot distance for each atom/residue in the sequence
     if sys.argv[1] == "seqdist":
-        saveplot = False
-        plot = True
-
-        if sys.argv[2] == "--saveplot":
-            saveplot = True
-            sys.argv.pop(2)
-
         pdb_ref_filename = sys.argv[2]
         pdbs_sample_filenames = sys.argv[3:]
         pdb_ref = pdbtools.parsePdb("foo", pdb_ref_filename)
@@ -279,54 +272,50 @@ if __name__ == '__main__':
         print sim.config["sequence"]
         print sim.config["secstruc"]
 
-        if plot:
-            plt.figure(figsize=(14,8))
-            ax = plt.gca()
+        plt.figure(figsize=(14,8))
+        ax = plt.gca()
 
-            plt.title("Residue Distances %s" % (sim.config["name"]))
-            plt.xlabel("Residue")
-            plt.ylabel(u"Distance to Native Structure in / Å")
+        plt.title("Residue Distances %s" % (sim.config["name"]))
+        plt.xlabel("Residue")
+        plt.ylabel(u"Distance to Native Structure in / Å")
 
-            x_values = np.arange(1, len(sim.config["sequence"]) + 1)
-            x_labels = ["%s\n%s" % ("\n".join(list("%.2d" % (i + 1))), x) for i, x in enumerate(sim.config["sequence"])]
-            x_min = 0.5
-            x_max = len(x_values) + 0.5
-            plt.xlim([x_min, x_max])
-            plt.xticks(x_values, x_labels)
+        x_values = np.arange(1, len(sim.config["sequence"]) + 1)
+        x_labels = ["%s\n%s" % ("\n".join(list("%.2d" % (i + 1))), x) for i, x in enumerate(sim.config["sequence"])]
+        x_min = 0.5
+        x_max = len(x_values) + 0.5
+        plt.xlim([x_min, x_max])
+        plt.xticks(x_values, x_labels)
 
-            y_min = 0
-            y_max = 0 # y limits will be set later when we know the final size
+        y_min = 0
+        y_max = 0 # y limits will be set later when we know the final size
 
-            for pdb_sample in pdbs_sample:
+        for pdb_sample in pdbs_sample:
 
-                dists_res, dists_atom, rmsd, rotran = pdbtools.alignStructure(pdb_ref, pdb_sample, assignBFactors=True)
-                plt.plot(x_values, dists_res, "-o", label=pdb_sample.id)
-                plt.plot((x_min, x_max), (rmsd, rmsd), "--", color=ax.lines[-1].get_color())
-                y_max = max(y_max, max(dists_res))
+            dists_res, dists_atom, rmsd, rotran = pdbtools.alignStructure(pdb_ref, pdb_sample, assignBFactors=True)
+            plt.plot(x_values, dists_res, "-o", label=pdb_sample.id)
+            plt.plot((x_min, x_max), (rmsd, rmsd), "--", color=ax.lines[-1].get_color())
+            y_max = max(y_max, max(dists_res))
 
-            y_max = y_max * 1.025
+        y_max = y_max * 1.025
 
-            plt.ylim([y_min, y_max])
+        plt.ylim([y_min, y_max])
 
-            hatch = ""
-            last_x = ""
-            start_i = 0
-            for i, x in enumerate(sim.config["secstruc"]):
-                if x != last_x and last_x != "" :
-                    if last_x != ".":
-                        if last_x == "(":
-                            hatch = "//"
-                        elif last_x == ")":
-                            hatch = "\\\\"
-                        plt.fill_between([start_i + 0.5, i + 0.5], y_min, y_max, hatch=hatch, color="black", alpha=0.15)
-                    start_i = i
-                last_x = x
+        hatch = ""
+        last_x = ""
+        start_i = 0
+        for i, x in enumerate(sim.config["secstruc"]):
+            if x != last_x and last_x != "" :
+                if last_x != ".":
+                    if last_x == "(":
+                        hatch = "//"
+                    elif last_x == ")":
+                        hatch = "\\\\"
+                    plt.fill_between([start_i + 0.5, i + 0.5], y_min, y_max, hatch=hatch, color="black", alpha=0.15)
+                start_i = i
+            last_x = x
 
-            plt.legend(prop={'size':12})
+        plt.legend(prop={'size':12})
 
-            if saveplot:
-                save = "foo.png"
-                print "saving to %s" % save
-                plt.savefig(save, bbox_inches="tight")
+        plt.savefig("/tmp/rna_tools_seqdist_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
 
-            plt.show()
+        plt.show()
