@@ -1,0 +1,49 @@
+#!/usr/bin/env zsh
+
+setopt nullglob
+
+for i in predictions/*/assembly/MOTIF_OVERRIDE; do
+  # extract cst name
+  cst=${${i#predictions/}%/assembly/MOTIF_OVERRIDE}
+
+  # extract motif cst name
+  read -r motif_cst < $i
+  motif_cst=${${motif_cst#predictions/}%/motifs}
+
+  # write new file
+  printf %s $motif_cst > predictions/$cst/MOTIF_OVERRIDE
+
+  # delete old file
+  rm $i
+
+  # delete unneded motifs directory
+  rm -fr predictions/$cst/motifs
+done
+
+
+# create a new MOTIF_OVERRIDE file for all predictions where the motifs dir is empty but the assembly dir has output files
+for i in predictions/*; do
+  if [[ ! -d $i/motifs ]]; then
+    continue
+  fi
+
+  if [[ -e $i/MOTIF_OVERRIDE ]]; then
+    continue
+  fi
+
+  motif_files=($i/motifs/*)
+  if (( $#motif_files )); then
+    continue
+  fi
+
+  assembly_files=($i/assembly/*.out)
+  if ! (( $#assembly_files )); then
+    continue
+  fi
+
+  # found empty motif dir, but generated assembly files. assume very old directory with "none" override.
+  printf none > $i/MOTIF_OVERRIDE
+
+  # remove empty dir
+  rmdir $i/motifs
+done
