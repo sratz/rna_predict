@@ -1347,3 +1347,51 @@ class RNAPrediction(object):
             for line in readFileLineByLine(inputFileName):
                 m = pattern.match(line)
                 outputFd.write("%s %s\n" % (m.group(1), cstFunction))
+
+
+    def printStatus(self):
+        cst_names = ["none"]
+        cst_names += [splitext(basename(cst_file))[0] for cst_file in glob.glob("constraints/*.cst")]
+        cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
+
+        print "Status:"
+        print "  cst                                 P M A E E"
+        print "  ---------------------------------------------"
+
+        for cst_name in sorted(set(cst_names), key=natural_sort_key):
+            done_preparation = "-"
+            done_motifs = "-"
+            done_assembly = "-"
+            done_extraction = "-"
+            done_evaluation = "-"
+
+            dir_prediction = "predictions/%s" % (cst_name)
+            dir_assembly = "predictions/%s/assembly" % (cst_name)
+            dir_motifs = "predictions/%s/motifs" % (cst_name)
+            dir_tmp = "predictions/%s/temp" % (cst_name)
+            dir_output = "predictions/%s/output" % (cst_name)
+
+
+            if os.path.isfile(dir_assembly + "/assembly.cst"):
+                done_preparation = "X"
+
+            if os.path.isfile(dir_prediction + "/MOTIF_OVERRIDE"):
+                done_motifs = "*"
+            elif os.path.isfile(dir_motifs + "/motif1.out"):
+                done_motifs = "X"
+
+            if glob.glob(dir_assembly + "/*.out"):
+                done_assembly = "X"
+
+            if os.path.isfile(dir_tmp + "/000000001.pdb"):
+                done_extraction = "X"
+
+            if os.path.isfile(dir_output + "/cluster_1.pdb"):
+                done_evaluation = "X"
+
+            def printStatusLine(cst_name, status_list):
+                line = "  %-035s" % (cst_name)
+                line += " " + " ".join(status_list)
+                print line
+
+            printStatusLine(cst_name, [done_preparation, done_motifs, done_assembly, done_extraction, done_evaluation])

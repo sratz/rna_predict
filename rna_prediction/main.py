@@ -151,6 +151,9 @@ USAGE
             if not args.quiet:
                 p.printConfig()
 
+            if not args.config and not args.prepare and not args.prepare_cst and not args.make_constraints and not args.edit_constraints and not args.create_helices and not args.create_motifs and not args.assemble and not args.extract and not args.evaluate and not args.compare:
+                p.printStatus()
+
             if args.prepare:
                 p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
                 p.saveConfig()
