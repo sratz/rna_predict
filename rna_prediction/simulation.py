@@ -27,6 +27,11 @@ def checkFileExistence(path, alternativeErrorText=None):
         raise SimulationException(alternativeErrorText if alternativeErrorText is not None else "Cannot find file: %s" % path)
 
 
+def checkDirExistence(path, alternativeErrorText=None):
+    if not os.path.isdir(path):
+        raise SimulationException(alternativeErrorText if alternativeErrorText is not None else "Cannot find directory: %s" % path)
+
+
 def deleteGlob(pattern, print_notice=True):
     for f in glob.glob(pattern):
         if print_notice:
@@ -880,6 +885,7 @@ class RNAPrediction(object):
 
         checkFileExistence("%s/motif1.out" % (dir_motifs))
         checkFileExistence("preparation/cutpoints.cst")
+        checkDirExistence("predictions/%s" % (cst_name))
 
         makeDirectory(dir_assembly)
 
