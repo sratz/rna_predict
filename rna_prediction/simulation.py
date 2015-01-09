@@ -331,6 +331,7 @@ class RNAPrediction(object):
         complement = {'a':['u'], 'u':['a','g'], 'c':['g'], 'g':['c','u']};
 
         # Parse out stems
+        basepair_mismatch = []
         cutpoints_original = []
         for line in readFileLineByLine(params_file):
             if line[:4] == 'STEM':
@@ -357,7 +358,9 @@ class RNAPrediction(object):
                         pair_map[ res1 ] = res2
                         pair_map[ res2 ] = res1
                         all_pairs.append( [res1,res2] )
-                        assert ( self.config["sequence"][res1] in complement[ self.config["sequence"][res2] ] )
+                        # check if the secondary structure watson-crick pair is allowed
+                        if not self.config["sequence"][res1] in complement[ self.config["sequence"][res2] ]:
+                            basepair_mismatch += [[res1, res2]]
                 assert( len (left_brackets) == 0 )
             else:
                 try:
@@ -373,6 +376,25 @@ class RNAPrediction(object):
 
             if line[:13] == 'CUTPOINT_OPEN':
                 cutpoints_original = map( lambda x:int(x), string.split( line[14:] ) )
+
+        # print all helix pairs that don't fit the allowed complements
+        if basepair_mismatch:
+            basepair_mismatch_str = [" "] * len(self.config["sequence"])
+            for r in basepair_mismatch:
+                basepair_mismatch_str[r[0]] = "^"
+                basepair_mismatch_str[r[1]] = "^"
+            print "".join(basepair_mismatch_str)
+
+            # more verbose:
+            for r in basepair_mismatch:
+                res1 = r[0]
+                res2 = r[1]
+                resstr1 = str(res1 + 1) + self.config["sequence"][res1]
+                resstr2 = str(res2 + 1) + self.config["sequence"][res2]
+                print " " * res1 + "^" + " " * (res2 - res1 - 1) + "^"
+                print " " * res1 + resstr1 + " " * (res2 - res1 - len(resstr1)) + resstr2
+
+            raise SimulationException("some helix pairs in secondary structure cannot be realized (see above)")
 
         #print pair_map
 
