@@ -1,0 +1,18 @@
+#!/usr/bin/env zsh
+
+setopt nullglob
+
+if (( $# % 2 != 0 )); then
+  echo "need even number of arguments!" >&2
+  exit 1
+fi
+
+while (( $# )); do
+  list=(log/*"$1".log(.) log/*"$1"_seed*.log(.) log/*"$1"_[0-9].log(.) predictions/"$1"(/) constraints/"$1".cst(.))
+
+  for i in "$list[@]"; do
+    mv "$i" "${i//$1/$2}"
+  done
+
+  shift 2
+done
