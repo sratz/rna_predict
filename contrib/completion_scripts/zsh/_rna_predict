@@ -10,6 +10,7 @@ suf=()
 
 
 typeset -a prepare_args
+typeset -a preparecst_args
 typeset -a motifs_args
 typeset -a assemble_args
 typeset -a motifs_assemble_args
@@ -27,6 +28,12 @@ if (( words[(I)--prepare] )); then
   )
 fi
 
+if (( words[(I)--prepare-cst] )); then
+  preparecst_args=(
+    '--override-motifs-cst=[use motifs from a different constraints set (default: -)]::constraints file:_files -W "(constraints)" -g \*.cst'
+  )
+fi
+
 if (( words[(I)--create-motifs] )); then
   motifs_args=(
     '--cycles-motifs=[number of cycles for motif generation (default: 5000)]: :_guard "[0-9]#" "cycles"'
@@ -38,7 +45,6 @@ if (( words[(I)--assemble] )); then
   assemble_args=(
     '--cycles-assembly=[number of cycles for assembly (default: 20000)]: :_guard "[0-9]#" "cycles"'
     '--nstruct-assembly=[number of assembly structures to create (default: 50000)]: :_guard "[0-9]#" "number of structures"'
-    '--override-motifs-cst=[use motifs from a different constraints set (default: -)]::constraints file:_files -W "(constraints)" -g \*.cst'
   )
 fi
 
@@ -97,6 +103,7 @@ _arguments -s -w \
   {-n,--dry-run}'[do not execute and only print external commands]' \
   '--config[modify config variable]:key:(fasta_file name native_pdb_file params_file torsions_file):value: ' \
   $prepare_args \
+  $preparecst_args \
   $motifs_args \
   $assemble_args \
   $motifs_assemble_args \

@@ -88,13 +88,14 @@ USAGE
     group_prepare.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
     group_prepare.add_argument("--sequence", dest="sequence", help="sequence fasta file [default: %(default)s]", default="sequence.fasta")
     group_prepare.add_argument("--secstruct", dest="secstruct", help="secondary structure file [default: %(default)s]", default="secstruct.txt")
+    group_preparecst = parser.add_argument_group(title="options for the --prepare-cst step")
+    group_preparecst.add_argument("--override-motifs-cst", dest="motifs_cst", help="use motifs from a different constraints set [default: %(default)s]", const="none", nargs="?")
     group_motifs = parser.add_argument_group(title="options for the --create-motifs step")
     group_motifs.add_argument("--cycles-motifs", dest="cycles_motifs", help="number of cycles for motif generation [default: %(default)s]", default=5000, type=int)
     group_motifs.add_argument("--nstruct-motifs", dest="nstruct_motifs", help="number of motif structures to create [default: %(default)s]", default=4000, type=int)
     group_assembly = parser.add_argument_group(title="options for the --assemble step")
     group_assembly.add_argument("--cycles-assembly", dest="cycles_assembly", help="number of cycles for assembly [default: %(default)s]", default=20000, type=int)
     group_assembly.add_argument("--nstruct-assembly", dest="nstruct_assembly", help="number of assembly structures to create [default: %(default)s]", default=50000, type=int)
-    group_assembly.add_argument("--override-motifs-cst", dest="motifs_cst", help="use motifs from a different constraints set [default: %(default)s]", const="none", nargs="?")
     group_simulaion = parser.add_argument_group(title="options for the --create-motifs and --assemble steps")
     group_simulaion.add_argument("--seed", dest="seed", help="force random seed (when multithreading, this will be incremented for each process) [default: %(default)s]", default=None, type=int)
     group_simulaion.add_argument("--use-native", dest="use_native", action="store_true", help="use native information for motif generation and assembly [default: %(default)s]")
@@ -154,7 +155,7 @@ USAGE
                 p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
                 p.saveConfig()
             if args.prepare_cst:
-                p.prepareCst(constraints=args.cst)
+                p.prepareCst(constraints=args.cst, motifsOverride=args.motifs_cst)
             if args.make_constraints:
                 p.makeConstraints(dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function, filterText=args.filter, mappingMode=args.mapping_mode)
             if args.edit_constraints:
@@ -164,7 +165,7 @@ USAGE
             if args.create_motifs:
                 p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct_motifs, cycles=args.cycles_motifs, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
             if args.assemble:
-                p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads, motifsOverride=args.motifs_cst)
+                p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
             if args.extract:
                 p.extract(constraints=args.cst)
             if args.evaluate:
