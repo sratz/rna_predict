@@ -20,8 +20,6 @@ class SysConfig(object):
         #defaults
         self.rosetta_exe_path = ""
         self.rosetta_exe_suffix = ".linuxgccrelease"
-        self.gromacs_exe_path = ""
-        self.gromacs_exe_suffix = ""
         self.subprocess_buffsize = None
 
         self.loadSysConfig()
@@ -34,11 +32,6 @@ class SysConfig(object):
                 self.rosetta_exe_path = re.sub("/+$", "", config.get("rosetta", "exe_path")) + "/"
             if config.has_option("rosetta", "exe_suffix"):
                 self.rosetta_exe_suffix = config.get("rosetta", "exe_suffix")
-        if config.has_section("gromacs"):
-            if config.has_option("gromacs", "exe_path"):
-                self.gromacs_exe_path = re.sub("/+$", "", config.get("gromacs", "exe_path")) + "/"
-            if config.has_option("gromacs", "exe_suffix"):
-                self.gromacs_exe_suffix = config.get("gromacs", "exe_suffix")
         if config.has_section("rna_predict"):
             if config.has_option("rna_predict", "subprocess_buffsize"):
                 self.subprocess_buffsize = config.get("rna_predict", "subprocess_buffsize")
@@ -47,8 +40,7 @@ class SysConfig(object):
         def is_exe(fpath):
             return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-        progs = [self.rosetta_exe_path + "rna_helix" + self.rosetta_exe_suffix,
-                 self.gromacs_exe_path + "g_rms" + self.gromacs_exe_suffix]
+        progs = [self.rosetta_exe_path + "rna_helix" + self.rosetta_exe_suffix]
 
         if self.subprocess_buffsize is not None:
             progs += ["stdbuf"]

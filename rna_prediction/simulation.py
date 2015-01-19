@@ -154,8 +154,6 @@ class Command(object):
         com = self.command[:]
         if self.add_suffix == "rosetta":
             com[0] = sysconfig.rosetta_exe_path + com[0] + sysconfig.rosetta_exe_suffix
-        elif self.add_suffix == "gromacs":
-            com[0] = sysconfig.gromacs_exe_path + com[0] + sysconfig.gromacs_exe_suffix
         if sysconfig.subprocess_buffsize is not None:
             com = ["stdbuf", "-o", sysconfig.subprocess_buffsize] + com
         return com
