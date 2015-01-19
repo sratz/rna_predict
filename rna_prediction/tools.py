@@ -255,13 +255,18 @@ def tools():
             models_c.append([m for m in models if "cluster" in m and m["cluster"] == i])
             descs.append("cluster %d" % i)
 
+        if "native_rmsd" in models_c[1][0]:
+            comparison = "native_rmsd"
+            plt.xlabel("native rmsd / A")
+        else:
+            comparison = "rmsd_cluster_1"
+            plt.xlabel("rmsd to best structure / A")
 
         # create plots
         for i in range(0,11):
-            plots.append(plt.scatter([x["native_rmsd"] for x in models_c[i]], [x["score"] for x in models_c[i]], s=50, c=colors[i]))
+            plots.append(plt.scatter([x[comparison] for x in models_c[i]], [x["score"] for x in models_c[i]], s=50, c=colors[i]))
 
         plt.title("model clusters %s, constraints: %s" % (sim.config["name"], cst_name))
-        plt.xlabel("native rmsd / nm")
         plt.ylabel("rosetta score")
         plt.legend(plots, descs, loc="upper right", prop={'size':12})
         plt.savefig("/tmp/rna_tools_rmsdscore_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
