@@ -57,15 +57,8 @@ _rna_predict-evaluate() {
   local cst_option
   __rna_predict_setup_cst_option
   _arguments -s -w \
-    '--cluster-cutoff=[cluster cutoff in nm (default: 0.41)]: : _guard "[0-9]#(.|)[0-9]#" "cutoff"' \
+    '--cluster-cutoff=[cluster cutoff in angström (default: 4.1)]: : _guard "[0-9]#(.|)[0-9]#" "cutoff"' \
     '--cluster-limit=[maximum number of clusters to create (default: 10)]: :_guard "[0-9]#" "limit"' \
-    $cst_option
-}
-
-_rna_predict-extract() {
-  local cst_option
-  __rna_predict_setup_cst_option
-  _arguments -s -w \
     $cst_option
 }
 
@@ -107,8 +100,7 @@ _rna_predict_commands() {
     'create-helices:create ideal a-helices'
     'create-motifs:create motifs'
     'assemble:assemble'
-    'extract:extract data and score'
-    'evaluate:evaluate data (clustering and scoring)'
+    'evaluate:evaluate data (clustering and rmsd calculation)'
     'make-constraints:create a constraints file from a dca prediction'
     'edit-constraints:replace rosetta function in a constraints file'
     'compare:print comparison of prediction to native structure'
@@ -186,7 +178,7 @@ __rna_predict_filter() {
         _wanted values expl 'constraints' _files $suf -W '(constraints)' -g '*.cst'
         ;;
       (model_kind)
-        _wanted values expl 'model kind' compadd $suf cluster model top
+        _wanted values expl 'model kind' compadd $suf cluster tag top
         ;;
       (model_number)
         _guard '[0-9]#' 'model number'

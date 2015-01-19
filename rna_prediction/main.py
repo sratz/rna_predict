@@ -93,8 +93,7 @@ USAGE
     parser_helices= subparsers.add_parser("create-helices", help="create ideal a-helices")
     parser_motifs = subparsers.add_parser("create-motifs", help="create motifs")
     parser_assemble = subparsers.add_parser("assemble", help="assemble models")
-    parser_extract = subparsers.add_parser("extract", help="extract pdb data and score")
-    parser_evaluate = subparsers.add_parser("evaluate", help="evaluate data (clustering and scoring)")
+    parser_evaluate = subparsers.add_parser("evaluate", help="evaluate data (clustering and rmsd calculation)")
     parser_compare = subparsers.add_parser("compare", help="print comparison of prediction to native structure")
     parser_makeconstraints = subparsers.add_parser("make-constraints", help="create a constraints file from a dca prediction")
     parser_editconstraints = subparsers.add_parser("edit-constraints", help="replace rosetta function in a constraints file")
@@ -111,7 +110,7 @@ USAGE
     parser_motifs.add_argument("--nstruct-motifs", dest="nstruct_motifs", help="number of motif structures to create [default: %(default)s]", default=4000, type=int)
     parser_assemble.add_argument("--cycles-assembly", dest="cycles_assembly", help="number of cycles for assembly [default: %(default)s]", default=20000, type=int)
     parser_assemble.add_argument("--nstruct-assembly", dest="nstruct_assembly", help="number of assembly structures to create [default: %(default)s]", default=50000, type=int)
-    parser_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in nm [default: %(default)s]", default=0.41, type=float)
+    parser_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in angström [default: %(default)s]", default=4.1, type=float)
     parser_evaluate.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     parser_makeconstraints.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
     parser_makeconstraints.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
@@ -125,7 +124,7 @@ USAGE
         p.add_argument("--seed", dest="seed", help="force random seed (when multithreading, this will be incremented for each process) [default: %(default)s]", default=None, type=int)
         p.add_argument("--use-native", dest="use_native", action="store_true", help="use native information for motif generation and assembly [default: %(default)s]")
 
-    for p in (parser_preparecst, parser_motifs, parser_assemble, parser_editconstraints, parser_extract, parser_evaluate):
+    for p in (parser_preparecst, parser_motifs, parser_assemble, parser_editconstraints, parser_evaluate):
         p.add_argument("--cst", dest="cst", help="constraint selection [default: %(default)s]", default=None)
 
     for p in (parser_makeconstraints, parser_editconstraints):
@@ -183,8 +182,6 @@ USAGE
             p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct_motifs, cycles=args.cycles_motifs, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
         elif args.subcommand == "assemble":
             p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
-        elif args.subcommand == "extract":
-            p.extract(constraints=args.cst)
         elif args.subcommand == "evaluate":
             p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
         elif args.subcommand == "compare":

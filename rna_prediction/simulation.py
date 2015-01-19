@@ -1012,11 +1012,14 @@ class RNAPrediction(object):
         self.executeCommands(commands, threads=threads)
 
 
-    def extract(self, constraints=None):
+    # TODO: set the cutoff value back to 4.0? It was set to 4.1 because the old bash script used integer comparison and even 4.09 was treated as 4.0
+    def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=4.1):
         self.checkConfig()
         cst_name, cst_file = self._parseCstNameAndFilename(constraints)
-        print "Extraction:"
+        print "Evaluation configuration:"
         print "    constraints: %s" % (cst_name)
+        print "    cluster_limit: %s" % (cluster_limit)
+        print "    cluster_cutoff: %s" % (cluster_cutoff)
 
         dir_assembly = "predictions/%s/assembly" % (cst_name)
         dir_output = "predictions/%s/output" % (cst_name)
@@ -1026,12 +1029,11 @@ class RNAPrediction(object):
         if not os.path.isdir("predictions/%s" % (cst_name)):
             raise SimulationException("No prediction directory for constraint '%s' found! Maybe you should assemble first?" % (cst_name))
 
-        files_assembly = glob.glob("%s/assembly_*.out" % (dir_assembly))
+        files_assembly = sorted(glob.glob("%s/assembly_*.out" % (dir_assembly)), key=natural_sort_key)
         if len(files_assembly) == 0:
             raise SimulationException("No assembly files for constraint '%s' found! Maybe you should assemble first?" % (cst_name))
 
         # cleanup
-        deleteGlob("%s/assembly_p.pdb" % (dir_assembly))
         deleteGlob(dir_output)
         deleteGlob(dir_tmp)
         makeDirectory(dir_output)
@@ -1040,174 +1042,80 @@ class RNAPrediction(object):
         # create dict to store evaluation data
         evalData = {"models": {}, "clusters": {}}
 
-        # model counter
-        model = 0
-
         # loop over all out files matching the constraint
-        for f in sorted(files_assembly, key=natural_sort_key):
+        for i, f in enumerate(files_assembly):
             print "  processing rosetta silent file: %s..." % (f)
 
-            description = splitext(basename(f))[0]
-
             # read out file and store a dict of the scores and the full score line
-            scores = dict()
-            score_regex = re.compile("^SCORE:\s+([-0-9.]+)\s.*(S_\d+)$")
+            regex_score = re.compile("^SCORE:\s+([-0-9.]+)\s.*(S_[0-9_]+)$")
             for line in readFileLineByLine(f):
-                m = score_regex.match(line)
+                m = regex_score.match(line)
                 if m:
-                    scores[m.group(2)]={"line": line.rstrip(), "score": float(m.group(1))}
+                    # name models exactly like rosetta would (that is, append _<num> when already present)
+                    j = 1
+                    tag = m.group(2)
+                    while tag in evalData["models"]:
+                        tag = "%s_%d" % (m.group(2), j)
+                        j += 1
+                    evalData["models"][tag] = {"source_file": basename(f),
+                                               "score": float(m.group(1)),
+                                               "tag": tag,
+                                               "tag_source": m.group(2)}
 
 
-            # delete any pdb files if existing
-            deleteGlob("S_*.pdb")
+        # clustering
+        print "  clustering models..."
+        filename_clusters = "%s/clusters.out" % (dir_output)
+        sys.stdout.write("    ")
 
-            # extract pdb files
-            command = ["rna_extract", "-in:file:silent", abspath(f), "-in:file:silent_struct_type", "rna"]
-            owd = os.getcwd()
-            try:
-                os.chdir(dir_tmp)
-                self.executeCommand(command, add_suffix="rosetta")
-            finally:
-                os.chdir(owd)
+        regex_clusters = re.compile("^.*RNA_PREDICT (old|new) cluster ([0-9]+) score ([-0-9.]+) model (S_[0-9_]+)$")
+        for line in self.executeCommandAndCapture(["rna_cluster", "-in:file:silent"] + files_assembly + ["-cluster:radius", "%s" % (cluster_cutoff), "-nstruct", str(cluster_limit), "-out:file:silent", filename_clusters], add_suffix="rosetta", quiet=True):
+            m = regex_clusters.match(line)
+            if m:
+                evalData["models"][m.group(4)]["cluster"] = int(m.group(2))
+                if m.group(1) == "new":
+                    evalData["clusters"][int(m.group(2))] = {"primary_model": m.group(4)}
+                print "    %s cluster: %02s, model: %-10s, score: %.3f" % ("new" if m.group(1) == "new" else "   ",
+                                                                                             m.group(2),
+                                                                                             m.group(4),
+                                                                                             float(m.group(3)))
 
-            # loop over all extracted pdb files
-            for fe in sorted(glob.glob("%s/S_*.pdb" % (dir_tmp))):
-                model += 1
-                name = basename(fe)[:-4]
-                remark = "%s %s" % (description, scores[name]["line"])
-
-                # extract all P atoms from the pdb file
-                p_only = pdbtools.extractPOnly(fe)
-
-                # append p only model to trajectory
-                pdbtools.writePdb("%s/assembly_p.pdb" % (dir_assembly), data=p_only, model=model, remark=remark, append=True)
-
-                # write p only model to temp file
-                pdbtools.writePdb("%s/%09d_p.pdb" % (dir_tmp, model), data=p_only, model=model, remark=remark)
-
-                # move original pdb to temp directory
-                shutil.move(fe, "%s/%09d.pdb" % (dir_tmp, model))
-
-                # create evaluation dict for model
-                evalData["models"][model] = {"source_file": f, "source_name": name, "score": scores[name]["score"]}
-
-        # save evaluation data to file
-        with open(file_evaldata, "w") as f:
-            pickle.dump(evalData, f)
-
-
-    # TODO: set the cutoff value back to 0.40? It was set to 0.41 because the old bash script used integer comparison and even 0.409 was treated as 0.40
-    def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=0.41):
-        self.checkConfig()
-        cst_name, cst_file = self._parseCstNameAndFilename(constraints)
-        print "Evaluation configuration:"
-        print "    cluster_limit: %s" % (cluster_limit)
-        print "    cluster_cutoff: %s" % (cluster_cutoff)
-        print "    constraints: %s" % (cst_name)
-
-        dir_assembly = "predictions/%s/assembly" % (cst_name)
-        dir_output = "predictions/%s/output" % (cst_name)
-        dir_tmp = "predictions/%s/temp" % (cst_name)
-        file_evaldata = "%s/evaldata.dat" % (dir_output)
-
-        # load evaluation data and check if extraction step was run before
+        # extract cluster pdbs
+        print "  extracting cluster decoy pdbs..."
+        owd = os.getcwd()
         try:
-            with open(file_evaldata, "r") as f:
-                evalData = pickle.load(f)
-            evalData["models"][1]["score"]
-        except KeyError:
-            raise SimulationException("Broken data file %s. Try running 'extract' again" % (file_evaldata))
-        except:
-            raise SimulationException("Data file %s for constraint not found. Did you forget to run 'extract'?" % (file_evaldata))
+            os.chdir(dir_output)
+            self.executeCommand(["rna_extract", "-in:file:silent", basename(filename_clusters), "-in:file:silent_struct_type", "rna"], add_suffix="rosetta")
+        finally:
+            os.chdir(owd)
 
-        if not os.path.isdir(dir_tmp) or not os.path.isfile("%s/%09d_p.pdb" % (dir_tmp, len(evalData["models"]))):
-            raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))
+        # loop over all extracted pdb files
+        for i, fe in enumerate(sorted(glob.glob("%s/S_*.pdb" % (dir_output)), key=natural_sort_key)):
+            shutil.move(fe, "%s/cluster_%d.pdb" % (dir_output, i + 1))
 
-        # clear old evaluation clusters
-        deleteGlob(dir_output)
-        makeDirectory(dir_output)
-
-        evalData["clusters"] = {}
-        for m in evalData["models"].iteritems():
-            m[1].pop("native_rmsd", None)
-            m[1].pop("cluster", None)
-            m[1].pop("rmsd_to_primary", None)
-
-
-        # calculate native rmsd values for all models if native pdb available
-        filename_rmsd = "%s/rmsd.xvg" % (dir_tmp)
-        if self.config["native_pdb_file"] != None:
-            # create native_p.pdb if needed
-            native_p_only = "%s_p.pdb" % (self.config["native_pdb_file"][:-4])
-            if not os.path.exists(native_p_only):
-                print "  creating p only native pdb file: %s" % (native_p_only)
-                pdbtools.writePdb(native_p_only, data=pdbtools.extractPOnly(self.config["native_pdb_file"]), model=1, remark="native p only")
-            print "  caluculating rmsd values to native structure for all models..."
+        # rmsdcalc helper function
+        def calculate_rmsd(name, filename_comparison):
+            # calculate native rmsd values for all models if native pdb available
+            filename_tmp = "%s/rmsd.out" % (dir_tmp)
+            print "  caluculating rmsd values to %s for all models..." % (name)
             sys.stdout.write("    ")
-            self.executeCommand(["g_rms", "-quiet", "-s", "native_p.pdb", "-f", "%s/assembly_p.pdb" % (dir_assembly), "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True)
-            for line in readFileLineByLine(filename_rmsd):
-                if not re.match(r"^[\s\d-]", line):
-                    continue
-                model, native_rmsd = line.split()
-                evalData["models"][int(float(model))]["native_rmsd"] = float(native_rmsd)
-            deleteGlob(filename_rmsd, print_notice=False)
 
-        # cluster counter
-        cluster = 0
+            regex_rmsd = re.compile("^All atom rmsd over moving residues: (S_[0-9_]+) ([-0-9.]+)$")
+            for line in self.executeCommandAndCapture(["rna_score", "-in:file:silent"] + files_assembly + ["-in:file:native", filename_comparison, "-score:just_calc_rmsd", "-out:file:silent", filename_tmp], add_suffix="rosetta", quiet=True):
+                m = regex_rmsd.match(line)
+                if m:
+                    print m.group(1), m.group(2)
+                    evalData["models"][m.group(1)]["rmsd_%s" %(name)] = float(m.group(2))
 
-        log = open("%s/clusters.log" % (dir_output), "w")
-        print "  sorting models into clusters..."
+            deleteGlob(filename_tmp, print_notice=False)
 
-        # do we have native rmsd information?
-        use_native = self.config["native_pdb_file"] != None
-        # loop over all models sorted by their score
-        for model, data in sorted(evalData["models"].items(), key=lambda x: x[1]["score"]):
-            filename_pdb = "%s/%09d.pdb" % (dir_tmp, model)
-            filename_pdb_p = "%s/%09d_p.pdb" % (dir_tmp, model)
 
-            # check if the current structure matches a cluster
-            matches_cluster = 0
-            rmsd_to_cluster_primary = cluster_cutoff
-            for c in range(cluster):
-                # calculate rmsd between cluster and pdb
-                self.executeCommand(["g_rms", "-quiet", "-s", "%s/cluster_%d_p.pdb" % (dir_output, c + 1), "-f", filename_pdb_p, "-o", filename_rmsd], add_suffix="gromacs", stdin="1\n1\n", quiet=True, print_commands=False)
-                for line in readFileLineByLine(filename_rmsd):
-                    pass
-                new_rmsd = float(line.split()[1])
-                if new_rmsd < rmsd_to_cluster_primary:
-                    rmsd_to_cluster_primary = new_rmsd
-                    matches_cluster = c + 1
-                deleteGlob(filename_rmsd, print_notice=False)
+        # calculate rmsd to native structure if native pdb available
+        if self.config["native_pdb_file"] != None:
+            calculate_rmsd("native", self.config["native_pdb_file"])
 
-            if matches_cluster == 0:
-                cluster = cluster + 1
-                shutil.copyfile(filename_pdb, "%s/cluster_%d.pdb" % (dir_output, cluster))
-                shutil.copyfile(filename_pdb_p, "%s/cluster_%d_p.pdb" % (dir_output, cluster))
-                evalData["clusters"][cluster] = {"primary_model": model}
-                evalData["models"][model]["cluster"] = cluster
-                evalData["models"][model]["rmsd_to_primary"] = 0
-                output = "new cluster: %02s, model: %05s, native_rmsd: %.7f, score: %.3f" % (cluster,
-                                                                                           model,
-                                                                                           evalData["models"][model]["native_rmsd"] if use_native else -1,
-                                                                                           evalData["models"][model]["score"])
-                print "    %s" % (output)
-                log.write(output + "\n")
-            else:
-                evalData["models"][model]["cluster"] = matches_cluster
-                evalData["models"][model]["rmsd_to_primary"] = rmsd_to_cluster_primary
-                output = "    cluster: %02s, model: %05s, native_rmsd: %.7f, score: %.3f, rmsd_to_cluster_primary: %.7f" % (matches_cluster,
-                                                                                                                        model,
-                                                                                                                        evalData["models"][model]["native_rmsd"] if use_native else -1,
-                                                                                                                        evalData["models"][model]["score"],
-                                                                                                                        evalData["models"][model]["rmsd_to_primary"])
-                print "    %s" % (output)
-                log.write(output + "\n")
-
-            log.flush()
-
-            if cluster == cluster_limit:
-                print "    maximum number of clusters reached. stopping..."
-                break
+        # calculate rmsd to best model
+        calculate_rmsd("cluster_1", "%s/cluster_1.pdb" % (dir_output))
 
         # save evaluation data
         with open(file_evaldata, "w") as f:
@@ -1232,7 +1140,7 @@ class RNAPrediction(object):
             try:
                 with open("predictions/%s/output/evaldata.dat" % (cst_name), "r") as f:
                     evalData = pickle.load(f)
-                    evalData["models"][1]["native_rmsd"]
+                    next(evalData["models"].itervalues())["native_rmsd"]
             except:
                 printComparisonLine(cst_name, ["-", "-", "-"])
                 continue
@@ -1247,15 +1155,25 @@ class RNAPrediction(object):
                     rmsd = evalData["models"][model]["native_rmsd"]
                     if rmsd < min_rmsd:
                         min_rmsd = rmsd
-                comparisons.append("%.2f" % (min_rmsd * 10))
+                comparisons.append("%.2f" % (min_rmsd))
             printComparisonLine(cst_name, comparisons)
 
 
+    # extract pdb of a model to the tmp directory
+    def extractPdb(self, constraints, model):
+        cst_name, cst_file = self._parseCstNameAndFilename(constraints)
+        dir_assembly = "predictions/%s/assembly" % (cst_name)
+        dir_tmp = "predictions/%s/temp" % (cst_name)
+        prefix = dir_tmp + os.path.sep + "tmp_"
+        self.executeCommand(["rna_extract", "-in:file:silent", "%s/%s" % (dir_assembly, model["source_file"]), "-out:prefix", prefix, "-tags", model["tag_source"]], add_suffix="rosetta", quiet=True)
+        shutil.move("%s/tmp_%s.pdb" % (dir_tmp, model["tag_source"]), "%s/%s.pdb" % (dir_tmp, model["tag"]))
+
+
     # retrieve a list for models by kind:
-    # "model": internal numbering / order in which they were extracted from rosetta data
-    # "top": number by score
-    # "cluster": model representing the nth cluster
-    def getModels(self, constraints, numbers, kind="model"):
+    # "tag": string: internal name such as S_000123_5
+    # "top": number: models ordered by score
+    # "cluster": number: nth cluster decoy
+    def getModels(self, constraints, model_list, kind="tag"):
         cst_name, cst_file = self._parseCstNameAndFilename(constraints)
 
         dir_output = "predictions/%s/output" % (cst_name)
@@ -1269,24 +1187,32 @@ class RNAPrediction(object):
 
         results = []
 
-        for number in numbers:
+        for model_i in model_list:
             # decide which model we want
             if kind == "cluster":
-                model = evalData["clusters"][number]["primary_model"]
-            elif kind == "model":
-                model = number
+                model_i = int(model_i)
+                tag = evalData["clusters"][model_i]["primary_model"]
+            elif kind == "tag":
+                tag = model_i
             elif kind == "top":
+                model_i = int(model_i)
                 # do we need to create a sorted list?
                 if models_sorted is None:
                     models_sorted = sorted(evalData["models"].items(), key=lambda x: x[1]["score"])
-                model = models_sorted[number - 1][0]
+                tag = models_sorted[model_i - 1][0]
+            else:
+                raise SimulationException("getModels: Invalid 'kind' parameter: '%s'" % (kind))
 
-            m = evalData["models"][model]
+            try:
+                m = evalData["models"][tag]
+            except:
+                raise SimulationException("getModels: Invalid tag: '%s'" % (tag))
 
-            # add the model number and pdb paths to the model dict
-            m["model"] = model
-            m["pdbfile"] = "%s/%09d.pdb" % (dir_tmp, model)
-            m["pdbfile_p"] = "%s/%09d_p.pdb" % (dir_tmp, model)
+            # add pdb path to the model dict
+            if kind == "cluster":
+                m["pdbfile"] = "%s/cluster_%d.pdb" % (dir_output, model_i)
+            else:
+                m["pdbfile"] = "%s/%s.pdb" % (dir_tmp, tag)
             results.append(m)
 
         return results
@@ -1375,20 +1301,18 @@ class RNAPrediction(object):
         cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
 
         print "Status:"
-        print "  cst                                 P M A E E"
-        print "  ---------------------------------------------"
+        print "  cst                                 P M A E"
+        print "  -------------------------------------------"
 
         for cst_name in sorted(set(cst_names), key=natural_sort_key):
             done_preparation = "-"
             done_motifs = "-"
             done_assembly = "-"
-            done_extraction = "-"
             done_evaluation = "-"
 
             dir_prediction = "predictions/%s" % (cst_name)
             dir_assembly = "predictions/%s/assembly" % (cst_name)
             dir_motifs = "predictions/%s/motifs" % (cst_name)
-            dir_tmp = "predictions/%s/temp" % (cst_name)
             dir_output = "predictions/%s/output" % (cst_name)
 
 
@@ -1403,9 +1327,6 @@ class RNAPrediction(object):
             if glob.glob(dir_assembly + "/*.out"):
                 done_assembly = "X"
 
-            if os.path.isfile(dir_tmp + "/000000001.pdb"):
-                done_extraction = "X"
-
             if os.path.isfile(dir_output + "/cluster_1.pdb"):
                 done_evaluation = "X"
 
@@ -1414,4 +1335,4 @@ class RNAPrediction(object):
                 line += " " + " ".join(status_list)
                 print line
 
-            printStatusLine(cst_name, [done_preparation, done_motifs, done_assembly, done_extraction, done_evaluation])
+            printStatusLine(cst_name, [done_preparation, done_motifs, done_assembly, done_evaluation])

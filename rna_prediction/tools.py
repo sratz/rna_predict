@@ -89,7 +89,13 @@ def tools():
 
     if sys.argv[1] == "comp2":
         sim = RNAPrediction(SysConfig(), ".")
-        models = sim.getModels("100rnaDCA_FADE_-100_26_20_-2_2", [0, 1, 2, 3, 4, 5], "top")
+        models = sim.getModels("100rna_r26_w2", [1, 10, 50, 100, 500], "top")
+        pprint.pprint(models)
+        print
+        models = sim.getModels("100rna_r26_w2", [1, 2, 10], "cluster")
+        pprint.pprint(models)
+        print
+        models = sim.getModels("100rna_r26_w2", ["S_000123_5", "S_000100"], "tag")
         pprint.pprint(models)
 
 
