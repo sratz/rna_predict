@@ -118,7 +118,6 @@ USAGE
     group_other.add_argument('-q', "--quiet", dest="quiet", action="store_true", help="don't print config on start [default: %(default)s]")
     group_other.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute and only print external commands [default: %(default)s]")
     group_other.add_argument("--config", dest="config", help="modify config variable", metavar=("KEY", "VALUE"), nargs=2)
-    parser.add_argument(dest="basepaths", help="paths to base directories [default: %(default)s]", metavar="basepaths", nargs="*", default=".")
 
     # Process arguments
     args = parser.parse_args()
@@ -135,64 +134,53 @@ USAGE
         if not args.quiet:
             sysconfig.printSysConfig()
 
-    # TODO: Is it really useful to allow more than one path argument? This makes error / exit code handling complicated.
-    # TODO: For now, at least try to make this work reliably if only one path is given.
-    init_workdir = os.getcwd()
-    exit_code = 0
-    for path in args.basepaths:
-        try:
-            os.chdir(init_workdir)
-            p = RNAPrediction(sysconfig, path)
+    try:
+        p = RNAPrediction(sysconfig, os.getcwd())
 
-            if args.config:
-                p.modifyConfig(args.config[0], args.config[1])
-                p.saveConfig()
+        if args.config:
+            p.modifyConfig(args.config[0], args.config[1])
+            p.saveConfig()
 
-            if not args.quiet:
-                p.printConfig()
+        if not args.quiet:
+            p.printConfig()
 
-            if not args.config and not args.prepare and not args.prepare_cst and not args.make_constraints and not args.edit_constraints and not args.create_helices and not args.create_motifs and not args.assemble and not args.extract and not args.evaluate and not args.compare:
-                p.printStatus()
+        if not args.config and not args.prepare and not args.prepare_cst and not args.make_constraints and not args.edit_constraints and not args.create_helices and not args.create_motifs and not args.assemble and not args.extract and not args.evaluate and not args.compare:
+            p.printStatus()
 
-            if args.prepare:
-                p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
-                p.saveConfig()
-            if args.prepare_cst:
-                p.prepareCst(constraints=args.cst, motifsOverride=args.motifs_cst)
-            if args.make_constraints:
-                p.makeConstraints(dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function, filterText=args.filter, mappingMode=args.mapping_mode)
-            if args.edit_constraints:
-                p.editConstraints(constraints=args.cst, outputFileName=args.cst_out_file,cstFunction=args.cst_function)
-            if args.create_helices:
-                p.create_helices(dry_run=args.dry_run, threads=args.threads)
-            if args.create_motifs:
-                p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct_motifs, cycles=args.cycles_motifs, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
-            if args.assemble:
-                p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
-            if args.extract:
-                p.extract(constraints=args.cst)
-            if args.evaluate:
-                p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
-            if args.compare:
-                p.compare()
-        except (SimulationException, DcaException) as e:
+        if args.prepare:
+            p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
+            p.saveConfig()
+        if args.prepare_cst:
+            p.prepareCst(constraints=args.cst, motifsOverride=args.motifs_cst)
+        if args.make_constraints:
+            p.makeConstraints(dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function, filterText=args.filter, mappingMode=args.mapping_mode)
+        if args.edit_constraints:
+            p.editConstraints(constraints=args.cst, outputFileName=args.cst_out_file,cstFunction=args.cst_function)
+        if args.create_helices:
+            p.create_helices(dry_run=args.dry_run, threads=args.threads)
+        if args.create_motifs:
+            p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct_motifs, cycles=args.cycles_motifs, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
+        if args.assemble:
+            p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
+        if args.extract:
+            p.extract(constraints=args.cst)
+        if args.evaluate:
+            p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
+        if args.compare:
+            p.compare()
+    except (SimulationException, DcaException) as e:
+        printToStderr(e)
+        return 1
+    except KeyboardInterrupt:
+        return 1
+    except Exception, e:
+        if DEBUG or TESTRUN:
+            raise
+        else:
             printToStderr(e)
-            exit_code = 1
-            continue
-        except KeyboardInterrupt:
-            exit_code = 1
-            break
-        except Exception, e:
-            if DEBUG or TESTRUN:
-                raise
-            else:
-                printToStderr(e)
-            # TODO: Save the config here, so we don't lose anything even in case of errors?
-            exit_code = 1
-            continue
+        return 1
 
-
-    return exit_code
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())

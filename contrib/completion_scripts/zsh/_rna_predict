@@ -110,8 +110,7 @@ _arguments -s -w \
   $evaluate_args \
   $cst_args \
   $make_constraints_args \
-  $makeedit_constraints_args \
-  '*:directory:_path_files -/'
+  $makeedit_constraints_args
 
 while (( $#state )); do
   case "$state[1]" in
