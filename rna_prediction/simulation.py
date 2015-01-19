@@ -1350,6 +1350,7 @@ class RNAPrediction(object):
 
 
     def printStatus(self):
+        self.checkConfig()
         cst_names = ["none"]
         cst_names += [splitext(basename(cst_file))[0] for cst_file in glob.glob("constraints/*.cst")]
         cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
