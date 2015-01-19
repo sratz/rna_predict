@@ -150,6 +150,17 @@ class Command(object):
         self.stdin = stdin
         self.quiet = quiet
 
+    def getFullCommand(self, sysconfig):
+        com = self.command[:]
+        if self.add_suffix == "rosetta":
+            com[0] = sysconfig.rosetta_exe_path + com[0] + sysconfig.rosetta_exe_suffix
+        elif self.add_suffix == "gromacs":
+            com[0] = sysconfig.gromacs_exe_path + com[0] + sysconfig.gromacs_exe_suffix
+        if sysconfig.subprocess_buffsize is not None:
+            com = ["stdbuf", "-o", sysconfig.subprocess_buffsize] + com
+        return com
+
+
 
 class RNAPrediction(object):
     '''
@@ -209,6 +220,20 @@ class RNAPrediction(object):
     def executeCommand(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
         self.executeCommands([Command(command, add_suffix, dry_run, print_commands, stdin, quiet)])
 
+    def executeCommandAndCapture(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
+        c = Command(command, add_suffix, dry_run, print_commands, stdin, quiet)
+        command = c.getFullCommand(self.sysconfig)
+        if print_commands:
+            print " ".join(command)
+        p = subprocess.Popen(c.getFullCommand(self.sysconfig), stdin=(subprocess.PIPE if c.stdin != None else None), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if c.stdin != None:
+            p.stdin.write(c.stdin)
+        for line in p.stdout:
+            if not quiet:
+                sys.stdout.write(line)
+            yield line
+        p.wait()
+
     def executeCommands(self, commands, threads=1):
         ':type commands: list'
 
@@ -218,28 +243,22 @@ class RNAPrediction(object):
             while True:
                 while commands and len(processes) < threads:
                     c = commands.pop(0)
-                    if c.add_suffix == "rosetta":
-                        c.command[0] = self.sysconfig.rosetta_exe_path + c.command[0] + self.sysconfig.rosetta_exe_suffix
-                    elif c.add_suffix == "gromacs":
-                        c.command[0] = self.sysconfig.gromacs_exe_path + c.command[0] + self.sysconfig.gromacs_exe_suffix
+                    command = c.getFullCommand(self.sysconfig)
                     if c.print_commands:
-                        print " ".join(c.command)
-                    if self.sysconfig.subprocess_buffsize is not None:
-                        c.command = ["stdbuf", "-o", self.sysconfig.subprocess_buffsize] + c.command
+                        print " ".join(command)
                     if not c.dry_run:
                         stdout = None
                         if c.quiet and stdout is None:
                             stdout = open(os.devnull, "w")
                         stderr = stdout
                         try:
-                            p = subprocess.Popen(c.command, stdin=(subprocess.PIPE if c.stdin != None else None), stdout=stdout, stderr=stderr)
+                            p = subprocess.Popen(command, stdin=(subprocess.PIPE if c.stdin != None else None), stdout=stdout, stderr=stderr)
                             # store original command in process
-                            p.command = c.command
+                            p.command = command
                             processes.append(p)
                             if c.stdin != None:
                                 p.stdin.write(c.stdin)
                         except OSError, e:
-                            print "lol1"
                             raise SimulationException("Failed to execute command: %s, Reason: %s" % (" ".join(c.command), e))
 
                 for p in processes:
