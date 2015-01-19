@@ -277,7 +277,7 @@ if __name__ == '__main__':
 
         plt.title("Residue Distances %s" % (sim.config["name"]))
         plt.xlabel("Residue")
-        plt.ylabel(u"Distance to Native Structure in / Å")
+        plt.ylabel(u"Distance to Native Structure / Å")
 
         x_values = np.arange(1, len(sim.config["sequence"]) + 1)
         x_labels = ["%s\n%s" % ("\n".join(list("%.2d" % (i + 1))), x) for i, x in enumerate(sim.config["sequence"])]
