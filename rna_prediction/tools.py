@@ -259,7 +259,7 @@ def tools():
                 n_clusters = i - 1
                 break
             models_c.append(models_current_cluster)
-            descs.append("cluster %d" % i)
+            descs.append("cluster %d (%d)" % (i, len(models_current_cluster)))
 
         if "native_rmsd" in models_c[1][0]:
             comparison = "native_rmsd"
