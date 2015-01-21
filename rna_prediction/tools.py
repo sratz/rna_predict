@@ -23,7 +23,7 @@ from rna_prediction.simulation import parseCstFile
 from rna_prediction.simulation import RNAPrediction
 from rna_prediction.sysconfig import SysConfig
 
-if __name__ == '__main__':
+def tools():
     if sys.argv[1] == "hist":
 
         distanceMap = dcatools.getContactDistanceMap(westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])

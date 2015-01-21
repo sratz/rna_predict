@@ -1,153 +1,199 @@
 #compdef rna_predict
 
-local context state state_descr line
-typeset -A opt_args
-
-local filters contexts suf ostate
-contexts=()
-filters=(threshold none)
-suf=()
-
-
-typeset -a prepare_args
-typeset -a preparecst_args
-typeset -a motifs_args
-typeset -a assemble_args
-typeset -a motifs_assemble_args
-typeset -a evaluate_args
-typeset -a cst_args
-typeset -a make_constraints_args
-typeset -a makeedit_consstraints_args
-
-if (( words[(I)--prepare] )); then
-  prepare_args=(
-    '--name=[simulation name (default: infer from dirname)]:name: '
-    '--native=[native pdb file (default: None)]:pdb file:_files -g \*.pdb'
-    '--sequence=[sequence fasta file (default: sequence.fasta)]:fasta file:_files -g \*.fasta'
-    '--secstruct=[secondary structure file (default: secstruct.txt)]:secstruct file:_files'
+__rna_predict_setup_cst_option() {
+  cst_option=(
+    '--cst=[constraints selection (default: none)]:constraints file:_files -W "(constraints)" -g \*.cst'
   )
-fi
+}
 
-if (( words[(I)--prepare-cst] )); then
-  preparecst_args=(
-    '--override-motifs-cst=[use motifs from a different constraints set (default: -)]::constraints file:_files -W "(constraints)" -g \*.cst'
-  )
-fi
-
-if (( words[(I)--create-motifs] )); then
-  motifs_args=(
-    '--cycles-motifs=[number of cycles for motif generation (default: 5000)]: :_guard "[0-9]#" "cycles"'
-    '--nstruct-motifs=[number of motif structures to create (default: 4000)]: :_guard "[0-9]#" "number of structures"'
-  )
-fi
-
-if (( words[(I)--assemble] )); then
-  assemble_args=(
-    '--cycles-assembly=[number of cycles for assembly (default: 20000)]: :_guard "[0-9]#" "cycles"'
-    '--nstruct-assembly=[number of assembly structures to create (default: 50000)]: :_guard "[0-9]#" "number of structures"'
-  )
-fi
-
-if (( words[(I)--create-motifs|--assemble] )); then
-  motifs_assemble_args=(
-    '--seed=[random seed (default: -)]: :_guard "(-|)[0-9]#" "seed"'
-    '--use-native[use native information for motif generation and assembly]'
-    {-j,--threads}'[maximum number of parallel subprocesses (default: 1)]: :_guard "[0-9]#" "threads"'
-  )
-fi
-
-if (( words[(I)--evaluate] )); then
-  evaluate_args=(
-    '--cluster-cutoff=[cluster cutoff in nm (default: 0.41)]: : _guard "[0-9]#(.|)[0-9]#" "cutoff"'
-    '--cluster-limit=[maximum number of clusters to create (default: 10)]: :_guard "[0-9]#" "limit"'
-  )
-fi
-
-if (( words[(I)--evaluate|--extract|--assemble|--edit-constraints|--create-motifs|--prepare-cst] )); then
-  cst_args=(
-    '--cst=[constraints file or name to use in motif creation, assembly, extraction or evaluation steps (default: None)]:constraints file:_files -W "(constraints)" -g \*.cst'
-  )
-fi
-
-if (( words[(I)--make-constraints] )); then
-  make_constraints_args=(
-    '--dca-file=[dca file to use as input (default: dca/dca.txt)]:dca file:_files'
-    '--dca-count=[maximum number o dca predictions to use (default: 100)]: :_guard "[0-9]#" "limit"'
-    '--filter=[run dca contacts though (a) filter(s). For syntax information refer to the documentation.]:filter:->filter'
-    '--mapping-mode=[mapping mode to use for constraints creation (default: allAtomWesthof)]:mapping mode:(allAtomWesthof pOnly)'
-  )
-fi
-
-if (( words[(I)--make-constraints|--edit-constraints] )); then
-  makeedit_constraints_args=(
+__rna_predict_setup_editmake_constraints_options() {
+  editmake_constraints_options=(
     '--cst-out-file=[output cst file (default: inferred from dca input file)]:constraints file:_files -g \*.cst'
     '--cst-function=[rosetta function to use for the constraints (default: "FADE -100 26 20 -2 2")]:function: '
   )
-fi
+}
+
+_rna_predict-prepare() {
+  _arguments -s -w \
+    '--name=[simulation name (default: infer from dirname)]:name: ' \
+    '--native=[native pdb file (default: None)]:pdb file:_files -g \*.pdb' \
+    '--sequence=[sequence fasta file (default: sequence.fasta)]:fasta file:_files -g \*.fasta' \
+    '--secstruct=[secondary structure file (default: secstruct.txt)]:secstruct file:_files'
+}
+
+_rna_predict-prepare-cst() {
+  local cst_option
+  __rna_predict_setup_cst_option
+  _arguments -s -w \
+    '--override-motifs-cst=[use motifs from a different constraints set (default: -)]::constraints file:_files -W "(constraints)" -g \*.cst' \
+    $cst_option
+}
 
 
-_arguments -s -w \
+_rna_predict-create-motifs() {
+  local cst_option
+  __rna_predict_setup_cst_option
+  _arguments -s -w \
+    '--cycles-motifs=[number of cycles for motif generation (default: 5000)]: :_guard "[0-9]#" "cycles"' \
+    '--nstruct-motifs=[number of motif structures to create (default: 4000)]: :_guard "[0-9]#" "number of structures"' \
+    '--seed=[random seed (default: -)]: :_guard "(-|)[0-9]#" "seed"' \
+    '--use-native[use native information for motif generation and assembly]' \
+    $cst_option
+}
+
+_rna_predict-assemble() {
+  local cst_option
+  __rna_predict_setup_cst_option
+  _arguments -s -w \
+    '--cycles-assembly=[number of cycles for assembly (default: 20000)]: :_guard "[0-9]#" "cycles"' \
+    '--nstruct-assembly=[number of assembly structures to create (default: 50000)]: :_guard "[0-9]#" "number of structures"' \
+    '--seed=[random seed (default: -)]: :_guard "(-|)[0-9]#" "seed"' \
+    '--use-native[use native information for motif generation and assembly]' \
+    $cst_option
+}
+
+
+_rna_predict-evaluate() {
+  local cst_option
+  __rna_predict_setup_cst_option
+  _arguments -s -w \
+    '--cluster-cutoff=[cluster cutoff in nm (default: 0.41)]: : _guard "[0-9]#(.|)[0-9]#" "cutoff"' \
+    '--cluster-limit=[maximum number of clusters to create (default: 10)]: :_guard "[0-9]#" "limit"' \
+    $cst_option
+}
+
+_rna_predict-extract() {
+  local cst_option
+  __rna_predict_setup_cst_option
+  _arguments -s -w \
+    $cst_option
+}
+
+_rna_predict-make-constraints() {
+  local editmake_constraints_options
+  __rna_predict_setup_editmake_constraints_options
+  _arguments -s -w \
+    '--dca-file=[dca file to use as input (default: dca/dca.txt)]:dca file:_files' \
+    '--dca-count=[maximum number o dca predictions to use (default: 100)]: :_guard "[0-9]#" "limit"' \
+    '--filter=[run dca contacts though (a) filter(s). For syntax information refer to the documentation.]:filter:__rna_predict_filter' \
+    '--mapping-mode=[mapping mode to use for constraints creation (default: allAtomWesthof)]:mapping mode:(allAtomWesthof pOnly)' \
+    $editmake_constraints_options
+}
+
+_rna_predict-edit-constraints() {
+  local cst_option
+  __rna_predict_setup_cst_option
+  local editmake_constraints_options
+  __rna_predict_setup_editmake_constraints_options
+  _arguments -s -w \
+    $editmake_constraints_options \
+    $cst_option
+}
+
+_rna_predict-compare() {
+}
+
+_rna_predict-status() {
+}
+
+
+# config::key:(fasta_file name native_pdb_file params_file torsions_file):value:
+
+_rna_predict_commands() {
+  local -a commands
+  commands=(
+    'prepare:prepare stems and motifs'
+    'prepare-cst:prepare constraints file for motif generation and assembly'
+    'create-helices:create ideal a-helices'
+    'create-motifs:create motifs'
+    'assemble:assemble'
+    'extract:extract data and score'
+    'evaluate:evaluate data (clustering and scoring)'
+    'make-constraints:create a constraints file from a dca prediction'
+    'edit-constraints:replace rosetta function in a constraints file'
+    'compare:print comparison of prediction to native structure'
+    'config:modify config variable'
+    'status:print status information'
+  )
+  _describe -t commands command commands && ret=0
+}
+
+_rna_predict() {
+  local curcontext=$curcontext state line
+  integer ret=1
+
+_arguments -C -s -w \
   {-h,--help}'[show help]' \
-  '--prepare[prepare stems and motifs]' \
-  '--prepare-cst[prepare constraints file for motif generation and assembly]' \
-  '--create-helices[create ideal a-helices]' \
-  '--create-motifs[create motifs]' \
-  '--assemble[assemble]' \
-  '--extract[extract pdb data and scrore]' \
-  '--evaluate[evaluate data (clusters)]' \
-  '--make-constraints[create a constraints file from a dca prediction]' \
-  '--edit-constraints[replace rosetta function in a constraints file]' \
-  '--compare[print comparison of prediction to native structure]' \
   {-V,--version}'[show program version number and exit]' \
   {-q,--quiet}'[do not print config on start]' \
   {-n,--dry-run}'[do not execute and only print external commands]' \
-  '--config[modify config variable]:key:(fasta_file name native_pdb_file params_file torsions_file):value: ' \
-  $prepare_args \
-  $preparecst_args \
-  $motifs_args \
-  $assemble_args \
-  $motifs_assemble_args \
-  $evaluate_args \
-  $cst_args \
-  $make_constraints_args \
-  $makeedit_constraints_args \
-  '*:directory:_path_files -/'
+  {-j,--threads}'[maximum number of parallel subprocesses (default: 1)]: :_guard "[0-9]#" "threads"' \
+  '(-): :->command' \
+  '(-)*:: :->option-or-argument' && return
 
-while (( $#state )); do
-  case "$state[1]" in
-    (filter)
-      compset -P '*,'
-      if [[ ! -prefix *: ]]; then
-        _wanted values expl 'filter' compadd -qS: -a filters
+  case $state in
+    (command)
+      _rna_predict_commands && ret=0
+      ;;
+    (option-or-argument)
+      curcontext=${curcontext%:*:*}:rna_predict-$words[1]:
+      if (( $+functions[_rna_predict-$words[1]] )); then
+        _call_function ret _rna_predict-$words[1]
+      elif zstyle -T :completion:$curcontext: use-fallback; then
+        _files && ret=0
       else
-        if compset -P threshold:; then
-          contexts=(threshold cst model_kind model_number)
-        elif compset -P none:; then
-          contexts=()
-        fi
+        _message 'unknown sub-command'
       fi
-      if (( $#contexts )); then
-        for ostate in $contexts; do
-	      compset -P '[^:]#:' || break
-	    done
-	    suf=()
-	    compset -S ':*' || suf=( -qS: )
-	    [[ $ostate = $contexts[-1] ]] && suf=()
-	    state+=( "$ostate" )
-      fi
-      ;;
-    (threshold)
-      _guard '[0-9.]#' 'threshold'
-      ;;
-    (cst)
-      _wanted values expl 'constraints' _files $suf -W '(constraints)' -g '*.cst'
-      ;;
-    (model_kind)
-      _wanted values expl 'model kind' compadd $suf cluster model top
-      ;;
-    (model_number)
-      _guard '[0-9]#' 'model number'
       ;;
   esac
-  shift state
- done
+}
+
+
+__rna_predict_filter() {
+  local filters contexts suf ostate state
+  contexts=()
+  filters=(threshold none)
+  suf=()
+  state=(filter)
+
+  while (( $#state )); do
+  case "$state[1]" in
+      (filter)
+        compset -P '*,'
+        if [[ ! -prefix *: ]]; then
+          _wanted values expl 'filter' compadd -qS: -a filters
+        else
+          if compset -P threshold:; then
+            contexts=(threshold cst model_kind model_number)
+          elif compset -P none:; then
+            contexts=()
+          fi
+        fi
+        if (( $#contexts )); then
+          for ostate in $contexts; do
+	        compset -P '[^:]#:' || break
+          done
+	      suf=()
+          compset -S ':*' || suf=( -qS: )
+          [[ $ostate = $contexts[-1] ]] && suf=()
+          state+=( "$ostate" )
+        fi
+        ;;
+      (threshold)
+        _guard '[0-9.]#' 'threshold'
+        ;;
+      (cst)
+        _wanted values expl 'constraints' _files $suf -W '(constraints)' -g '*.cst'
+        ;;
+      (model_kind)
+        _wanted values expl 'model kind' compadd $suf cluster model top
+        ;;
+      (model_number)
+        _guard '[0-9]#' 'model number'
+        ;;
+    esac
+    shift state
+   done
+ }
+
+ _rna_predict

@@ -193,7 +193,7 @@ class RNAPrediction(object):
 
     def checkConfig(self):
         if not self.config:
-            raise SimulationException("No config file found. Please run --prepare first!")
+            raise SimulationException("No config file found. Please run 'prepare' first!")
 
     def __init__(self, sysconfig, path):
         '''
@@ -820,7 +820,7 @@ class RNAPrediction(object):
         # check if motif constraints were created correctly
         if cst_file is not None:
             for i in range(n_motifs):
-                checkFileExistence("%s/motif%d.cst" % (dir_motifs, i+1), "Motif cst files not found. Please run --prepare-cst step!")
+                checkFileExistence("%s/motif%d.cst" % (dir_motifs, i+1), "Motif cst files not found. Please run the 'prepare-cst' step!")
 
         # merge all motifs abd check what we have so far
         completed = {}
@@ -930,8 +930,8 @@ class RNAPrediction(object):
         dir_motifs = "predictions/%s/motifs" % (motifcst_name)
         file_assembly_cst = "%s/assembly.cst" % (dir_assembly)
 
-        checkFileExistence(file_assembly_cst, "Preparation incomplete. Please run --prepare-cst.")
-        checkFileExistence("%s/motif1.out" % (dir_motifs), "Motifs not found. Please run --create-motifs.")
+        checkFileExistence(file_assembly_cst, "Preparation incomplete. Please run 'prepare-cst'.")
+        checkFileExistence("%s/motif1.out" % (dir_motifs), "Motifs not found. Please run 'create-motifs'.")
 
         commands = list()
 
@@ -1097,9 +1097,9 @@ class RNAPrediction(object):
                 evalData = pickle.load(f)
             evalData["models"][1]["score"]
         except KeyError:
-            raise SimulationException("Broken data file %s. Try running --extract again" % (file_evaldata))
+            raise SimulationException("Broken data file %s. Try running 'extract' again" % (file_evaldata))
         except:
-            raise SimulationException("Data file %s for constraint not found. Did you forget to run --extract?" % (file_evaldata))
+            raise SimulationException("Data file %s for constraint not found. Did you forget to run 'extract'?" % (file_evaldata))
 
         if not os.path.isdir(dir_tmp) or not os.path.isfile("%s/%09d_p.pdb" % (dir_tmp, len(evalData["models"]))):
             raise SimulationException("No extracted pdb for constraint '%s' found. Did you delete temp/ files?" % (cst_name))

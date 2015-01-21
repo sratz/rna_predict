@@ -1,2 +1,3 @@
 /.settings
+/rna_prediction.egg-info
 *.pyc
