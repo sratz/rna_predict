@@ -374,8 +374,11 @@ def parseFilterLine(line, simulation):
             threshold = float(fields[1])
             cst_name = fields[2]
             model_kind = fields[3]
-            model_number = int(fields[4])
-            pdbfile = simulation.getModels(cst_name, [model_number], model_kind)[0]["pdbfile"]
+            model_i = fields[4]
+            model = simulation.getModels(cst_name, [model_i], model_kind)[0]
+            pdbfile = model["pdbfile"]
+            if not os.path.isfile(pdbfile):
+                simulation.extractPdb(cst_name, model)
             filterPdbChain = pdbtools.parsePdb("", pdbfile)[0].child_list[0]
             if threshold > 0:
                 dcaFilter = dcaFilterThresholdMinimumKeepBelow(threshold, filterPdbChain)
