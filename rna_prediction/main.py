@@ -28,6 +28,7 @@ from rna_prediction.simulation import SimulationException
 from rna_prediction.sysconfig import SysConfig
 from .dcatools import DcaException
 from . import dcatools
+from . import tools
 
 __all__ = []
 __version__ = 0.1
@@ -99,6 +100,7 @@ USAGE
     parser_editconstraints = subparsers.add_parser("edit-constraints", help="replace rosetta function in a constraints file")
     parser_status = subparsers.add_parser("status", help="print status summary")
     parser_config = subparsers.add_parser("config", help="modify config variable")
+    parser_tools = subparsers.add_parser("tools", help="various plot generation tools")
 
     parser_prepare.add_argument("--name", dest="name", help="simulation name (for example the analyzed pdb) [default: basename of directory]")
     parser_prepare.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
@@ -117,6 +119,7 @@ USAGE
     parser_makeconstraints.add_argument("--filter", dest="filter", help="run dca contacts though (a) filter(s). For syntax information refer to the documentation. [default: %(default)s", default=None)
     parser_config.add_argument("key", help="config key")
     parser_config.add_argument("value", help="config value")
+    parser_tools.add_argument("positional", nargs="*")
 
     for p in (parser_motifs, parser_assemble):
         p.add_argument("--seed", dest="seed", help="force random seed (when multithreading, this will be incremented for each process) [default: %(default)s]", default=None, type=int)
@@ -146,6 +149,13 @@ USAGE
             sysconfig.printSysConfig()
 
     try:
+        if args.subcommand == "tools":
+            # TODO: hack! introduce proper argument parsing for tools
+            sys.argv = sys.argv[1:]
+            tools.tools()
+            return 0
+
+        # for all the other subcommannds we need a simulation
         p = RNAPrediction(sysconfig, os.getcwd())
 
         # treat "config" special, because we want to print the configuartion after we change something
