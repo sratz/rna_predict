@@ -250,9 +250,15 @@ def tools():
         models_c.append([m for m in models if "cluster" not in m])
         descs.append("no cluster")
 
+        n_clusters = 10
+
         # cluster1-10
-        for i in range(1,11):
-            models_c.append([m for m in models if "cluster" in m and m["cluster"] == i])
+        for i in range(1, n_clusters + 1):
+            models_current_cluster = [m for m in models if "cluster" in m and m["cluster"] == i]
+            if len(models_current_cluster) == 0:
+                n_clusters = i - 1
+                break
+            models_c.append(models_current_cluster)
             descs.append("cluster %d" % i)
 
         if "native_rmsd" in models_c[1][0]:
@@ -263,7 +269,7 @@ def tools():
             plt.xlabel("rmsd to best structure / A")
 
         # create plots
-        for i in range(0,11):
+        for i in range(0, n_clusters + 1):
             plots.append(plt.scatter([x[comparison] for x in models_c[i]], [x["score"] for x in models_c[i]], s=50, c=colors[i]))
 
         plt.title("model clusters %s, constraints: %s" % (sim.config["name"], cst_name))
