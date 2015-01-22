@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import math
 import re
+from pkg_resources import ResourceManager
 
 from . import pdbtools
 from sysconfig import SysConfig
@@ -52,13 +53,29 @@ def getAtomsForResSequence(sequence):
 
 # the westhofVector can be used to apply different weights to the bonding family classes
 def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], forceRebuild=False):
+
+    nucleotides = ["A", "U", "G", "C"]
+
+    # build a dict of filenames
+    # if a local file is present in the user directory it will take precedence over the system wide shipped version
+    structure_filenames = {}
+    resource_manager = ResourceManager()
+    for nt1 in nucleotides:
+        for nt2 in nucleotides:
+            ntpair = "%s-%s" % (nt1, nt2)
+            local_file = structureDirectory + os.sep + ntpair + ".txt"
+            if os.path.isfile(local_file):
+                structure_filenames[ntpair] = local_file
+            else:
+                structure_filenames[ntpair] = resource_manager.resource_filename(__name__, "structure_info/%s.txt" % (ntpair))
+
     # try to use a cached version of the distance map if found and recent and forceRebuild is False
     if not forceRebuild:
         try:
             cacheOk = True
             if os.path.isfile(CACHE_DISTANCEMAP):
                 cacheTimestamp = os.path.getmtime(CACHE_DISTANCEMAP)
-                for d in glob.glob(INFO_DIRECTORY + os.sep + "*.txt"):
+                for d in structure_filenames.itervalues():
                     if (os.path.getmtime(d) > cacheTimestamp):
                         cacheOk = False
                         print "Contact map cache out of date. Rebuilding..."
@@ -77,8 +94,8 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1
     # TODO: add exception handling in case structureDirectory does not exist or is missing needed files
     pdbStructureDict = {}
     distanceMap = {}
-    for nt1 in ["A", "U", "G", "C"]:
-        for nt2 in ["A", "U", "G", "C"]:
+    for nt1 in nucleotides:
+        for nt2 in nucleotides:
 
             distanceMapResPair = {}
 
@@ -86,7 +103,7 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1
             residues = []
 
             # read the structures for the 12 edge-to-edge bonding families
-            for line in readFileLineByLine(structureDirectory + nt1 + '-' + nt2 + '.txt'):
+            for line in readFileLineByLine(structure_filenames[nt1 + '-' + nt2]):
                 fields = line.split(" ")
                 if fields[0] != "-":
                     pdbCodes.append(fields[0].upper())
