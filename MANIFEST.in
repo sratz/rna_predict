@@ -1,0 +1,3 @@
+include contrib
+include README.md
+include TODO
