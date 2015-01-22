@@ -1,3 +1,5 @@
 /.settings
+/build
+/dist
 /rna_prediction.egg-info
 *.pyc
