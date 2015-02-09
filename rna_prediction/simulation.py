@@ -178,7 +178,7 @@ class RNAPrediction(object):
 
     # TODO: support different data types?
     def modifyConfig(self, key, value):
-        if self.config.has_key(key):
+        if key in self.config:
             self.config[key] = None if value == "-" else value
         else:
             raise SimulationException("No such config entry: %s" % key)
@@ -407,7 +407,7 @@ class RNAPrediction(object):
 
         self.config["stems"] = []
         for i in range(numres):
-            if pair_map.has_key(i) and not already_in_stem[i]:  # In a base pair
+            if i in pair_map and not already_in_stem[i]:  # In a base pair
                 k = i
                 stem_res = []
 
@@ -416,7 +416,7 @@ class RNAPrediction(object):
                 already_in_stem[pair_map[k]] = 1
 
                 # Can we extend in one direction?
-                while pair_map.has_key(k + 1) and pair_map[k + 1] == pair_map[k] - 1 and not already_in_stem[k + 1]:
+                while (k + 1) in pair_map and pair_map[k + 1] == pair_map[k] - 1 and not already_in_stem[k + 1]:
                     k += 1
                     stem_res.append([k, pair_map[k]])
                     already_in_stem[k] = 1
