@@ -8,11 +8,11 @@ import errno
 import os
 
 
-def readFileLineByLine(filename, skipEmpty=True):
+def read_file_line_by_line(filename, skip_empty=True):
     with open(filename) as lines:
         for line in lines:
             line = line.rstrip()
-            if line == "" and skipEmpty:
+            if line == "" and skip_empty:
                 continue
             yield line
 

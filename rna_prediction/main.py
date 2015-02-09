@@ -45,7 +45,7 @@ def main():
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)
     sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
 
-    def printToStderr(message, prefix="error"):
+    def print_to_stderr(message, prefix="error"):
         sys.stderr.write("%s: %s: %s\n" % (program_name, prefix, message))
 
     '''Command line options.'''
@@ -130,15 +130,15 @@ USAGE
 
     # system configuration
     sysconfig = SysConfig()
-    check = sysconfig.checkSysConfig()
+    check = sysconfig.check_sysconfig()
     failed = check["fail"]
     if failed:
         for f in failed:
-            printToStderr("Sysconfig error: Cannot access %s" % f)
+            print_to_stderr("Sysconfig error: Cannot access %s" % f)
         return 1
     else:
         if not args.quiet:
-            sysconfig.printSysConfig()
+            sysconfig.print_sysconfig()
 
     try:
         if args.subcommand == "tools":
@@ -152,23 +152,23 @@ USAGE
 
         # treat "config" special, because we want to print the configuartion after we change something
         if args.subcommand == "config":
-            p.modifyConfig(args.key, args.value)
-            p.saveConfig()
+            p.modify_config(args.key, args.value)
+            p.save_config()
 
         if not args.quiet:
-            p.printConfig()
+            p.print_config()
 
         if args.subcommand == "status":
-            p.printStatus()
+            p.print_status()
         elif args.subcommand == "prepare":
             p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
-            p.saveConfig()
+            p.save_config()
         elif args.subcommand == "prepare-cst":
-            p.prepareCst(constraints=args.cst, motifsOverride=args.motifs_cst)
+            p.prepare_cst(constraints=args.cst, motifs_override=args.motifs_cst)
         elif args.subcommand == "make-constraints":
-            p.makeConstraints(dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function, filterText=args.filter, mappingMode=args.mapping_mode)
+            p.make_constraints(dca_prediction_filename=args.dca_file, output_filename=args.cst_out_file, number_dca_predictions=args.dca_count, cst_function=args.cst_function, filter_text=args.filter, mapping_mode=args.mapping_mode)
         elif args.subcommand == "edit-constraints":
-            p.editConstraints(constraints=args.cst, outputFileName=args.cst_out_file, cstFunction=args.cst_function)
+            p.edit_constraints(constraints=args.cst, output_filename=args.cst_out_file, cst_function=args.cst_function)
         elif args.subcommand == "create-helices":
             p.create_helices(dry_run=args.dry_run, threads=args.threads)
         elif args.subcommand == "create-motifs":
@@ -183,7 +183,7 @@ USAGE
         return 0
 
     except (SimulationException, DcaException) as e:
-        printToStderr(e)
+        print_to_stderr(e)
         return 1
     except KeyboardInterrupt:
         return 1
@@ -191,7 +191,7 @@ USAGE
         if DEBUG or TESTRUN:
             raise
         else:
-            printToStderr(e)
+            print_to_stderr(e)
         return 1
 
 if __name__ == "__main__":

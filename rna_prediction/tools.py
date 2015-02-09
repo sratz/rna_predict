@@ -17,7 +17,7 @@ from os.path import basename, splitext
 
 from rna_prediction import dcatools
 from rna_prediction import pdbtools
-from rna_prediction.simulation import parseCstFile
+from rna_prediction.simulation import parse_cst_file
 from rna_prediction.simulation import RNAPrediction
 from rna_prediction.sysconfig import SysConfig
 
@@ -25,13 +25,13 @@ from rna_prediction.sysconfig import SysConfig
 def tools():
     if sys.argv[1] == "hist":
 
-        distanceMap = dcatools.getContactDistanceMap(westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        distance_map = dcatools.get_contact_distance_map(westhof_vector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
         f, axarr = plt.subplots(4, 4)
 
         f.suptitle("normed frequency / distance")
         i = 0
-        for resPair, distanceMapResPair in sorted(distanceMap.iteritems()):
+        for resPair, distanceMapResPair in sorted(distance_map.iteritems()):
             print resPair
             dists = []
             for atomPair, distancesAtomPair in distanceMapResPair.iteritems():
@@ -48,25 +48,25 @@ def tools():
     if sys.argv[1] == "hist2":
 
         if len(sys.argv) >= 3:
-            meanCutoff = float(sys.argv[2])
+            mean_cutoff = float(sys.argv[2])
         else:
-            meanCutoff = 6.0
+            mean_cutoff = 6.0
 
         if len(sys.argv) >= 4:
-            stdCutoff = float(sys.argv[3])
+            std_cutoff = float(sys.argv[3])
         else:
-            stdCutoff = 3.0
+            std_cutoff = 3.0
 
-        distanceMap = dcatools.getContactDistanceMap(westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-        meanDistanceMap = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff, stdCutoff)
+        distance_map = dcatools.get_contact_distance_map(westhof_vector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+        mean_distance_map = dcatools.get_contact_distance_map_mean(distance_map, mean_cutoff, std_cutoff)
 
         f, axarr = plt.subplots(4, 4)
 
-        f.suptitle("mean distance (cutoff: %s), standard deviation (cutoff: %s)" % (meanCutoff, stdCutoff))
+        f.suptitle("mean distance (cutoff: %s), standard deviation (cutoff: %s)" % (mean_cutoff, std_cutoff))
         f.subplots_adjust(left=0.02, bottom=0.05, right=0.99, top=0.95, hspace=0.3, wspace=0.1)
         i = 0
 
-        for resPair, meanDistanceMapResPair in sorted(meanDistanceMap.items()):
+        for resPair, meanDistanceMapResPair in sorted(mean_distance_map.items()):
             print resPair
             data = sorted(meanDistanceMapResPair.items(), key=lambda x: x[1])
             x_names = [d[0] for d in data]
@@ -84,13 +84,13 @@ def tools():
 
     if sys.argv[1] == "comp2":
         sim = RNAPrediction(SysConfig(), ".")
-        models = sim.getModels("100rna_r26_w2", [1, 10, 50, 100, 500], "top")
+        models = sim.get_models("100rna_r26_w2", [1, 10, 50, 100, 500], "top")
         pprint.pprint(models)
         print
-        models = sim.getModels("100rna_r26_w2", [1, 2, 10], "cluster")
+        models = sim.get_models("100rna_r26_w2", [1, 2, 10], "cluster")
         pprint.pprint(models)
         print
-        models = sim.getModels("100rna_r26_w2", ["S_000123_5", "S_000100"], "tag")
+        models = sim.get_models("100rna_r26_w2", ["S_000123_5", "S_000100"], "tag")
         pprint.pprint(models)
 
     if sys.argv[1] == "comp":
@@ -104,7 +104,7 @@ def tools():
         sources = sys.argv[3:]
 
         sim = RNAPrediction(SysConfig(), ".")
-        pdb = pdbtools.parsePdb("foo", comparison_pdb)
+        pdb = pdbtools.parse_pdb("foo", comparison_pdb)
         chain = pdb[0].child_list[0]
 
         print "Comparison PDB: %s" % comparison_pdb
@@ -123,21 +123,21 @@ def tools():
                 title = arg
                 _, dca_file, filtertext = arg.split(":", 2)
                 print "  Applying filters: %s" % filtertext
-                dca = dcatools.parseDcaData(dca_file)
-                dcaFilterChain = dcatools.parseFilterLine(filtertext, sim)
-                dcatools.filterDcaData(dcaData=dca, dcaFilterChain=dcaFilterChain, quiet=True)
+                dca = dcatools.parse_dca_data(dca_file)
+                dca_filter_chain = dcatools.parse_filter_line(filtertext, sim)
+                dcatools.filter_dca_data(dca_data=dca, dca_filter_chain=dca_filter_chain, quiet=True)
 
                 if not dca_mode:
                     print "  Mapping to atom-atom."
-                    cst_info = dcatools.buildCstInfoFromDcaContacts(dca, sequence=sim.config["sequence"], mappingMode="allAtomWesthof", cstFunction="FADE -100 26 20 -2 2", numberDcaPredictions=100, quiet=True)
+                    cst_info = dcatools.build_cst_info_from_dca_contacts(dca, sequence=sim.config["sequence"], mapping_mode="allAtomWesthof", cst_function="FADE -100 26 20 -2 2", number_dca_predictions=100, quiet=True)
             else:
                 title = splitext(basename(arg))[0]
                 print "  Reading file directly."
 
                 if dca_mode:
-                    dca = dcatools.parseDcaData(arg)
+                    dca = dcatools.parse_dca_data(arg)
                 else:
-                    cst_info = parseCstFile(sim._parseCstNameAndFilename(arg)[1])
+                    cst_info = parse_cst_file(sim._parse_cst_name_and_filename(arg)[1])
 
             dists = []
             if dca_mode:
@@ -148,7 +148,7 @@ def tools():
                     j += 1
                     if j > 100:
                         break
-                    average_heavy, minimum_heavy, minimum_pair = dcatools.getContactInformationInPdbChain(d, chain)
+                    average_heavy, minimum_heavy, minimum_pair = dcatools.get_contact_information_in_pdb_chain(d, chain)
                     dists.append(minimum_heavy)
             else:
                 for cst in cst_info:
@@ -170,12 +170,12 @@ def tools():
         plt.show()
 
     if sys.argv[1] == "checkcontacts":
-        dca = dcatools.parseDcaData(dcaPredictionFileName=sys.argv[2])
+        dca = dcatools.parse_dca_data(dca_prediction_filename=sys.argv[2])
 
         # loop over all pdb files
         chains = []
         for i in xrange(3, len(sys.argv)):
-            pdb = pdbtools.parsePdb("foo", sys.argv[i])
+            pdb = pdbtools.parse_pdb("foo", sys.argv[i])
             chains.append({"chain": pdb[0].child_list[0], "name": sys.argv[i]})
 
         maximum = min(len(dca), 100)
@@ -191,7 +191,7 @@ def tools():
 
             for i in xrange(0, len(chains)):
 
-                average_heavy, minimum_heavy, minimum_pair = dcatools.getContactInformationInPdbChain(d, chains[i]["chain"])
+                average_heavy, minimum_heavy, minimum_pair = dcatools.get_contact_information_in_pdb_chain(d, chains[i]["chain"])
                 averages[i][j] = average_heavy
                 minimums[i][j] = minimum_heavy
                 print "        %-70s  avg: %.05f   min: %-3s  %-3s %f" % (chains[i]["name"], average_heavy, minimum_pair[0].name, minimum_pair[1].name, minimum_heavy)
@@ -218,8 +218,8 @@ def tools():
         number = int(sys.argv[3])
 
         sim = RNAPrediction(SysConfig(), ".")
-        cst_name, cst_file = sim._parseCstNameAndFilename(cst)
-        models = sim.getModels(cst_name, range(1, number), "top")
+        cst_name, cst_file = sim._parse_cst_name_and_filename(cst)
+        models = sim.get_models(cst_name, range(1, number), "top")
 
         # TODO: this only works for max 10 clusters so far
         colors = ['w', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF', '#ff6600', '#006000', '#600060', '#F7C2CA']
@@ -266,8 +266,8 @@ def tools():
     if sys.argv[1] == "seqdist":
         pdb_ref_filename = sys.argv[2]
         pdbs_sample_filenames = sys.argv[3:]
-        pdb_ref = pdbtools.parsePdb("foo", pdb_ref_filename)
-        pdbs_sample = [pdbtools.parsePdb(i, i) for i in pdbs_sample_filenames]
+        pdb_ref = pdbtools.parse_pdb("foo", pdb_ref_filename)
+        pdbs_sample = [pdbtools.parse_pdb(i, i) for i in pdbs_sample_filenames]
 
         sim = RNAPrediction(SysConfig(), ".")
         print sim.config["sequence"]
@@ -292,7 +292,7 @@ def tools():
 
         for pdb_sample in pdbs_sample:
 
-            dists_res, dists_atom, rmsd, rotran = pdbtools.alignStructure(pdb_ref, pdb_sample, assignBFactors=True)
+            dists_res, dists_atom, rmsd, rotran = pdbtools.align_structure(pdb_ref, pdb_sample, assign_b_factors=True)
             plt.plot(x_values, dists_res, "-o", label=pdb_sample.id)
             plt.plot((x_min, x_max), (rmsd, rmsd), "--", color=ax.lines[-1].get_color())
             y_max = max(y_max, max(dists_res))

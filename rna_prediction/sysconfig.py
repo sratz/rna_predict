@@ -23,9 +23,9 @@ class SysConfig(object):
         self.rosetta_exe_suffix = ".linuxgccrelease"
         self.subprocess_buffsize = None
 
-        self.loadSysConfig()
+        self.load_sysconfig()
 
-    def loadSysConfig(self):
+    def load_sysconfig(self):
         config = ConfigParser.RawConfigParser()
         config.read(SysConfig.SYSCONFIG_FILE)
         if config.has_section("rosetta"):
@@ -37,7 +37,7 @@ class SysConfig(object):
             if config.has_option("rna_predict", "subprocess_buffsize"):
                 self.subprocess_buffsize = config.get("rna_predict", "subprocess_buffsize")
 
-    def checkSysConfig(self):
+    def check_sysconfig(self):
         def is_exe(fpath):
             return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -46,7 +46,7 @@ class SysConfig(object):
         if self.subprocess_buffsize is not None:
             progs += ["stdbuf"]
 
-        def isOk(prog):
+        def is_ok(prog):
             fpath, fname = os.path.split(prog)
             if fpath:
                 if is_exe(prog):
@@ -61,13 +61,13 @@ class SysConfig(object):
         fail = []
         success = []
         for prog in progs:
-            if isOk(prog):
+            if is_ok(prog):
                 success += [prog]
             else:
                 fail += [prog]
         return {"fail": fail, "success": success}
 
-    def printSysConfig(self):
+    def print_sysconfig(self):
         print "System configuration:"
         for key, value in sorted(self.__dict__.items()):
             print "    %s: %s" % (key, "-" if value is None else value)

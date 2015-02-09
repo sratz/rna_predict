@@ -18,7 +18,7 @@ from . import utils
 PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
 
 
-def writePdb(filename, data, model=1, remark=None, append=False):
+def write_pdb(filename, data, model=1, remark=None, append=False):
     with open(filename, "a" if append else "w") as output_pdb_fd:
         output_pdb_fd.write("MODEL %d\n" % model)
         output_pdb_fd.write("REMARK %s\n" % remark)
@@ -26,8 +26,8 @@ def writePdb(filename, data, model=1, remark=None, append=False):
         output_pdb_fd.write("ENDMDL\n")
 
 
-def extractPOnly(filename):
-    def isValidAtom(atom):
+def extract_p_only(filename):
+    def is_valid_atom(atom):
         if atom == "P":
             return True
         if atom == "OP1":
@@ -39,9 +39,9 @@ def extractPOnly(filename):
     p_only = ""
     # only extract first chain
     chain_id = None
-    for line in utils.readFileLineByLine(filename):
+    for line in utils.read_file_line_by_line(filename):
         fields = line.split()
-        if fields[0] == "ATOM" and isValidAtom(fields[2]):
+        if fields[0] == "ATOM" and is_valid_atom(fields[2]):
             if chain_id is None:
                 chain_id = fields[4]
             elif chain_id != fields[4]:
@@ -51,57 +51,57 @@ def extractPOnly(filename):
     return p_only
 
 
-def downloadPdbFile(pdbCode, pdbDirectory=PDB_DIRECTORY):
+def download_pdb_file(pdb_code, pdb_directory=PDB_DIRECTORY):
     import urllib2
 
     # make sure directory names have a trailing slash
-    pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
+    pdb_directory = os.path.normpath(pdb_directory) + os.sep
 
-    response = urllib2.urlopen("http://www.rcsb.org/pdb/files/%s.pdb" % pdbCode.upper())
-    with open(pdbDirectory + pdbCode + ".pdb", "w") as f:
+    response = urllib2.urlopen("http://www.rcsb.org/pdb/files/%s.pdb" % pdb_code.upper())
+    with open(pdb_directory + pdb_code + ".pdb", "w") as f:
         f.write(response.read())
 
 
-def getPdbByCode(pdbCode, pdbDirectory=PDB_DIRECTORY):
+def get_pdb_by_code(pdb_code, pdb_directory=PDB_DIRECTORY):
     # make sure directory names have a trailing slash
-    pdbDirectory = os.path.normpath(pdbDirectory) + os.sep
+    pdb_directory = os.path.normpath(pdb_directory) + os.sep
 
-    utils.mkdir_p(pdbDirectory)
-    pdbFile = pdbDirectory + pdbCode + '.pdb'
-    if not os.path.exists(pdbFile):
-        downloadPdbFile(pdbCode, pdbDirectory)
-    return parsePdb(pdbCode, pdbFile)
+    utils.mkdir_p(pdb_directory)
+    pdb_file = pdb_directory + pdb_code + '.pdb'
+    if not os.path.exists(pdb_file):
+        download_pdb_file(pdb_code, pdb_directory)
+    return parse_pdb(pdb_code, pdb_file)
 
 
-def parsePdb(pdbCode, pdbFile):
+def parse_pdb(pdb_code, pdb_file):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", PDBConstructionWarning)
-        return Bio.PDB.PDBParser().get_structure(pdbCode, pdbFile)
+        return Bio.PDB.PDBParser().get_structure(pdb_code, pdb_file)
 
 
-def filterAtoms(atoms, heavyOnly=False, pOnly=False):
+def filter_atoms(atoms, heavy_only=False, p_only=False):
     ret = []
     for atom in atoms:
-        if pOnly and atom.name != "P":
+        if p_only and atom.name != "P":
             continue
-        elif heavyOnly and atom.name.startswith("H"):
+        elif heavy_only and atom.name.startswith("H"):
             continue
         ret.append(atom)
     return ret
 
 
-def getCenterOfRes(res):
+def get_center_of_res(res):
     coords = []
     # loop over all atoms
-    for atom in filterAtoms(res, heavyOnly=True):
+    for atom in filter_atoms(res, heavy_only=True):
         coords.append(atom.coord)
     return np.mean(coords, axis=0)
 
 
-def alignStructure(refPdb, movingPdb, assignBFactors=True):
-    """Aligns movingPdb to refPdb. Returns (resDists, atomDists, rmsd, transformationMatrix)"""
-    chain_ref = refPdb[0].child_list[0]
-    chain_sample = movingPdb[0].child_list[0]
+def align_structure(ref_pdb, moving_pdb, assign_b_factors=True):
+    """Aligns moving_pdb to ref_pdb. Returns (resDists, atomDists, rmsd, transformationMatrix)"""
+    chain_ref = ref_pdb[0].child_list[0]
+    chain_sample = moving_pdb[0].child_list[0]
 
     ref_atoms = []
     ref_res = []
@@ -130,10 +130,10 @@ def alignStructure(refPdb, movingPdb, assignBFactors=True):
 
     super_imposer = Bio.PDB.Superimposer()
     super_imposer.set_atoms(ref_atoms, sample_atoms)
-    super_imposer.apply(movingPdb)
+    super_imposer.apply(moving_pdb)
 
     # in case we want to assign b-factors to the moving structure, set them all to 0 before.
-    if assignBFactors:
+    if assign_b_factors:
         for res in chain_sample:
             for atom in res:
                 atom.set_bfactor(0)
@@ -142,7 +142,7 @@ def alignStructure(refPdb, movingPdb, assignBFactors=True):
     for atom1, atom2 in itertools.izip(ref_atoms, sample_atoms):
         dist = np.linalg.norm(atom1.coord - atom2.coord)
         dists_atom.append(dist)
-        if assignBFactors:
+        if assign_b_factors:
             atom2.set_bfactor(dist)
 
     print super_imposer.rotran
@@ -150,7 +150,7 @@ def alignStructure(refPdb, movingPdb, assignBFactors=True):
 
     dists_res = []
     for res1, res2 in itertools.izip(ref_res, sample_res):
-        dist = np.linalg.norm(getCenterOfRes(res1) - getCenterOfRes(res2))
+        dist = np.linalg.norm(get_center_of_res(res1) - get_center_of_res(res2))
         dists_res.append(dist)
 
     return dists_res, dists_atom, super_imposer.rms, super_imposer.rotran
