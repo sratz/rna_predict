@@ -1,8 +1,8 @@
-'''
+"""
 Created on Oct 13, 2014
 
 @author: sebastian
-'''
+"""
 
 import itertools
 import numpy as np
@@ -20,8 +20,8 @@ PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
 
 def writePdb(filename, data, model=1, remark=None, append=False):
     with open(filename, "a" if append else "w") as output_pdb_fd:
-        output_pdb_fd.write("MODEL %d\n" % (model))
-        output_pdb_fd.write("REMARK %s\n" % (remark))
+        output_pdb_fd.write("MODEL %d\n" % model)
+        output_pdb_fd.write("REMARK %s\n" % remark)
         output_pdb_fd.write(data)
         output_pdb_fd.write("ENDMDL\n")
 
@@ -99,7 +99,7 @@ def getCenterOfRes(res):
 
 
 def alignStructure(refPdb, movingPdb, assignBFactors=True):
-    '''Aligns movingPdb to refPdb. Returns (resDists, atomDists, rmsd, transformationMatrix)'''
+    """Aligns movingPdb to refPdb. Returns (resDists, atomDists, rmsd, transformationMatrix)"""
     chain_ref = refPdb[0].child_list[0]
     chain_sample = movingPdb[0].child_list[0]
 
@@ -128,7 +128,6 @@ def alignStructure(refPdb, movingPdb, assignBFactors=True):
             ref_atoms.append(atom1)
             sample_atoms.append(atom2)
 
-
     super_imposer = Bio.PDB.Superimposer()
     super_imposer.set_atoms(ref_atoms, sample_atoms)
     super_imposer.apply(movingPdb)
@@ -154,4 +153,4 @@ def alignStructure(refPdb, movingPdb, assignBFactors=True):
         dist = np.linalg.norm(getCenterOfRes(res1) - getCenterOfRes(res2))
         dists_res.append(dist)
 
-    return (dists_res, dists_atom, super_imposer.rms, super_imposer.rotran)
+    return dists_res, dists_atom, super_imposer.rms, super_imposer.rotran

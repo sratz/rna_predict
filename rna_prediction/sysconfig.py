@@ -1,8 +1,8 @@
-'''
+"""
 Created on Sep 22, 2014
 
 @author: sebastian
-'''
+"""
 
 import re
 import ConfigParser
@@ -14,9 +14,9 @@ class SysConfig(object):
     SYSCONFIG_FILE = SYSCONFIG_LOCATION + os.sep + "sysconfig"
 
     def __init__(self):
-        '''
+        """
         Load system configuration
-        '''
+        """
         #defaults
         self.rosetta_exe_path = ""
         self.rosetta_exe_suffix = ".linuxgccrelease"

@@ -68,7 +68,7 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=None,
             if os.path.isfile(local_file):
                 structure_filenames[ntpair] = local_file
             else:
-                structure_filenames[ntpair] = resource_manager.resource_filename(__name__, "structure_info/%s.txt" % (ntpair))
+                structure_filenames[ntpair] = resource_manager.resource_filename(__name__, "structure_info/%s.txt" % ntpair)
 
     # try to use a cached version of the distance map if found and recent and forceRebuild is False
     if not forceRebuild:
@@ -77,7 +77,7 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=None,
             if os.path.isfile(CACHE_DISTANCEMAP):
                 cacheTimestamp = os.path.getmtime(CACHE_DISTANCEMAP)
                 for d in structure_filenames.itervalues():
-                    if (os.path.getmtime(d) > cacheTimestamp):
+                    if os.path.getmtime(d) > cacheTimestamp:
                         cacheOk = False
                         print "Contact map cache out of date. Rebuilding..."
                         break
@@ -202,7 +202,7 @@ def createPdbMappingFromString(mapping):
                     i += 1
         return pdbMapping
     except:
-        raise DcaException("Invalid pdb mapping string: %s" % (mapping))
+        raise DcaException("Invalid pdb mapping string: %s" % mapping)
 
 
 # read a pdb mapping from dca file if present and return it as text
@@ -223,14 +223,14 @@ def readPdbMappingFromFile(dcaPredictionFileName):
 
 # reads a dca file and adjusts the sequence numbers to match the alignment of the pdb file
 def parseDcaData(dcaPredictionFileName):
-    print "Parsing dca file %s..." % (dcaPredictionFileName)
+    print "Parsing dca file %s..." % dcaPredictionFileName
     # read pdb mapping from file
     pdbMappingText = readPdbMappingFromFile(dcaPredictionFileName)
     pdbMapping = createPdbMappingFromString(pdbMappingText)
-    print "pdb-mapping: %s" % (pdbMappingText)
+    print "pdb-mapping: %s" % pdbMappingText
 
     if pdbMappingText is None:
-        print "Warning: no pdb-mapping found in header of dca file %s, assuming '1-N'" %(dcaPredictionFileName)
+        print "Warning: no pdb-mapping found in header of dca file %s, assuming '1-N'" % dcaPredictionFileName
 
     dca = []
     for line in utils.readFileLineByLine(dcaPredictionFileName):
@@ -266,7 +266,7 @@ def getContactInformationInPdbChain(dcaContact, pdbChain):
             if dist < minimum_heavy:
                 minimum_heavy = dist
                 minimum_pair = [atom1, atom2]
-    return (average_heavy, minimum_heavy, minimum_pair)
+    return average_heavy, minimum_heavy, minimum_pair
 
 
 # maps dca residue contacts to atom-atom constraints
@@ -276,7 +276,7 @@ def getContactInformationInPdbChain(dcaContact, pdbChain):
 def buildCstInfoFromDcaContacts(dcaData, sequence, mappingMode, cstFunction, numberDcaPredictions, quiet=False):
     mappingMode = mappingMode.lower()
     if mappingMode not in ["allatomwesthof", "ponly"]:
-        raise DcaException("buildCstInfo: Invalid mapping mode given: %s" % (mappingMode))
+        raise DcaException("buildCstInfo: Invalid mapping mode given: %s" % mappingMode)
 
     if mappingMode == "allatomwesthof":
         # load contact map for atom-atom contacts
@@ -290,7 +290,7 @@ def buildCstInfoFromDcaContacts(dcaData, sequence, mappingMode, cstFunction, num
     for i, d in enumerate(dcaData):
         if predictionsUsed >= numberDcaPredictions:
             if not quiet:
-                print "Limit of %d used predictions reached. Stopping..." % (numberDcaPredictions)
+                print "Limit of %d used predictions reached. Stopping..." % numberDcaPredictions
             break
 
         # print some information about the dca contact

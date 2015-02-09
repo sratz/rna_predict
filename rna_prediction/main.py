@@ -1,6 +1,6 @@
 #!/usr/local/bin/python2.7
 # encoding: utf-8
-'''
+"""
 rna_prediction.main -- predict tertiary rna structure
 
 rna_prediction.main is a tool to predict tertiary rna structure based on secondary structure information and a set of constraints
@@ -14,7 +14,7 @@ It defines classes_and_methods
 @license:    license
 
 @contact:    sebastian.ratz@student.kit.edu
-'''
+"""
 
 import sys
 import os
@@ -136,7 +136,7 @@ USAGE
     failed = check["fail"]
     if failed:
         for f in failed:
-            printToStderr("Sysconfig error: Cannot access %s" % (f))
+            printToStderr("Sysconfig error: Cannot access %s" % f)
         return 1
     else:
         if not args.quiet:

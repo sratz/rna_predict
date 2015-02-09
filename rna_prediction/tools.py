@@ -1,11 +1,11 @@
 #!/usr/bin/env python2
 # coding: utf8
 
-'''
+"""
 Created on Sep 22, 2014
 
 @author: sra
-'''
+"""
 
 import Bio.PDB
 import itertools
@@ -113,7 +113,7 @@ def tools():
         pdb = pdbtools.parsePdb("foo", comparison_pdb)
         chain = pdb[0].child_list[0]
 
-        print "Comparison PDB: %s" % (comparison_pdb)
+        print "Comparison PDB: %s" % comparison_pdb
         plt.figure(figsize=(14,8))
 
         if dca_mode:
@@ -124,11 +124,11 @@ def tools():
             bins = np.linspace(0, 60, 180)
 
         for arg in sources:
-            print "Processing: %s" % (arg)
+            print "Processing: %s" % arg
             if arg.startswith("filter:"):
                 title = arg
                 _, dca_file, filtertext = arg.split(":", 2)
-                print "  Applying filters: %s" % (filtertext)
+                print "  Applying filters: %s" % filtertext
                 dca = dcatools.parseDcaData(dca_file)
                 dcaFilterChain = dcatools.parseFilterLine(filtertext, sim)
                 dcatools.filterDcaData(dcaData=dca, dcaFilterChain=dcaFilterChain, quiet=True)
@@ -313,7 +313,7 @@ def tools():
             plt.plot((x_min, x_max), (rmsd, rmsd), "--", color=ax.lines[-1].get_color())
             y_max = max(y_max, max(dists_res))
 
-        y_max = y_max * 1.025
+        y_max *= 1.025
 
         plt.ylim([y_min, y_max])
 
