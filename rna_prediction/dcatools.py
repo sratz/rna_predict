@@ -381,6 +381,8 @@ def parseFilterLine(line, simulation):
 
     # filters are split by ","
     for filtertext in line.split(","):
+        # initialize to None to suppress warning
+        dcaFilter = None
         # filter fields are split by ":"
         fields = filtertext.split(":")
         if fields[0] == "none":
