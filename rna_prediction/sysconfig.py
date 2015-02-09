@@ -9,6 +9,7 @@ import ConfigParser
 import os
 from os.path import expanduser
 
+
 class SysConfig(object):
     SYSCONFIG_LOCATION = expanduser("~/.rna_predict")
     SYSCONFIG_FILE = SYSCONFIG_LOCATION + os.sep + "sysconfig"
@@ -17,7 +18,7 @@ class SysConfig(object):
         """
         Load system configuration
         """
-        #defaults
+        # defaults
         self.rosetta_exe_path = ""
         self.rosetta_exe_suffix = ".linuxgccrelease"
         self.subprocess_buffsize = None
@@ -64,9 +65,9 @@ class SysConfig(object):
                 success += [prog]
             else:
                 fail += [prog]
-        return {    "fail": fail, "success": success}
+        return {"fail": fail, "success": success}
 
     def printSysConfig(self):
         print "System configuration:"
         for key, value in sorted(self.__dict__.items()):
-            print "    %s: %s" %(key, "-" if value is None else value)
+            print "    %s: %s" % (key, "-" if value is None else value)
