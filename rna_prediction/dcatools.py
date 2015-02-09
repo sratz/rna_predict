@@ -155,7 +155,7 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=None,
                         if not (atom1.name.startswith('H') or atom2.name.startswith('H')):
                             contactKey = str(atom1.name) + '-' + str(atom2.name)
                             distance = westhofVector[index] * (atom1 - atom2)
-                            if not contactKey in distanceMapResPair:
+                            if contactKey not in distanceMapResPair:
                                 distanceMapResPair[contactKey] = [distance]
                             else:
                                 distanceMapResPair[contactKey].append(distance)
