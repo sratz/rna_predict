@@ -5,8 +5,8 @@ import re
 from pkg_resources import ResourceManager
 
 from . import pdbtools
+from . import utils
 from sysconfig import SysConfig
-from utils import readFileLineByLine
 
 
 '''
@@ -100,7 +100,7 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=None,
             residues = []
 
             # read the structures for the 12 edge-to-edge bonding families
-            for line in readFileLineByLine(structure_filenames[nt1 + '-' + nt2]):
+            for line in utils.readFileLineByLine(structure_filenames[nt1 + '-' + nt2]):
                 fields = line.split(" ")
                 if fields[0] != "-":
                     pdbCodes.append(fields[0].upper())
@@ -161,10 +161,7 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=None,
             distanceMap[nt1 + nt2] = distanceMapResPair
 
     # save distance map in cache
-    try:
-        os.makedirs(CACHE_DIRECTORY)
-    except:
-        pass
+    utils.mkdir_p(CACHE_DIRECTORY)
     with open(CACHE_DISTANCEMAP, "w") as f:
         pickle.dump(distanceMap, f)
 
@@ -211,7 +208,7 @@ def createPdbMappingFromString(mapping):
 # read a pdb mapping from dca file if present and return it as text
 def readPdbMappingFromFile(dcaPredictionFileName):
     pattern_parameter = re.compile(r"^#\s(\S+)\s+(.*)$")
-    for line in readFileLineByLine(dcaPredictionFileName):
+    for line in utils.readFileLineByLine(dcaPredictionFileName):
         if line[0] == "#":
             # comment / parameter line
             m = pattern_parameter.match(line)
@@ -236,7 +233,7 @@ def parseDcaData(dcaPredictionFileName):
         print "Warning: no pdb-mapping found in header of dca file %s, assuming '1-N'" %(dcaPredictionFileName)
 
     dca = []
-    for line in readFileLineByLine(dcaPredictionFileName):
+    for line in utils.readFileLineByLine(dcaPredictionFileName):
         if line[0] == "#":
             continue
         # data line

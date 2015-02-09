@@ -18,7 +18,7 @@ import string
 import pickle
 from . import dcatools
 from . import pdbtools
-from utils import readFileLineByLine
+from . import utils
 from os.path import splitext, basename, abspath
 
 
@@ -43,16 +43,6 @@ def deleteGlob(pattern, print_notice=True):
                 os.remove(f)
         except:
             pass
-
-
-def makeDirectory(directory):
-    try:
-        os.mkdir(directory)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST and os.path.isdir(directory):
-            pass
-        else:
-            raise
 
 
 def mergeSilentFiles(target, sources):
@@ -103,7 +93,7 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
 
 def parseCstFile(constraints_file):
     cst_info = []
-    for line in readFileLineByLine(constraints_file):
+    for line in utils.readFileLineByLine(constraints_file):
         if len(line) > 6 and line[0] != '[':
             cols = string.split(line)
             atom_name1 = cols[0]
@@ -305,10 +295,11 @@ class RNAPrediction(object):
         for f in [fasta_file, params_file, native_pdb_file, data_file, torsions_file]:
             if f is not None:
                 checkFileExistence(f)
-        makeDirectory("constraints")
-        makeDirectory("preparation")
-        makeDirectory("dca")
-        makeDirectory("predictions")
+
+        utils.mkdir_p("constraints")
+        utils.mkdir_p("preparation")
+        utils.mkdir_p("dca")
+        utils.mkdir_p("predictions")
         self.config["fasta_file"] = fasta_file
         self.config["params_file"] = params_file
         self.config["native_pdb_file"] = native_pdb_file
@@ -320,7 +311,7 @@ class RNAPrediction(object):
         print "Preparation:"
 
         # Read in files
-        for line in readFileLineByLine(fasta_file):
+        for line in utils.readFileLineByLine(fasta_file):
             if line[0] == ">":
                 continue
             self.config["sequence"] = line.lower()
@@ -332,7 +323,7 @@ class RNAPrediction(object):
         self.config["data_info"] = []
         if data_file != None:
             self.config["backbone_burial_info"] = []
-            for line in readFileLineByLine(data_file):
+            for line in utils.readFileLineByLine(data_file):
                 if len( line ) > 6 and line[:6]=='EXPOSE':
                     cols = string.split( line )
                     for i in range( len(cols)/3 ):
@@ -350,7 +341,7 @@ class RNAPrediction(object):
         # Parse out stems
         basepair_mismatch = []
         cutpoints_original = []
-        for line in readFileLineByLine(params_file):
+        for line in utils.readFileLineByLine(params_file):
             if line[:4] == 'STEM':
                 cols = string.split( line )
                 for i in range( len( cols )):
@@ -771,8 +762,8 @@ class RNAPrediction(object):
             if motifcst_name == cst_name:
                 raise SimulationException("Motif override cst name can't be the same as the cst name!")
 
-        makeDirectory("predictions/%s" % (cst_name))
-        makeDirectory(dir_assembly)
+        utils.mkdir_p("predictions/%s" % (cst_name))
+        utils.mkdir_p(dir_assembly)
 
         if motifsOverride:
             # TODO: just make all that stuff a cst config file
@@ -804,7 +795,7 @@ class RNAPrediction(object):
 
         # extract relevant constraints for motif generation from global cst file if necessary
         if not motifsOverride:
-            makeDirectory(dir_motifs)
+            utils.mkdir_p(dir_motifs)
             for i in range(len(self.config["motifs"])):
                 motif_res_map = self.config["motif_res_maps"][i]
                 motif_cst_file = '%s/motif%d.cst' % (dir_motifs, i+1)
@@ -829,8 +820,8 @@ class RNAPrediction(object):
         print "    threads: %s" % (threads)
 
         dir_motifs = "predictions/%s/motifs" % (cst_name)
-        makeDirectory("predictions/%s" % (cst_name))
-        makeDirectory(dir_motifs)
+        utils.mkdir_p("predictions/%s" % (cst_name))
+        utils.mkdir_p(dir_motifs)
 
         n_motifs = len(self.config["motifs"])
 
@@ -1034,8 +1025,8 @@ class RNAPrediction(object):
         # cleanup
         deleteGlob(dir_output)
         deleteGlob(dir_tmp)
-        makeDirectory(dir_output)
-        makeDirectory(dir_tmp)
+        utils.mkdir_p(dir_output)
+        utils.mkdir_p(dir_tmp)
 
         # create dict to store evaluation data
         evalData = {"models": {}, "clusters": {}}
@@ -1046,7 +1037,7 @@ class RNAPrediction(object):
 
             # read out file and store a dict of the scores and the full score line
             regex_score = re.compile("^SCORE:\s+([-0-9.]+)\s.*(S_[0-9_]+)$")
-            for line in readFileLineByLine(f):
+            for line in utils.readFileLineByLine(f):
                 m = regex_score.match(line)
                 if m:
                     # name models exactly like rosetta would (that is, append _<num> when already present)
@@ -1287,7 +1278,7 @@ class RNAPrediction(object):
 
         pattern = re.compile(r"^(\S+\s+\d+\s+\S+\s+\d+)\s+(\S+)\s+.+$")
         with open(outputFileName, "w") as outputFd:
-            for line in readFileLineByLine(inputFileName):
+            for line in utils.readFileLineByLine(inputFileName):
                 m = pattern.match(line)
                 outputFd.write("%s %s\n" % (m.group(1), cstFunction))
 
