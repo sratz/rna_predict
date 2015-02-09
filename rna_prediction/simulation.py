@@ -97,8 +97,9 @@ def parseCstFile(constraints_file):
             res1 = int(cols[1])
             atom_name2 = cols[2]
             res2 = int(cols[3])
-            cst_info.append( [ atom_name1, res1, atom_name2, res2, cols[4:]] )
+            cst_info.append([atom_name1, res1, atom_name2, res2, cols[4:]])
     return cst_info
+
 
 # TODO: Correcting atom names IS MOST LIKELY WRONG! It is commented out for now and can probably be removed completely.
 def fixAtomNamesInCst(cst_info, sequence):
@@ -171,7 +172,7 @@ class RNAPrediction(object):
                 if key == "motif_res_maps" or key == "motif_stem_sets" or key == "motifs" or key == "stems" or key == "evaluate":
                     print "    %s: ..." % key
                 else:
-                    print "    %s: %s" %(key, value)
+                    print "    %s: %s" % (key, value)
         else:
             print "    No configuration found."
 
@@ -263,20 +264,21 @@ class RNAPrediction(object):
             if stdout is not None:
                 stdout.close()
 
-    def _make_tag_with_dashes(self, int_vector ):
+    def _make_tag_with_dashes(self, int_vector):
         tag = []
 
         start_res = int_vector[0]
-        for i in range( 1, len(int_vector)+1 ):
-            if i==len( int_vector)  or  int_vector[i] != int_vector[i-1]+1:
+        for i in range(1, len(int_vector) + 1):
+            if i == len(int_vector) or int_vector[i] != int_vector[i - 1] + 1:
 
-                stop_res = int_vector[i-1]
+                stop_res = int_vector[i - 1]
                 if stop_res > start_res:
-                    tag += ["%d-%d" % (start_res, stop_res )]
+                    tag += ["%d-%d" % (start_res, stop_res)]
                 else:
                     tag += ["%d" % stop_res]
 
-                if i < len( int_vector): start_res = int_vector[i]
+                if i < len(int_vector):
+                    start_res = int_vector[i]
 
         return tag
 
@@ -308,73 +310,74 @@ class RNAPrediction(object):
             self.config["sequence"] = line.lower()
             break
         print self.config["sequence"]
-        numres = len( self.config["sequence"] )
+        numres = len(self.config["sequence"])
 
         # Read in data information
         self.config["data_info"] = []
         if data_file is not None:
             self.config["backbone_burial_info"] = []
             for line in utils.readFileLineByLine(data_file):
-                if len( line ) > 6 and line[:6]=='EXPOSE':
-                    cols = string.split( line )
-                    for i in range( len(cols)/3 ):
-                        self.config["data_info"].append( [int( cols[ 3*i+1] ), cols[3*i+2],cols[3*i+3]] )
-                if len( line ) > 15 and line[:15]=='BACKBONE_BURIAL':
-                    cols = string.split( line )
-                    for i in range( 1,len(cols) ):
-                        self.config["backbone_burial_info"].append( int( cols[i] ) )
+                if len(line) > 6 and line[:6] == 'EXPOSE':
+                    cols = string.split(line)
+                    for i in range(len(cols) / 3):
+                        self.config["data_info"].append([int(cols[3 * i + 1]), cols[3 * i + 2], cols[3 * i + 3]])
+                if len(line) > 15 and line[:15] == 'BACKBONE_BURIAL':
+                    cols = string.split(line)
+                    for i in range(1, len(cols)):
+                        self.config["backbone_burial_info"].append(int(cols[i]))
 
         pair_map = {}
         all_pairs = []
 
-        complement = {'a':['u'], 'u':['a','g'], 'c':['g'], 'g':['c','u']}
+        complement = {'a': ['u'], 'u': ['a', 'g'], 'c': ['g'], 'g': ['c', 'u']}
 
         # Parse out stems
         basepair_mismatch = []
         cutpoints_original = []
         for line in utils.readFileLineByLine(params_file):
             if line[:4] == 'STEM':
-                cols = string.split( line )
-                for i in range( len( cols )):
+                cols = string.split(line)
+                for i in range(len(cols)):
                     if cols[i] == 'PAIR':
-                        #Offset to get to python numbering (starts with zero)
-                        res1 = int(cols[i+1])-1
-                        res2 = int(cols[i+2])-1
-                        pair_map[ res1 ] = res2
-                        pair_map[ res2 ] = res1
-                        all_pairs.append( [res1,res2] )
-                        assert ( self.config["sequence"][res1] in complement[ self.config["sequence"][res2] ] )
-            elif line.count( '(' ) > 0:         #maybe dot/bracket notation (((...)))
+                        # Offset to get to python numbering (starts with zero)
+                        res1 = int(cols[i + 1]) - 1
+                        res2 = int(cols[i + 2]) - 1
+                        pair_map[res1] = res2
+                        pair_map[res2] = res1
+                        all_pairs.append([res1, res2])
+                        assert (self.config["sequence"][res1] in complement[self.config["sequence"][res2]])
+            elif line.count('(') > 0:  # maybe dot/bracket notation (((...)))
                 print line
                 self.config["secstruc"] = line
                 left_brackets = []
-                for i in range( len(line) ):
-                    if line[i] == '(':  left_brackets.append( i )
+                for i in range(len(line)):
+                    if line[i] == '(':
+                        left_brackets.append(i)
                     if line[i] == ')':
                         res1 = left_brackets[-1]
                         res2 = i
-                        del( left_brackets[-1] )
-                        pair_map[ res1 ] = res2
-                        pair_map[ res2 ] = res1
-                        all_pairs.append( [res1,res2] )
+                        del (left_brackets[-1])
+                        pair_map[res1] = res2
+                        pair_map[res2] = res1
+                        all_pairs.append([res1, res2])
                         # check if the secondary structure watson-crick pair is allowed
-                        if not self.config["sequence"][res1] in complement[ self.config["sequence"][res2] ]:
+                        if not self.config["sequence"][res1] in complement[self.config["sequence"][res2]]:
                             basepair_mismatch += [[res1, res2]]
-                assert( len (left_brackets) == 0 )
+                assert (len(left_brackets) == 0)
             else:
                 try:
-                    cols = string.split( line )
-                    res1 = int( cols[ 0 ] ) - 1
-                    res2 = int( cols[ 1 ] ) - 1
-                    pair_map[ res1 ] = res2
-                    pair_map[ res2 ] = res1
-                    all_pairs.append( [res1,res2] )
-                    assert ( self.config["sequence"][res1] in complement[ self.config["sequence"][res2] ] )
+                    cols = string.split(line)
+                    res1 = int(cols[0]) - 1
+                    res2 = int(cols[1]) - 1
+                    pair_map[res1] = res2
+                    pair_map[res2] = res1
+                    all_pairs.append([res1, res2])
+                    assert (self.config["sequence"][res1] in complement[self.config["sequence"][res2]])
                 except:
                     continue
 
             if line[:13] == 'CUTPOINT_OPEN':
-                cutpoints_original = map( lambda x:int(x), string.split( line[14:] ) )
+                cutpoints_original = map(lambda x: int(x), string.split(line[14:]))
 
         # print all helix pairs that don't fit the allowed complements
         if basepair_mismatch:
@@ -395,49 +398,51 @@ class RNAPrediction(object):
 
             raise SimulationException("some helix pairs in secondary structure cannot be realized (see above)")
 
-        #print pair_map
+        # print pair_map
 
         # Parse out stems
         already_in_stem = {}
-        for i in range( numres ): already_in_stem[ i ] = 0
+        for i in range(numres):
+            already_in_stem[i] = 0
 
         self.config["stems"] = []
-        for i in range( numres ):
-            if pair_map.has_key( i ) and not already_in_stem[ i ]:  # In a base pair
+        for i in range(numres):
+            if pair_map.has_key(i) and not already_in_stem[i]:  # In a base pair
                 k = i
                 stem_res = []
 
-                stem_res.append( [k, pair_map[k]] )
-                already_in_stem[ k ] = 1
-                already_in_stem[ pair_map[k] ] = 1
+                stem_res.append([k, pair_map[k]])
+                already_in_stem[k] = 1
+                already_in_stem[pair_map[k]] = 1
 
                 # Can we extend in one direction?
-                while pair_map.has_key( k + 1 ) and  pair_map[ k+1 ] == pair_map[ k ] - 1  and  not already_in_stem[k+1]:
+                while pair_map.has_key(k + 1) and pair_map[k + 1] == pair_map[k] - 1 and not already_in_stem[k + 1]:
                     k += 1
-                    stem_res.append( [k, pair_map[k]] )
-                    already_in_stem[ k ] = 1
-                    already_in_stem[ pair_map[k] ] = 1
+                    stem_res.append([k, pair_map[k]])
+                    already_in_stem[k] = 1
+                    already_in_stem[pair_map[k]] = 1
 
                 # Do not allow single WC base pairs.
-                if len( stem_res ) <2:
+                if len(stem_res) < 2:
                     print 'All stems must have length > 1 bp '
                     print stem_res
                     exit()
-                self.config["stems"].append( stem_res )
+                self.config["stems"].append(stem_res)
 
         # Parse out motifs
         already_in_motif = {}
-        for i in range( numres ): already_in_motif[ i ] = 0
+        for i in range(numres):
+            already_in_motif[i] = 0
 
         motif_cutpoints = []
         self.config["motif_res_maps"] = []
         self.config["motif_stem_sets"] = []
         self.config["motifs"] = []
-        for i in range( numres ):
+        for i in range(numres):
 
-            if not already_in_motif[i] and ( not already_in_stem[ i ] or
-                                             ( i > 0 and already_in_stem[i-1] and
-                                                   pair_map[i]+1 != pair_map[i-1] ) ):
+            if not already_in_motif[i] and (not already_in_stem[i] or (i > 0
+                                                                       and already_in_stem[i - 1]
+                                                                       and pair_map[i] + 1 != pair_map[i - 1])):
 
                 motif_res = []
                 motif_stem_set = []
@@ -450,92 +455,92 @@ class RNAPrediction(object):
                     motif_stem = []
 
                     # first base pair.
-                    motif_stem.append( [ k, pair_map[k] ] )
-                    motif_res.append( k )
-                    motif_res.append( pair_map[k] )
+                    motif_stem.append([k, pair_map[k]])
+                    motif_res.append(k)
+                    motif_res.append(pair_map[k])
 
-                    k-= 1
+                    k -= 1
                     while k >= 0 and already_in_stem[k] and \
-                            (pair_map[k]-1 == pair_map[k+1]):
-                        motif_stem.append( [ k, pair_map[k] ] )
-                        motif_res.append( k )
-                        motif_res.append( pair_map[k] )
+                            (pair_map[k] - 1 == pair_map[k + 1]):
+                        motif_stem.append([k, pair_map[k]])
+                        motif_res.append(k)
+                        motif_res.append(pair_map[k])
                         k -= 1
-                    motif_stem_set.append( motif_stem )
+                    motif_stem_set.append(motif_stem)
                     k += 1
-                    cutpoints.append( pair_map[k] )
+                    cutpoints.append(pair_map[k])
 
-                #print 'AFTER FIRST HELIX: ', motif_res
+                # print 'AFTER FIRST HELIX: ', motif_res
 
                 k = i
                 while k not in motif_res and k < numres:
                     # Move forward to next stem:
-                    while k < numres and not already_in_stem[ k ]:
-                        if already_in_motif[ k ]:
+                    while k < numres and not already_in_stem[k]:
+                        if already_in_motif[k]:
                             print 'Hey cant deal with pseudoknots!'
                             exit()
-                        motif_res.append( k )
+                        motif_res.append(k)
                         k += 1
 
                     stem_start = k
 
                     if k >= numres:
-                        cutpoints.append( k-1 )
+                        cutpoints.append(k - 1)
                         break
 
-                    if k in motif_res : break
+                    if k in motif_res:
+                        break
 
                     motif_stem = []
-                    motif_stem.append( [ k, pair_map[k] ] )
-                    motif_res.append( k )
-                    motif_res.append( pair_map[ k ] )
-                    k+=1
+                    motif_stem.append([k, pair_map[k]])
+                    motif_res.append(k)
+                    motif_res.append(pair_map[k])
+                    k += 1
 
-                    while ( k < numres and already_in_stem[ k ] and
-                                pair_map[k-1] == pair_map[k]+1 and not k in motif_res):
-                        motif_stem.append( [ k, pair_map[k] ] )
-                        motif_res.append( k )
-                        motif_res.append( pair_map[ k ] )
+                    while k < numres and already_in_stem[k] and pair_map[k - 1] == pair_map[k] + 1 and k not in motif_res:
+                        motif_stem.append([k, pair_map[k]])
+                        motif_res.append(k)
+                        motif_res.append(pair_map[k])
                         k += 1
-                    motif_stem_set.append( motif_stem )
-                    cutpoints.append( k-1 )
+                    motif_stem_set.append(motif_stem)
+                    cutpoints.append(k - 1)
 
                     # Next non-helical part..
-                    k = pair_map[ stem_start ] + 1
+                    k = pair_map[stem_start] + 1
 
-                    #print 'AFTER NEXT HELIX: ', motif_res
+                    # print 'AFTER NEXT HELIX: ', motif_res
 
                 motif_res.sort()
 
                 motif_res_map = {}
-                for k in range( len( motif_res ) ):
-                    motif_res_map[ motif_res[k] ] = k
-                    already_in_motif[ motif_res[k] ] = 1
+                for k in range(len(motif_res)):
+                    motif_res_map[motif_res[k]] = k
+                    already_in_motif[motif_res[k]] = 1
 
-                self.config["motifs"].append( motif_res )
-                self.config["motif_stem_sets"].append( motif_stem_set )
-                motif_cutpoints.append( cutpoints )
-                self.config["motif_res_maps"].append( motif_res_map )
-                #print 'CUTPOINTS ', cutpoints
+                self.config["motifs"].append(motif_res)
+                self.config["motif_stem_sets"].append(motif_stem_set)
+                motif_cutpoints.append(cutpoints)
+                self.config["motif_res_maps"].append(motif_res_map)
+                # print 'CUTPOINTS ', cutpoints
 
-        for i in range( len(self.config["stems"]) ):
+        for i in range(len(self.config["stems"])):
 
             # Fasta
-            tag = 'preparation/stem%d.fasta' % (i+1)
-            fid = open( tag , 'w' )
-            fid.write( '>'+tag+'\n')
+            tag = 'preparation/stem%d.fasta' % (i + 1)
+            fid = open(tag, 'w')
+            fid.write('>' + tag + '\n')
 
             stem_res = self.config["stems"][i]
-            stem_length = len( stem_res )
+            stem_length = len(stem_res)
 
-            for k in range( stem_length ):
-                fid.write( self.config["sequence"][stem_res[k][0]] )
-                #print stem_res[k][0]+1,
-            for k in range( stem_length ):
-                fid.write( self.config["sequence"][stem_res[stem_length-k-1][1]] )
-                #print stem_res[stem_length-k-1][1]+1,
+            for k in range(stem_length):
+                fid.write(self.config["sequence"][stem_res[k][0]])
+                # print stem_res[k][0]+1,
+            for k in range(stem_length):
+                fid.write(self.config["sequence"][stem_res[stem_length - k - 1][1]])
+                # print stem_res[stem_length-k-1][1]+1,
 
-            #print
+            # print
             fid.write('\n')
             fid.close()
             print 'Created: ', tag
@@ -543,66 +548,65 @@ class RNAPrediction(object):
             # pdb_file
             if native_pdb_file is not None:
                 command = ["pdbslice.py",
-                          native_pdb_file,
-                          "-segment",
-                          "%d" % (stem_res[0][0]+1),
-                          "%d" % (stem_res[-1][0]+1),
-                          "%d" % (stem_res[-1][-1]+1),
-                          "%d" % (stem_res[0][-1]+1),
-                          "preparation/stem%d_" % (i+1)]
+                           native_pdb_file,
+                           "-segment",
+                           "%d" % (stem_res[0][0] + 1),
+                           "%d" % (stem_res[-1][0] + 1),
+                           "%d" % (stem_res[-1][-1] + 1),
+                           "%d" % (stem_res[0][-1] + 1),
+                           "preparation/stem%d_" % (i + 1)]
                 self.executeCommand(command)
-                native_pdb_file_subset =  'preparation/stem%d_%s' % (i+1, native_pdb_file )
+                native_pdb_file_subset = 'preparation/stem%d_%s' % (i + 1, native_pdb_file)
                 print 'Created: ', native_pdb_file_subset
 
-
         # Output motif jobs
-        for i in range( len(self.config["motifs"]) ):
+        for i in range(len(self.config["motifs"])):
 
             # Fasta
-            motif_fasta_file = 'preparation/motif%d.fasta' % (i+1)
-            fid = open( motif_fasta_file , 'w' )
-            fid.write( '>'+motif_fasta_file+'\n')
+            motif_fasta_file = 'preparation/motif%d.fasta' % (i + 1)
+            fid = open(motif_fasta_file, 'w')
+            fid.write('>' + motif_fasta_file + '\n')
 
             motif_res = self.config["motifs"][i]
-            motif_length = len( motif_res )
+            motif_length = len(motif_res)
 
-            for k in range( motif_length ):
-                fid.write( self.config["sequence"][motif_res[k]] )
+            for k in range(motif_length):
+                fid.write(self.config["sequence"][motif_res[k]])
             fid.write('\n')
             fid.close()
             print 'Created: ', motif_fasta_file
 
             # params file
-            motif_stem_set = self.config["motif_stem_sets"][ i ]
-            motif_res_map = self.config["motif_res_maps"][ i ]
-            motif_cutpoint = motif_cutpoints[ i ]
+            motif_stem_set = self.config["motif_stem_sets"][i]
+            motif_res_map = self.config["motif_res_maps"][i]
+            motif_cutpoint = motif_cutpoints[i]
 
-            motif_params_file = 'preparation/motif%d.params' % (i+1)
-            fid = open( motif_params_file , 'w' )
+            motif_params_file = 'preparation/motif%d.params' % (i + 1)
+            fid = open(motif_params_file, 'w')
 
-            for k in range( len(motif_stem_set) ):
-                motif_stem = motif_stem_set[ k ]
-                fid.write( 'STEM   ' )
-                for n in range( len( motif_stem ) ):
-                    fid.write( '  PAIR %d %d W W A'  % \
-                               ( motif_res_map[ motif_stem[n][0] ]+1,
-                                 motif_res_map[ motif_stem[n][1] ]+1 ) )
-                fid.write( '\n' )
+            for k in range(len(motif_stem_set)):
+                motif_stem = motif_stem_set[k]
+                fid.write('STEM   ')
+                for n in range(len(motif_stem)):
+                    fid.write('  PAIR %d %d W W A' %
+                              (motif_res_map[motif_stem[n][0]] + 1,
+                               motif_res_map[motif_stem[n][1]] + 1))
+                fid.write('\n')
 
-                fid.write( 'OBLIGATE PAIR %d %d W W A \n\n'  % \
-                               ( motif_res_map[ motif_stem[-1][0] ]+1,
-                                 motif_res_map[ motif_stem[-1][1] ]+1 ) )
+                fid.write('OBLIGATE PAIR %d %d W W A \n\n' %
+                          (motif_res_map[motif_stem[-1][0]] + 1,
+                           motif_res_map[motif_stem[-1][1]] + 1))
 
             motif_cutpoint.sort()
 
-            #print motif_res
-            #print motif_cutpoint
+            # print motif_res
+            # print motif_cutpoint
 
-            if len( motif_cutpoint ) > 1:
-                fid.write( 'CUTPOINT_OPEN ' )
-                for k in range( len( motif_cutpoint ) ):
-                    if motif_res_map[ motif_cutpoint[k] ] < (len( motif_res )-1):
-                        fid.write( ' %d' % (motif_res_map[ motif_cutpoint[k] ]+1) )
+            if len(motif_cutpoint) > 1:
+                fid.write('CUTPOINT_OPEN ')
+                for k in range(len(motif_cutpoint)):
+                    if motif_res_map[motif_cutpoint[k]] < (len(motif_res) - 1):
+                        fid.write(' %d' % (motif_res_map[motif_cutpoint[k]] + 1))
             fid.write('\n')
             fid.close()
             print 'Created: ', motif_params_file
@@ -612,90 +616,85 @@ class RNAPrediction(object):
                 command = ["pdbslice.py",
                            native_pdb_file,
                            "-subset"]
-                for k in range( motif_length ):
-                    command += ["%d" % (motif_res[k]+1)]
-                command += ["preparation/motif%d_" % (i+1)]
+                for k in range(motif_length):
+                    command += ["%d" % (motif_res[k] + 1)]
+                command += ["preparation/motif%d_" % (i + 1)]
                 self.executeCommand(command)
-                native_pdb_file_subset =  'preparation/motif%d_%s' % (i+1, native_pdb_file )
+                native_pdb_file_subset = 'preparation/motif%d_%s' % (i + 1, native_pdb_file)
                 print 'Created: ', native_pdb_file_subset
 
             if data_file is not None:
-                motif_data_file = 'preparation/motif%d.data' % ( i+1 )
-                fid_data = open( motif_data_file, 'w' )
-                fid_data.write( 'EXPOSE' )
+                motif_data_file = 'preparation/motif%d.data' % (i + 1)
+                fid_data = open(motif_data_file, 'w')
+                fid_data.write('EXPOSE')
                 for data in self.config["data_info"]:
-                    if data[0]-1 in motif_res_map.keys():
-                        fid_data.write( '   %d %s %s ' % (motif_res_map[data[0]-1]+1,data[1],data[2]) )
+                    if data[0] - 1 in motif_res_map.keys():
+                        fid_data.write('   %d %s %s ' % (motif_res_map[data[0] - 1] + 1, data[1], data[2]))
                 fid_data.write('\n')
 
-                if len( self.config["backbone_burial_info"] ) > 0:
-                    fid_data.write( 'BACKBONE_BURIAL ' )
+                if len(self.config["backbone_burial_info"]) > 0:
+                    fid_data.write('BACKBONE_BURIAL ')
                     for k in self.config["backbone_burial_info"]:
-                        if k-1 in motif_res_map.keys():
-                            fid_data.write( ' %d' % (motif_res_map[ k-1 ] + 1) )
-                    fid_data.write( '\n' )
+                        if k - 1 in motif_res_map.keys():
+                            fid_data.write(' %d' % (motif_res_map[k - 1] + 1))
+                    fid_data.write('\n')
                 fid_data.close()
                 print 'Created: ', motif_data_file
 
-
-        if len( cutpoints_original ) > 0:
-            fid.write( 'CUTPOINT_OPEN ' )
+        if len(cutpoints_original) > 0:
+            fid.write('CUTPOINT_OPEN ')
             for cutpoint in cutpoints_original:
-                fid.write( ' %d'  % (cutpoint+1) )
-            fid.write( '\n' )
+                fid.write(' %d' % (cutpoint + 1))
+            fid.write('\n')
 
+        cutpoints = []
+        for i in range(len(self.config["motifs"])):
 
-        cutpoints  = []
-        for i in range( len(self.config["motifs"]) ):
+            motif_stem_set = self.config["motif_stem_sets"][i]
 
-            motif_stem_set = self.config["motif_stem_sets"][ i ]
+            motif_stem = motif_stem_set[0]
 
-            motif_stem = motif_stem_set[ 0 ]
-
-            possible_cutpoints =  [ motif_stem[ 0 ][ 0 ], motif_stem[ 1 ][ 1 ] ]
+            possible_cutpoints = [motif_stem[0][0], motif_stem[1][1]]
             possible_cutpoints.sort()
-            #print possible_cutpoints
+            # print possible_cutpoints
             if possible_cutpoints[0] not in cutpoints:
-                cutpoints.append( possible_cutpoints[ 0 ] )
-
+                cutpoints.append(possible_cutpoints[0])
 
         params_file = "preparation/sequence.params"
-        fid = open( params_file, 'w')
+        fid = open(params_file, 'w')
 
-        if len( cutpoints ) > 0:
-            fid.write( 'CUTPOINT_CLOSED ' )
-            #cutpoints.sort()
+        if len(cutpoints) > 0:
+            fid.write('CUTPOINT_CLOSED ')
+            # cutpoints.sort()
             for cutpoint in cutpoints:
-                fid.write( ' %d'  % (cutpoint+1) )
-            fid.write( '\n' )
-
-        #for cutpoint in cutpoints:
-        #    fid.write( 'OBLIGATE   PAIR %d %d W W A\n' % (cutpoint+1, pair_map[cutpoint]+1) )
-
-        for i in range( len(self.config["stems"]) ):
-            stem_res = self.config["stems"][i]
-            fid.write( 'STEM ')
-            for k in range( len( stem_res )):
-                fid.write( ' PAIR %d %d W W A ' % \
-                               ( stem_res[k][ 0 ]+1, stem_res[k][ 1 ]+1 ) )
+                fid.write(' %d' % (cutpoint + 1))
             fid.write('\n')
-            fid.write( 'OBLIGATE PAIR %d %d W W A \n\n'  % \
-                           ( stem_res[-1][0] + 1,
-                             stem_res[-1][1] + 1 ) )
+
+        # for cutpoint in cutpoints:
+        # fid.write( 'OBLIGATE   PAIR %d %d W W A\n' % (cutpoint+1, pair_map[cutpoint]+1) )
+
+        for i in range(len(self.config["stems"])):
+            stem_res = self.config["stems"][i]
+            fid.write('STEM ')
+            for k in range(len(stem_res)):
+                fid.write(' PAIR %d %d W W A ' %
+                          (stem_res[k][0] + 1, stem_res[k][1] + 1))
+            fid.write('\n')
+            fid.write('OBLIGATE PAIR %d %d W W A \n\n' %
+                      (stem_res[-1][0] + 1,
+                       stem_res[-1][1] + 1))
 
         fid.close()
         print 'Created: ', params_file
 
         # default cutpoint constraints
         assemble_cst_file = "preparation/cutpoints.cst"
-        fid = open( assemble_cst_file,'w')
+        fid = open(assemble_cst_file, 'w')
         fid.write('[ atompairs ]\n')
         for cutpoint in cutpoints:
-            fid.write( "O3'  %d  P     %d  HARMONIC  1.619  2.0\n" % \
-                           ( cutpoint+1, cutpoint+2 ) )
+            fid.write("O3'  %d  P     %d  HARMONIC  1.619  2.0\n" % (cutpoint + 1, cutpoint + 2))
         fid.close()
         print 'Created: ', assemble_cst_file
-
 
     def create_helices(self, dry_run=False, threads=1):
         self.checkConfig()
@@ -703,21 +702,20 @@ class RNAPrediction(object):
         deleteGlob("preparation/stem*.out")
         for i in range(len(self.config["stems"])):
             command = ["rna_helix",
-                       "-fasta", "preparation/stem%d.fasta" % (i+1),
-                       "-out:file:silent","preparation/stem%d.out" % (i+1)]
+                       "-fasta", "preparation/stem%d.fasta" % (i + 1),
+                       "-out:file:silent", "preparation/stem%d.out" % (i + 1)]
             commands.append(Command(command, add_suffix="rosetta", dry_run=dry_run))
         self.executeCommands(commands, threads=threads)
 
         # rna_helix dumps <sequence>.pdb files in the working directory.
         # These can be useful for us, so move them to the preparation directory with a proper stemX.pdb filename.
         # TODO: What happens if there are multiple helices with the same sequence? In that case we need to move them
-        #       out of the way before running the next command.
-        #       Just disable multithreading here (not really needed with stem generation anyways)?
+        # out of the way before running the next command.
+        # Just disable multithreading here (not really needed with stem generation anyways)?
         for i in range(len(self.config["stems"])):
             sequence = [self.config["sequence"][j[0]] for j in self.config["stems"][i]]
             sequence += [self.config["sequence"][j[1]] for j in reversed(self.config["stems"][i])]
             shutil.move("%s.pdb" % ("".join(sequence)), "preparation/stem%d.pdb" % (i + 1))
-
 
     def _parseCstNameAndFilename(self, constraints):
         if constraints is None or constraints == "none":
@@ -776,7 +774,7 @@ class RNAPrediction(object):
         cst_info = parseCstFile(cst_file)
 
         # probably wrong, commented out for now!
-        #cst_info = fixAtomNamesInCst(cst_info, self.config["sequence"])
+        # cst_info = fixAtomNamesInCst(cst_info, self.config["sequence"])
 
         # add tertiary constraints
         with open(assembly_cst, "a") as ft:
@@ -789,15 +787,14 @@ class RNAPrediction(object):
             utils.mkdir_p(dir_motifs)
             for i in range(len(self.config["motifs"])):
                 motif_res_map = self.config["motif_res_maps"][i]
-                motif_cst_file = '%s/motif%d.cst' % (dir_motifs, i+1)
+                motif_cst_file = '%s/motif%d.cst' % (dir_motifs, i + 1)
                 fid_cst = open(motif_cst_file, 'w')
-                fid_cst.write( '[ atompairs ]\n' )
+                fid_cst.write('[ atompairs ]\n')
                 for cst in cst_info:
-                    if cst[1]-1 in motif_res_map.keys() and cst[3]-1 in motif_res_map.keys():
-                        fid_cst.write( '%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1]-1]+1,cst[2],motif_res_map[cst[3]-1]+1," ".join(map(str, cst[4]))) )
+                    if cst[1] - 1 in motif_res_map.keys() and cst[3] - 1 in motif_res_map.keys():
+                        fid_cst.write('%s %d %s %d %s\n' % (cst[0], motif_res_map[cst[1] - 1] + 1, cst[2], motif_res_map[cst[3] - 1] + 1, " ".join(map(str, cst[4]))))
                 fid_cst.close()
                 print 'Created: ', motif_cst_file
-
 
     def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None):
         self.checkConfig()
@@ -819,7 +816,7 @@ class RNAPrediction(object):
         # check if motif constraints were created correctly
         if cst_file is not None:
             for i in range(n_motifs):
-                checkFileExistence("%s/motif%d.cst" % (dir_motifs, i+1), "Motif cst files not found. Please run the 'prepare-cst' step!")
+                checkFileExistence("%s/motif%d.cst" % (dir_motifs, i + 1), "Motif cst files not found. Please run the 'prepare-cst' step!")
 
         # merge all motifs abd check what we have so far
         completed = {}
@@ -841,8 +838,8 @@ class RNAPrediction(object):
                 structs_threads[j] += 1
 
             command = ["rna_denovo",
-                       "-fasta", "preparation/motif%d.fasta" % (i+1),
-                       "-params_file", "preparation/motif%d.params" % (i+1),
+                       "-fasta", "preparation/motif%d.fasta" % (i + 1),
+                       "-params_file", "preparation/motif%d.params" % (i + 1),
                        "-cycles", "%d" % cycles,
                        "-mute", "all",
                        "-close_loops",
@@ -850,40 +847,41 @@ class RNAPrediction(object):
                        "-minimize_rna"]
 
             if cst_file is not None:
-                command += ["-cst_file", '%s/motif%d.cst' % (dir_motifs, i+1)]
+                command += ["-cst_file", '%s/motif%d.cst' % (dir_motifs, i + 1)]
             if self.config["native_pdb_file"] is not None and use_native_information:
-                command += ["-native", "preparation/motif%d_%s" % (i+1, self.config["native_pdb_file"])]
+                command += ["-native", "preparation/motif%d_%s" % (i + 1, self.config["native_pdb_file"])]
             if self.config["data_file"] is not None:
-                command += ["-data_file", "preparation/motif%d.data" % (i+1)]
+                command += ["-data_file", "preparation/motif%d.data" % (i + 1)]
             if self.config["torsions_file"] is not None:
-                command += ["-vall_torsions", "preparation/motif%d.torsions" % (i+1)]
+                command += ["-vall_torsions", "preparation/motif%d.torsions" % (i + 1)]
 
             which_stems = []
             stem_chunk_res = []
             motif_stem_set = self.config["motif_stem_sets"][i]
             motif_res_map = self.config["motif_res_maps"][i]
-            for k in range( len(motif_stem_set) ):
+            for k in range(len(motif_stem_set)):
                 motif_stem = motif_stem_set[k]
-                #need to find in stems
-                for n in range( len( self.config["stems"] )  ):
+                # need to find in stems
+                for n in range(len(self.config["stems"])):
                     stem = self.config["stems"][n]
                     found_match = 0
-                    for q in range( len( stem ) ) :
+                    for q in range(len(stem)):
                         if motif_stem[0][0] in stem[q]:
                             found_match = 1
                             break
-                    if found_match: break
-                which_stems.append( n )
+                    if found_match:
+                        break
+                which_stems.append(n)
 
-                for q in range( len( stem ) ):
-                    stem_chunk_res.append( motif_res_map[ stem[q][0] ]+1 )
-                for q in range( len( stem ) ):
-                    stem_chunk_res.append( motif_res_map[ stem[ len(stem) - q - 1][1] ]+1 )
+                for q in range(len(stem)):
+                    stem_chunk_res.append(motif_res_map[stem[q][0]] + 1)
+                for q in range(len(stem)):
+                    stem_chunk_res.append(motif_res_map[stem[len(stem) - q - 1][1]] + 1)
 
             command += ["-in:file:silent_struct_type", "rna",
                         "-in:file:silent"]
             for n in which_stems:
-                command += ["preparation/stem%d.out" % (n+1)]
+                command += ["preparation/stem%d.out" % (n + 1)]
 
             command += ["-in:file:input_res"]
             command += self._make_tag_with_dashes(stem_chunk_res)
@@ -903,7 +901,6 @@ class RNAPrediction(object):
         # merge motifs
         for i in range(n_motifs):
             mergeSilentFiles("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
-
 
     # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with createMotifs, it is distributed.
     def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1):
@@ -945,23 +942,26 @@ class RNAPrediction(object):
                    "-in:file:silent"]
 
         for i in range(len(self.config["stems"])):
-            command += ["preparation/stem%d.out" % (i+1)]
+            command += ["preparation/stem%d.out" % (i + 1)]
 
         for i in range(len(self.config["motifs"])):
-            command += ["%s/motif%d.out" % (dir_motifs, i+1)]
+            command += ["%s/motif%d.out" % (dir_motifs, i + 1)]
 
         if cst_file is not None:
             command += ["-cst_file", file_assembly_cst]
 
         chunk_res = []
-        for n in range( len(self.config["stems"])  ):
+        for n in range(len(self.config["stems"])):
             stem = self.config["stems"][n]
-            for q in range( len( stem ) ):        chunk_res.append(stem[q][0] + 1)
-            for q in range( len( stem ) ):        chunk_res.append(stem[ len(stem) - q - 1][1] + 1)
+            for q in range(len(stem)):
+                chunk_res.append(stem[q][0] + 1)
+            for q in range(len(stem)):
+                chunk_res.append(stem[len(stem) - q - 1][1] + 1)
 
-        for n in range( len(self.config["motifs"]) ):
+        for n in range(len(self.config["motifs"])):
             motif_res = self.config["motifs"][n]
-            for m in motif_res: chunk_res.append(m+1)
+            for m in motif_res:
+                chunk_res.append(m + 1)
 
         command += ["-in:file:input_res"]
         command += self._make_tag_with_dashes(chunk_res)
