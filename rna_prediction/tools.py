@@ -129,8 +129,6 @@ def tools():
 
                 if not dca_mode:
                     print "  Mapping to atom-atom."
-                    distanceMap = dcatools.getContactDistanceMap()
-                    distanceMapMean = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff=6.0, stdCutoff=3.0)
                     cst_info = dcatools.buildCstInfoFromDcaContacts(dca, sequence=sim.config["sequence"], mappingMode="allAtomWesthof", cstFunction="FADE -100 26 20 -2 2", numberDcaPredictions=100, quiet=True)
             else:
                 title = splitext(basename(arg))[0]
