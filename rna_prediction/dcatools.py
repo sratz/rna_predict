@@ -1,4 +1,3 @@
-import glob
 import os
 import pickle
 import numpy as np
@@ -52,7 +51,10 @@ def getAtomsForResSequence(sequence):
 
 
 # the westhofVector can be used to apply different weights to the bonding family classes
-def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], forceRebuild=False):
+def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=None, forceRebuild=False):
+    # default: same weight for all families
+    if not westhofVector:
+        westhofVector = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
     nucleotides = ["A", "U", "G", "C"]
 
@@ -88,10 +90,6 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=[1, 1
 
     print "Building contact distance map:"
 
-    # make sure directory names have a trailing slash
-    structureDirectory = os.path.normpath(structureDirectory) + os.sep
-
-    # TODO: add exception handling in case structureDirectory does not exist or is missing needed files
     pdbStructureDict = {}
     distanceMap = {}
     for nt1 in nucleotides:
