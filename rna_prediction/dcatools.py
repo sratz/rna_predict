@@ -1,7 +1,6 @@
 import os
 import pickle
 import numpy as np
-import math
 import re
 from pkg_resources import ResourceManager
 
@@ -110,50 +109,50 @@ def getContactDistanceMap(structureDirectory=INFO_DIRECTORY, westhofVector=None,
                     pdbCodes.append(None)
                     residues.append(None)
 
+            # loop over all pdbcodes and their index in the list (0-11)
             for index, pdbCode in enumerate(pdbCodes):
+                # skip if we don't have any entry for this family
                 if pdbCode is None:
                     continue
 
+                # download pdb if necessary
                 if pdbCode not in pdbStructureDict:
                     pdbStructureDict[pdbCode] = pdbtools.getPdbByCode(pdbCode)
 
+                # extract model from pdb
                 model = pdbStructureDict[pdbCode][0]
 
-                found1 = False
-                found2 = False
+                # try to find the residue contact specified. this is done by looping over all chains in the model,
+                # and checking if the residue is in there and is the correct nucleotide
+                res1 = None
                 for chain in model:
                     try:
                         res1 = chain[residues[index][0]]
                         assert res1.get_resname().strip() == nt1
-                        found1 = True
-                        if found2:
-                            break
-                    except:
-                        pass
+                        break
+                    except (KeyError, AssertionError):
+                        res1 = None
 
+                res2 = None
+                for chain in model:
                     try:
                         res2 = chain[residues[index][1]]
                         assert res2.get_resname().strip() == nt2
-                        found2 = True
-                        if found1:
-                            break
-                    except:
-                        pass
-
-                    if found1 and found2:
                         break
+                    except (KeyError, AssertionError):
+                        res2 = None
 
-                if not found1 or not found2:
+                if not res1 or not res2:
                     raise Exception("Could not find residue contact in pdb file: %s-%s %s %s %s" % (nt1, nt2, pdbCode, residues[index][0], residues[index][1]))
 
                 print "%s-%s %s %s %s" % (nt1, nt2, pdbCode, residues[index][0], residues[index][1])
+
+                # add all atom-atom contacts to the distance map for the current residue pair
                 for atom1 in res1:
                     for atom2 in res2:
                         if not (atom1.name.startswith('H') or atom2.name.startswith('H')):
                             contactKey = str(atom1.name) + '-' + str(atom2.name)
-                            x1, y1, z1 = atom1.coord
-                            x2, y2, z2 = atom2.coord
-                            distance = westhofVector[index] * math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
+                            distance = westhofVector[index] * (atom1 - atom2)
                             if not contactKey in distanceMapResPair:
                                 distanceMapResPair[contactKey] = [distance]
                             else:
