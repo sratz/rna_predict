@@ -335,7 +335,7 @@ def buildCstInfoFromDcaContacts(dcaData, sequence, mappingMode, cstFunction, num
 
 
 class DcaContact(object):
-    def __init__(self, res1, res2, useContact=True, weight=1, potentialMin=6, potentialMax=26, energyBoost=2, function="FADE"):
+    def __init__(self, res1, res2, useContact=True, weight=1):
         self.res1 = res1
         self.res2 = res2
         self.useContact = useContact
