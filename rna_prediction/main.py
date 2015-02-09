@@ -40,7 +40,7 @@ TESTRUN = 0
 PROFILE = 0
 
 
-def main(argv=None): # IGNORE:C0111
+def main():
 
     # use line-buffered stdout and stderr
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)
@@ -50,11 +50,6 @@ def main(argv=None): # IGNORE:C0111
         sys.stderr.write("%s: %s: %s\n" % (program_name, prefix, message))
 
     '''Command line options.'''
-
-    if argv is None:
-        argv = sys.argv
-    else:
-        sys.argv.extend(argv)
 
     program_name = os.path.basename(sys.argv[0])
     program_version = "v%s" % __version__
