@@ -7,11 +7,9 @@ Created on Sep 22, 2014
 @author: sra
 """
 
-import Bio.PDB
 import itertools
 import pprint
 import sys
-import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import os.path
@@ -77,7 +75,6 @@ def tools():
             y = [d[1][0] for d in data]
             y_err = [d[1][1] for d in data]
 
-
             axarr[i / 4, i % 4].errorbar(x, y, y_err)
             axarr[i / 4, i % 4].set_xticks(x)
             axarr[i / 4, i % 4].set_xticklabels(x_names, rotation=90, size="x-small")
@@ -85,7 +82,6 @@ def tools():
             i += 1
 
         plt.show()
-
 
     if sys.argv[1] == "comp2":
         sim = RNAPrediction(SysConfig(), ".")
@@ -97,7 +93,6 @@ def tools():
         print
         models = sim.getModels("100rna_r26_w2", ["S_000123_5", "S_000100"], "tag")
         pprint.pprint(models)
-
 
     if sys.argv[1] == "comp":
         if sys.argv[2] == "--dca":
@@ -142,7 +137,6 @@ def tools():
                 title = splitext(basename(arg))[0]
                 print "  Reading file directly."
 
-
                 if dca_mode:
                     dca = dcatools.parseDcaData(arg)
                 else:
@@ -179,7 +173,6 @@ def tools():
         plt.savefig("/tmp/rna_tools_quality_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
         plt.show()
 
-
     if sys.argv[1] == "checkcontacts":
         dca = dcatools.parseDcaData(dcaPredictionFileName=sys.argv[2])
 
@@ -188,7 +181,6 @@ def tools():
         for i in xrange(3, len(sys.argv)):
             pdb = pdbtools.parsePdb("foo", sys.argv[i])
             chains.append({"chain": pdb[0].child_list[0], "name":sys.argv[i]})
-
 
         maximum = min(len(dca), 100)
         averages = np.zeros((len(chains), maximum))
@@ -208,11 +200,9 @@ def tools():
                 minimums[i][j] = minimum_heavy
                 print "        %-70s  avg: %.05f   min: %-3s  %-3s %f" % (chains[i]["name"], average_heavy, minimum_pair[0].name, minimum_pair[1].name, minimum_heavy)
 
-
         colors = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
         x = np.array(range(0, maximum))
         width = 0.8
-        width_single = width / len(chains)
         for i in xrange(0, len(chains)):
             color = colors.next()
             plt.bar(x + 1 - width / 2, averages[i], width, label=chains[i]["name"], color=color, alpha=0.5)
@@ -225,13 +215,11 @@ def tools():
         plt.savefig("/tmp/rna_tools_checkcontacts_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
         plt.show()
 
-
     # plot native rmsd over rosetta score
     # usage: rna_tools rmsdscore <cst> <max_models> [output_image]
     if sys.argv[1] == "rmsdscore":
         cst = sys.argv[2]
         number = int(sys.argv[3])
-
 
         sim = RNAPrediction(SysConfig(), ".")
         cst_name, cst_file = sim._parseCstNameAndFilename(cst)

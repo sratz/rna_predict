@@ -28,6 +28,7 @@ def _getAtomsBackbone(termPhosphate=False):
     atoms = ["P", "OP1", "OP2"] if termPhosphate else []
     return atoms + ["O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "O2'", "C1'"]
 
+
 def getAtomsForRes(res, termPhosphate=False):
     atoms = _getAtomsBackbone(termPhosphate)
     if res == "A":
@@ -38,6 +39,7 @@ def getAtomsForRes(res, termPhosphate=False):
         return atoms + ["N9", "C8", "N7", "C5", "C6", "O6", "N1", "C2", "N2", "N3", "C4"]
     elif res == "C":
         return atoms + ["N1", "C2", "O2", "N3", "C4", "N4", "C5", "C6"]
+
 
 def getAtomsForResSequence(sequence):
     atoms = []
@@ -270,9 +272,7 @@ def getContactInformationInPdbChain(dcaContact, pdbChain):
 
 
 # maps dca residue contacts to atom-atom constraints
-# mode: mapping mode, can be:
-#       - allAtomWesthof
-#       - pOnly
+# mode: mapping mode, can be: allAtomWesthof,pOnly
 def buildCstInfoFromDcaContacts(dcaData, sequence, mappingMode, cstFunction, numberDcaPredictions, quiet=False):
     mappingMode = mappingMode.lower()
     if mappingMode not in ["allatomwesthof", "ponly"]:
@@ -355,8 +355,7 @@ class DcaContact(object):
             raise DcaException("Not implemented! Only FADE function is recognized.")
 
 
-
-## DCA FILTERING
+# DCA FILTERING
 
 # run dca data through a chain of filters
 def filterDcaData(dcaData, dcaFilterChain, quiet=False):
@@ -401,13 +400,16 @@ def parseFilterLine(line, simulation):
 
     return filterChain
 
+
 # use contact if realized minimum distance in a single pdb is smaller than a threshold
 def dcaFilterThresholdMinimumKeepBelow(threshold, pdbChain):
     return _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=True)
 
+
 # use contact if realized minimum distance is a single pdb is larger than a threshold
 def dcaFilterThresholdMinimumKeepAbove(threshold, pdbChain):
     return _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=False)
+
 
 def _dcaFilterThresholdMinimumKeep(threshold, pdbChain, below=True):
     def f(contact, quiet):

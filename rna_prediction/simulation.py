@@ -6,18 +6,15 @@ Created on Aug 13, 2014
 
 import time
 import shutil
-import pprint
 import glob
 import struct
 import re
 import os
 import subprocess
 import sys
-import errno
 import string
 import pickle
 from . import dcatools
-from . import pdbtools
 from . import utils
 from os.path import splitext, basename, abspath
 
@@ -126,7 +123,6 @@ def fixAtomNamesInCst(cst_info, sequence):
     return cst_info_new
 
 
-
 class SimulationException(Exception):
     pass
 
@@ -147,7 +143,6 @@ class Command(object):
         if sysconfig.subprocess_buffsize is not None:
             com = ["stdbuf", "-o", sysconfig.subprocess_buffsize] + com
         return com
-
 
 
 class RNAPrediction(object):
@@ -186,7 +181,6 @@ class RNAPrediction(object):
             self.config[key] = None if value == "-" else value
         else:
             raise SimulationException("No such config entry: %s" % key)
-
 
     def checkConfig(self):
         if not self.config:
@@ -333,7 +327,7 @@ class RNAPrediction(object):
         pair_map = {}
         all_pairs = []
 
-        complement = {'a':['u'], 'u':['a','g'], 'c':['g'], 'g':['c','u']};
+        complement = {'a':['u'], 'u':['a','g'], 'c':['g'], 'g':['c','u']}
 
         # Parse out stems
         basepair_mismatch = []
@@ -442,7 +436,7 @@ class RNAPrediction(object):
         for i in range( numres ):
 
             if not already_in_motif[i] and ( not already_in_stem[ i ] or
-                                             ( i > 0 and already_in_stem[i-1] and \
+                                             ( i > 0 and already_in_stem[i-1] and
                                                    pair_map[i]+1 != pair_map[i-1] ) ):
 
                 motif_res = []
@@ -497,7 +491,7 @@ class RNAPrediction(object):
                     motif_res.append( pair_map[ k ] )
                     k+=1
 
-                    while ( k < numres and already_in_stem[ k ] and \
+                    while ( k < numres and already_in_stem[ k ] and
                                 pair_map[k-1] == pair_map[k]+1 and not k in motif_res):
                         motif_stem.append( [ k, pair_map[k] ] )
                         motif_res.append( k )
@@ -686,7 +680,7 @@ class RNAPrediction(object):
                                ( stem_res[k][ 0 ]+1, stem_res[k][ 1 ]+1 ) )
             fid.write('\n')
             fid.write( 'OBLIGATE PAIR %d %d W W A \n\n'  % \
-                           ( stem_res[-1][0] + 1,\
+                           ( stem_res[-1][0] + 1,
                              stem_res[-1][1] + 1 ) )
 
         fid.close()
@@ -974,8 +968,6 @@ class RNAPrediction(object):
 
         if self.config["native_pdb_file"] is not None and use_native_information:
             command += ["-native", self.config["native_pdb_file"]]
-
-
         if self.config["torsions_file"] is not None:
             command += ["-vall_torsions", self.config["torsions_file"]]
         if self.config["data_file"] is not None:
@@ -996,7 +988,6 @@ class RNAPrediction(object):
             commands.append(Command(command_full, add_suffix="rosetta", dry_run=dry_run))
 
         self.executeCommands(commands, threads=threads)
-
 
     # TODO: set the cutoff value back to 4.0? It was set to 4.1 because the old bash script used integer comparison and even 4.09 was treated as 4.0
     def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=4.1):
@@ -1048,7 +1039,6 @@ class RNAPrediction(object):
                                                "tag": tag,
                                                "tag_source": m.group(2)}
 
-
         # clustering
         print "  clustering models..."
         filename_clusters = "%s/clusters.out" % dir_output
@@ -1061,10 +1051,7 @@ class RNAPrediction(object):
                 evalData["models"][m.group(4)]["cluster"] = int(m.group(2))
                 if m.group(1) == "new":
                     evalData["clusters"][int(m.group(2))] = {"primary_model": m.group(4)}
-                print "    %s cluster: %02s, model: %-10s, score: %.3f" % ("new" if m.group(1) == "new" else "   ",
-                                                                                             m.group(2),
-                                                                                             m.group(4),
-                                                                                             float(m.group(3)))
+                print "    %s cluster: %02s, model: %-10s, score: %.3f" % ("new" if m.group(1) == "new" else "   ", m.group(2), m.group(4), float(m.group(3)))
 
         # extract cluster pdbs
         print "  extracting cluster decoy pdbs..."
@@ -1095,7 +1082,6 @@ class RNAPrediction(object):
 
             deleteGlob(filename_tmp, print_notice=False)
 
-
         # calculate rmsd to native structure if native pdb available
         if self.config["native_pdb_file"] is not None:
             calculate_rmsd("native", self.config["native_pdb_file"])
@@ -1106,7 +1092,6 @@ class RNAPrediction(object):
         # save evaluation data
         with open(file_evaldata, "w") as f:
             pickle.dump(evalData, f)
-
 
     def compare(self):
         self.checkConfig()
@@ -1144,7 +1129,6 @@ class RNAPrediction(object):
                 comparisons.append("%.2f" % min_rmsd)
             printComparisonLine(cst_name, comparisons)
 
-
     # extract pdb of a model to the tmp directory
     def extractPdb(self, constraints, model):
         cst_name, cst_file = self._parseCstNameAndFilename(constraints)
@@ -1153,7 +1137,6 @@ class RNAPrediction(object):
         prefix = dir_tmp + os.path.sep + "tmp_"
         self.executeCommand(["rna_extract", "-in:file:silent", "%s/%s" % (dir_assembly, model["source_file"]), "-out:prefix", prefix, "-tags", model["tag_source"]], add_suffix="rosetta", quiet=True)
         shutil.move("%s/tmp_%s.pdb" % (dir_tmp, model["tag_source"]), "%s/%s.pdb" % (dir_tmp, model["tag"]))
-
 
     # retrieve a list for models by kind:
     # "tag": string: internal name such as S_000123_5
@@ -1203,7 +1186,6 @@ class RNAPrediction(object):
 
         return results
 
-
     # create a reasonable output filename from
     # output format uses placeholders for input name, number of predictions, and function
     # TODO: include mappingMode?
@@ -1225,7 +1207,6 @@ class RNAPrediction(object):
         # replace placeholders with actual values
         outputFileName = outputFileName.replace("%f", cstFunctionUnderscore).replace("%n", sourceBasename).replace("%d", str(numberDcaPredictions))
         return outputFileName
-
 
     def makeConstraints(self, dcaPredictionFileName="dca/dca.txt", outputFileName=None, numberDcaPredictions=100, cstFunction="FADE -100 26 20 -2 2", filterText=None, mappingMode="allAtomWesthof"):
         # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
@@ -1259,7 +1240,6 @@ class RNAPrediction(object):
             for c in cst_info:
                 out.write("%s %d %s %d %s\n" % (c[0], c[1], c[2], c[3], " ".join(map(str, c[4]))))
 
-
     def editConstraints(self, constraints, outputFileName=None, cstFunction="FADE -100 26 20 -2 2"):
         cst_name, inputFileName = self._parseCstNameAndFilename(constraints)
         outputFileName = self._createConstraintsOutputFilename(inputFileName, outputFileName, cstFunction)
@@ -1277,7 +1257,6 @@ class RNAPrediction(object):
             for line in utils.readFileLineByLine(inputFileName):
                 m = pattern.match(line)
                 outputFd.write("%s %s\n" % (m.group(1), cstFunction))
-
 
     def printStatus(self):
         self.checkConfig()
@@ -1299,7 +1278,6 @@ class RNAPrediction(object):
             dir_assembly = "predictions/%s/assembly" % cst_name
             dir_motifs = "predictions/%s/motifs" % cst_name
             dir_output = "predictions/%s/output" % cst_name
-
 
             if os.path.isfile(dir_assembly + "/assembly.cst"):
                 done_preparation = "X"

@@ -27,7 +27,6 @@ from rna_prediction.simulation import RNAPrediction
 from rna_prediction.simulation import SimulationException
 from rna_prediction.sysconfig import SysConfig
 from .dcatools import DcaException
-from . import dcatools
 from . import tools
 
 __all__ = []
@@ -125,7 +124,6 @@ USAGE
     for p in (parser_makeconstraints, parser_editconstraints):
         p.add_argument("--cst-function", dest="cst_function", help="rosetta function to use for the constraints [default: '%(default)s']", default="FADE -100 26 20 -2 2")
         p.add_argument("--cst-out-file", dest="cst_out_file", help="output cst file [default: inferred from input file]", default=None)
-
 
     # Process arguments
     args = parser.parse_args()
