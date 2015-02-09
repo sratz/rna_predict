@@ -84,7 +84,7 @@ USAGE
 
     parser_prepare = subparsers.add_parser("prepare", help="prepare stems and motifs")
     parser_preparecst = subparsers.add_parser("prepare-cst", help="prepare constraints file for motif generation and assembly")
-    parser_helices= subparsers.add_parser("create-helices", help="create ideal a-helices")
+    parser_helices = subparsers.add_parser("create-helices", help="create ideal a-helices")
     parser_motifs = subparsers.add_parser("create-motifs", help="create motifs")
     parser_assemble = subparsers.add_parser("assemble", help="assemble models")
     parser_evaluate = subparsers.add_parser("evaluate", help="evaluate data (clustering and rmsd calculation)")
@@ -168,7 +168,7 @@ USAGE
         elif args.subcommand == "make-constraints":
             p.makeConstraints(dcaPredictionFileName=args.dca_file, outputFileName=args.cst_out_file, numberDcaPredictions=args.dca_count, cstFunction=args.cst_function, filterText=args.filter, mappingMode=args.mapping_mode)
         elif args.subcommand == "edit-constraints":
-            p.editConstraints(constraints=args.cst, outputFileName=args.cst_out_file,cstFunction=args.cst_function)
+            p.editConstraints(constraints=args.cst, outputFileName=args.cst_out_file, cstFunction=args.cst_function)
         elif args.subcommand == "create-helices":
             p.create_helices(dry_run=args.dry_run, threads=args.threads)
         elif args.subcommand == "create-motifs":
