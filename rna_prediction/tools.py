@@ -26,7 +26,6 @@ def tools():
     if sys.argv[1] == "hist":
 
         distanceMap = dcatools.getContactDistanceMap(westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-        #distanceMap = pickle.load(open("lol.dat"))
 
         f, axarr = plt.subplots(4, 4)
 
@@ -59,7 +58,6 @@ def tools():
             stdCutoff = 3.0
 
         distanceMap = dcatools.getContactDistanceMap(westhofVector=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-        #distanceMap = pickle.load(open("lol.dat"))
         meanDistanceMap = dcatools.getMeanDistanceMapMean(distanceMap, meanCutoff, stdCutoff)
 
         f, axarr = plt.subplots(4, 4)
@@ -160,7 +158,6 @@ def tools():
                     try:
                         dist = np.linalg.norm(chain[res1][atom1].coord - chain[res2][atom2].coord)
                         dists.append(dist)
-                        #print atom1, res1, atom2, res2, "   distance:", dist
                     except:
                         print atom1, res1, atom2, res2, "   NOT FOUND"
 
