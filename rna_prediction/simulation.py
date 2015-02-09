@@ -162,8 +162,6 @@ class RNAPrediction(object):
             c = open(RNAPrediction.CONFIG_FILE)
             self.config = pickle.load(c)
             c.close()
-        else:
-            self.config = {}
 
     def saveConfig(self):
         c = open(RNAPrediction.CONFIG_FILE, "w")
@@ -198,6 +196,7 @@ class RNAPrediction(object):
         """
         Create or load a prediction simulation
         """
+        self.config = {}
         try:
             os.chdir(path)
         except:
