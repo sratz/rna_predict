@@ -21,6 +21,7 @@ from rna_prediction.simulation import parseCstFile
 from rna_prediction.simulation import RNAPrediction
 from rna_prediction.sysconfig import SysConfig
 
+
 def tools():
     if sys.argv[1] == "hist":
 
@@ -109,7 +110,7 @@ def tools():
         chain = pdb[0].child_list[0]
 
         print "Comparison PDB: %s" % comparison_pdb
-        plt.figure(figsize=(14,8))
+        plt.figure(figsize=(14, 8))
 
         if dca_mode:
             print "Mode: residue-residue"
@@ -180,7 +181,7 @@ def tools():
         chains = []
         for i in xrange(3, len(sys.argv)):
             pdb = pdbtools.parsePdb("foo", sys.argv[i])
-            chains.append({"chain": pdb[0].child_list[0], "name":sys.argv[i]})
+            chains.append({"chain": pdb[0].child_list[0], "name": sys.argv[i]})
 
         maximum = min(len(dca), 100)
         averages = np.zeros((len(chains), maximum))
@@ -232,7 +233,7 @@ def tools():
         plots = []
         descs = []
 
-        plt.figure(figsize=(14,8))
+        plt.figure(figsize=(14, 8))
 
         # cluster0
         models_c.append([m for m in models if "cluster" not in m])
@@ -262,7 +263,7 @@ def tools():
 
         plt.title("model clusters %s, constraints: %s" % (sim.config["name"], cst_name))
         plt.ylabel("rosetta score")
-        plt.legend(plots, descs, loc="upper right", prop={'size':12})
+        plt.legend(plots, descs, loc="upper right", prop={'size': 12})
         plt.savefig("/tmp/rna_tools_rmsdscore_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
         plt.show()
 
@@ -277,7 +278,7 @@ def tools():
         print sim.config["sequence"]
         print sim.config["secstruc"]
 
-        plt.figure(figsize=(14,8))
+        plt.figure(figsize=(14, 8))
         ax = plt.gca()
 
         plt.title("Residue Distances %s" % (sim.config["name"]))
@@ -292,7 +293,7 @@ def tools():
         plt.xticks(x_values, x_labels)
 
         y_min = 0
-        y_max = 0 # y limits will be set later when we know the final size
+        y_max = 0  # y limits will be set later when we know the final size
 
         for pdb_sample in pdbs_sample:
 
@@ -309,7 +310,7 @@ def tools():
         last_x = ""
         start_i = 0
         for i, x in enumerate(sim.config["secstruc"]):
-            if x != last_x and last_x != "" :
+            if x != last_x and last_x != "":
                 if last_x != ".":
                     if last_x == "(":
                         hatch = "//"
@@ -319,7 +320,7 @@ def tools():
                 start_i = i
             last_x = x
 
-        plt.legend(prop={'size':12})
+        plt.legend(prop={'size': 12})
 
         plt.savefig("/tmp/rna_tools_seqdist_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
 
