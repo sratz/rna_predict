@@ -49,10 +49,11 @@ def merge_silent_files(target, sources):
     # if target already exists, see how many structures we have already
     if os.path.isfile(target):
         with open(target, "r") as t:
+            line = None
             for line in t:
                 pass
-            if 'line' in locals():
-                m = re.match(".*S_(\d+)$", line)
+            if line is not None and 'line' in locals():
+                m = re.match(".*S_(\d+)$",  line)
                 if m:
                     n = int(m.group(1))
 
@@ -868,8 +869,8 @@ class RNAPrediction(object):
                             found_match = 1
                             break
                     if found_match:
+                        which_stems.append(n)
                         break
-                which_stems.append(n)
 
                 for q in range(len(stem)):
                     stem_chunk_res.append(motif_res_map[stem[q][0]] + 1)
