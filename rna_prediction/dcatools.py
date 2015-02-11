@@ -343,16 +343,23 @@ class DcaContact(object):
 
     def get_rosetta_function(self, function="FADE -100 26 20 -2 2"):
         function = function.split()
-        for i in range(1, len(function) + 1):
-            try:
-                # TODO: make this float()?
-                function[i] = int(function[i])
-            except:
-                pass
-        if function[0] == "FADE":
-            return [function[0], function[1], function[2], function[3], function[4] * self.weight, function[5] * self.weight]
-        else:
-            raise DcaException("Not implemented! Only FADE function is recognized.")
+
+        # parse numeric arguments
+        def parse_function(function, types):
+            for arg, argtype in types:
+                try:
+                    function[arg] = argtype(function[arg])
+                except ValueError:
+                    raise DcaException("Invalid Rosetta function: Could not parse argument '%s' as '%s'" % (function[arg], argtype.__name__))
+
+        try:
+            if function[0] == "FADE":
+                parse_function(function, [(1, int), (2, int), (3, int), (4, int), (5, int)])  # TODO: make this float?
+                return [function[0], function[1], function[2], function[3], function[4] * self.weight, function[5] * self.weight]
+            else:
+                raise DcaException("Invalid Rosetta function: '%s' is not implemented! Only 'FADE' function is recognized at this time." % function[0])
+        except IndexError:
+            raise DcaException("Invalid Rosetta function: Not enough arguments")
 
 
 # DCA FILTERING
