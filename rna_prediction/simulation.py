@@ -88,19 +88,6 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(_nsre, s)]
 
 
-def parse_cst_file(constraints_file):
-    cst_info = []
-    for line in utils.read_file_line_by_line(constraints_file):
-        if len(line) > 6 and line[0] != '[':
-            cols = string.split(line)
-            atom_name1 = cols[0]
-            res1 = int(cols[1])
-            atom_name2 = cols[2]
-            res2 = int(cols[3])
-            cst_info.append([atom_name1, res1, atom_name2, res2, cols[4:]])
-    return cst_info
-
-
 # TODO: Correcting atom names IS MOST LIKELY WRONG! It is commented out for now and can probably be removed completely.
 def fix_atom_names_in_cst(cst_info, sequence):
     pyrimidines = ['c', 'u']
@@ -264,7 +251,8 @@ class RNAPrediction(object):
             if stdout is not None:
                 stdout.close()
 
-    def _make_tag_with_dashes(self, int_vector):
+    @staticmethod
+    def _make_tag_with_dashes(int_vector):
         tag = []
 
         start_res = int_vector[0]
@@ -717,7 +705,8 @@ class RNAPrediction(object):
             sequence += [self.config["sequence"][j[1]] for j in reversed(self.config["stems"][i])]
             shutil.move("%s.pdb" % ("".join(sequence)), "preparation/stem%d.pdb" % (i + 1))
 
-    def _parse_cst_name_and_filename(self, constraints):
+    @staticmethod
+    def parse_cst_name_and_filename(constraints):
         if constraints is None or constraints == "none":
             cst_name = "none"
             cst_file = None
@@ -733,11 +722,24 @@ class RNAPrediction(object):
             check_file_existence(cst_file)
         return cst_name, cst_file
 
+    @staticmethod
+    def parse_cst_file(constraints_file):
+        cst_info = []
+        for line in utils.read_file_line_by_line(constraints_file):
+            if len(line) > 6 and line[0] != '[':
+                cols = string.split(line)
+                atom_name1 = cols[0]
+                res1 = int(cols[1])
+                atom_name2 = cols[2]
+                res2 = int(cols[3])
+                cst_info.append([atom_name1, res1, atom_name2, res2, cols[4:]])
+        return cst_info
+
     # prepare constraints files for motif generation and assembly
     # this is done separately to prevent a race condition when starting multiple parallel assembly jobs
     def prepare_cst(self, constraints=None, motifs_override=None):
         self.check_config()
-        cst_name, cst_file = self._parse_cst_name_and_filename(constraints)
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Constraints preparation:"
         print "    constraints: %s" % cst_name
 
@@ -746,7 +748,7 @@ class RNAPrediction(object):
         dir_motifs = "predictions/%s/motifs" % cst_name
 
         if motifs_override:
-            motifcst_name, motifcst_file = self._parse_cst_name_and_filename(motifs_override)
+            motifcst_name, motifcst_file = self.parse_cst_name_and_filename(motifs_override)
             print "    motif constraints: %s" % motifcst_name
             if motifcst_name == cst_name:
                 raise SimulationException("Motif override cst name can't be the same as the cst name!")
@@ -798,7 +800,7 @@ class RNAPrediction(object):
 
     def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None):
         self.check_config()
-        cst_name, cst_file = self._parse_cst_name_and_filename(constraints)
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Motif creation configuration:"
         print "    constraints: %s" % cst_name
         print "    cycles: %s" % cycles
@@ -905,7 +907,7 @@ class RNAPrediction(object):
     # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with createMotifs, it is distributed.
     def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1):
         self.check_config()
-        cst_name, cst_file = self._parse_cst_name_and_filename(constraints)
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Assembly configuration:"
         print "    constraints: %s" % cst_name
         print "    cycles: %s" % cycles
@@ -992,7 +994,7 @@ class RNAPrediction(object):
     # TODO: set the cutoff value back to 4.0? It was set to 4.1 because the old bash script used integer comparison and even 4.09 was treated as 4.0
     def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=4.1):
         self.check_config()
-        cst_name, cst_file = self._parse_cst_name_and_filename(constraints)
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Evaluation configuration:"
         print "    constraints: %s" % cst_name
         print "    cluster_limit: %s" % cluster_limit
@@ -1131,7 +1133,7 @@ class RNAPrediction(object):
 
     # extract pdb of a model to the tmp directory
     def extract_pdb(self, constraints, model):
-        cst_name, cst_file = self._parse_cst_name_and_filename(constraints)
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         dir_assembly = "predictions/%s/assembly" % cst_name
         dir_tmp = "predictions/%s/temp" % cst_name
         prefix = dir_tmp + os.path.sep + "tmp_"
@@ -1143,7 +1145,7 @@ class RNAPrediction(object):
     # "top": number: models ordered by score
     # "cluster": number: nth cluster decoy
     def get_models(self, constraints, model_list, kind="tag"):
-        cst_name, cst_file = self._parse_cst_name_and_filename(constraints)
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
 
         dir_output = "predictions/%s/output" % cst_name
         dir_tmp = "predictions/%s/temp" % cst_name
@@ -1189,7 +1191,8 @@ class RNAPrediction(object):
     # create a reasonable output filename from
     # output format uses placeholders for input name, number of predictions, and function
     # TODO: include mappingMode?
-    def _create_constraints_output_filename(self, input_filename, output_filename, cst_function, number_dca_predictions=None, output_format="%n_%f"):
+    @staticmethod
+    def _create_constraints_output_filename(input_filename, output_filename, cst_function, number_dca_predictions=None, output_format="%n_%f"):
         source_basename = splitext(basename(input_filename))[0]
         cst_function_underscore = cst_function.replace(" ", "_")
 
@@ -1241,7 +1244,7 @@ class RNAPrediction(object):
                 out.write("%s %d %s %d %s\n" % (c[0], c[1], c[2], c[3], " ".join(map(str, c[4]))))
 
     def edit_constraints(self, constraints, output_filename=None, cst_function="FADE -100 26 20 -2 2"):
-        cst_name, input_filename = self._parse_cst_name_and_filename(constraints)
+        cst_name, input_filename = self.parse_cst_name_and_filename(constraints)
         output_filename = self._create_constraints_output_filename(input_filename, output_filename, cst_function)
         print "Constraints editing:"
         print "    input_filename:  %s" % input_filename

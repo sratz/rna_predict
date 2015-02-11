@@ -17,7 +17,6 @@ from os.path import basename, splitext
 
 from rna_prediction import dcatools
 from rna_prediction import pdbtools
-from rna_prediction.simulation import parse_cst_file
 from rna_prediction.simulation import RNAPrediction
 from rna_prediction.sysconfig import SysConfig
 
@@ -137,7 +136,7 @@ def tools():
                 if dca_mode:
                     dca = dcatools.parse_dca_data(arg)
                 else:
-                    cst_info = parse_cst_file(sim._parse_cst_name_and_filename(arg)[1])
+                    cst_info = sim.parse_cst_file(sim.parse_cst_name_and_filename(arg)[1])
 
             dists = []
             if dca_mode:
@@ -218,7 +217,7 @@ def tools():
         number = int(sys.argv[3])
 
         sim = RNAPrediction(SysConfig(), ".")
-        cst_name, cst_file = sim._parse_cst_name_and_filename(cst)
+        cst_name, cst_file = sim.parse_cst_name_and_filename(cst)
         models = sim.get_models(cst_name, range(1, number), "top")
 
         # TODO: this only works for max 10 clusters so far
