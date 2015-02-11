@@ -67,7 +67,7 @@ def tools():
 
         for resPair, meanDistanceMapResPair in sorted(mean_distance_map.items()):
             print resPair
-            data = sorted(meanDistanceMapResPair.items(), key=lambda x: x[1])
+            data = sorted(meanDistanceMapResPair.items(), key=lambda entry: entry[1])
             x_names = [d[0] for d in data]
             x = np.arange(len(x_names))
             y = [d[1][0] for d in data]

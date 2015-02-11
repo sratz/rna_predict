@@ -627,6 +627,7 @@ class RNAPrediction(object):
                 print 'Created: ', motif_data_file
 
         if len(cutpoints_original) > 0:
+            # noinspection PyUnboundLocalVariable
             fid.write('CUTPOINT_OPEN ')
             for cutpoint in cutpoints_original:
                 fid.write(' %d' % (cutpoint + 1))
@@ -1066,6 +1067,7 @@ class RNAPrediction(object):
             shutil.move(fe, "%s/cluster_%d.pdb" % (dir_output, i + 1))
 
         # rmsdcalc helper function
+        # noinspection PyShadowingNames
         def calculate_rmsd(name, filename_comparison):
             # calculate native rmsd values for all models if native pdb available
             filename_tmp = "%s/rmsd.out" % dir_tmp
@@ -1098,6 +1100,7 @@ class RNAPrediction(object):
             raise SimulationException("Cannot compare without native information.")
         print self.config["name"]
 
+        # noinspection PyShadowingNames
         def print_comparison_line(cst_name, comparisons):
             print "  %-035s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2])
 

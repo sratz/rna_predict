@@ -46,6 +46,7 @@ class SysConfig(object):
         if self.subprocess_buffsize is not None:
             progs += ["stdbuf"]
 
+        # noinspection PyShadowingNames
         def is_ok(prog):
             fpath, fname = os.path.split(prog)
             if fpath:
