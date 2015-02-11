@@ -153,8 +153,7 @@ def tools():
                 for cst in cst_info:
                     atom1, res1, atom2, res2, fuction = cst
                     try:
-                        dist = np.linalg.norm(chain[res1][atom1].coord - chain[res2][atom2].coord)
-                        dists.append(dist)
+                        dists.append(chain[res1][atom1] - chain[res2][atom2])
                     except:
                         print atom1, res1, atom2, res2, "   NOT FOUND"
 
