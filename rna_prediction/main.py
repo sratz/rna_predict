@@ -84,14 +84,14 @@ USAGE
 
     parser_prepare = subparsers.add_parser("prepare", help="prepare stems and motifs")
     parser_preparecst = subparsers.add_parser("prepare-cst", help="prepare constraints file for motif generation and assembly")
-    parser_helices = subparsers.add_parser("create-helices", help="create ideal a-helices")
+    subparsers.add_parser("create-helices", help="create ideal a-helices")
     parser_motifs = subparsers.add_parser("create-motifs", help="create motifs")
     parser_assemble = subparsers.add_parser("assemble", help="assemble models")
     parser_evaluate = subparsers.add_parser("evaluate", help="evaluate data (clustering and rmsd calculation)")
-    parser_compare = subparsers.add_parser("compare", help="print comparison of prediction to native structure")
+    subparsers.add_parser("compare", help="print comparison of prediction to native structure")
     parser_makeconstraints = subparsers.add_parser("make-constraints", help="create a constraints file from a dca prediction")
     parser_editconstraints = subparsers.add_parser("edit-constraints", help="replace rosetta function in a constraints file")
-    parser_status = subparsers.add_parser("status", help="print status summary")
+    subparsers.add_parser("status", help="print status summary")
     parser_config = subparsers.add_parser("config", help="modify config variable")
     parser_tools = subparsers.add_parser("tools", help="various plot generation tools")
 
