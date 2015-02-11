@@ -21,6 +21,7 @@ from rna_prediction.simulation import RNAPrediction
 from rna_prediction.sysconfig import SysConfig
 
 
+# TODO: use argparse for all this
 def tools():
     if sys.argv[1] == "hist":
 
@@ -93,7 +94,7 @@ def tools():
         pprint.pprint(models)
 
     if sys.argv[1] == "comp":
-        if sys.argv[2] == "--dca":
+        if sys.argv[2] == "dca":
             dca_mode = True
             sys.argv.pop(2)
         else:
