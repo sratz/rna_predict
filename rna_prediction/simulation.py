@@ -1111,7 +1111,8 @@ class RNAPrediction(object):
             try:
                 with open("predictions/%s/output/evaldata.dat" % cst_name, "r") as f:
                     eval_data = pickle.load(f)
-                    next(eval_data["models"].itervalues())["native_rmsd"]
+                    # noinspection PyStatementEffect
+                    next(eval_data["models"].itervalues())["native_rmsd"]  # raise an exception if dict entry not found
             except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError):
                 print_comparison_line(cst_name, ["-", "-", "-"])
                 continue
