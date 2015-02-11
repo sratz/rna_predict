@@ -770,7 +770,7 @@ class RNAPrediction(object):
             return
 
         # load constraints information
-        cst_info = parse_cst_file(cst_file)
+        cst_info = self.parse_cst_file(cst_file)
 
         # probably wrong, commented out for now!
         # cst_info = fix_atom_names_in_cst(cst_info, self.config["sequence"])
