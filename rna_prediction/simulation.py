@@ -397,9 +397,8 @@ class RNAPrediction(object):
         for i in range(numres):
             if i in pair_map and not already_in_stem[i]:  # In a base pair
                 k = i
-                stem_res = []
+                stem_res = [[k, pair_map[k]]]
 
-                stem_res.append([k, pair_map[k]])
                 already_in_stem[k] = 1
                 already_in_stem[pair_map[k]] = 1
 
@@ -440,10 +439,9 @@ class RNAPrediction(object):
 
                     # back up to beginning of stem.
                     k = i - 1
-                    motif_stem = []
 
                     # first base pair.
-                    motif_stem.append([k, pair_map[k]])
+                    motif_stem = [[k, pair_map[k]]]
                     motif_res.append(k)
                     motif_res.append(pair_map[k])
 
@@ -479,8 +477,7 @@ class RNAPrediction(object):
                     if k in motif_res:
                         break
 
-                    motif_stem = []
-                    motif_stem.append([k, pair_map[k]])
+                    motif_stem = [[k, pair_map[k]]]
                     motif_res.append(k)
                     motif_res.append(pair_map[k])
                     k += 1
