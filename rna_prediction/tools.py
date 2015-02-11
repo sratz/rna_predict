@@ -31,14 +31,14 @@ def tools():
 
         f.suptitle("normed frequency / distance")
         i = 0
-        for resPair, distanceMapResPair in sorted(distance_map.iteritems()):
-            print resPair
+        for res_pair, distance_map_res_pair in sorted(distance_map.iteritems()):
+            print res_pair
             dists = []
-            for atomPair, distancesAtomPair in distanceMapResPair.iteritems():
-                dists += distancesAtomPair
+            for atom_pair, distances_atom_pair in distance_map_res_pair.iteritems():
+                dists += distances_atom_pair
 
             axarr[i / 4, i % 4].hist(dists, normed=True, bins=50)
-            axarr[i / 4, i % 4].set_title(resPair)
+            axarr[i / 4, i % 4].set_title(res_pair)
             axarr[i / 4, i % 4].set_xlim([0, 25])
 
             i += 1
@@ -66,9 +66,9 @@ def tools():
         f.subplots_adjust(left=0.02, bottom=0.05, right=0.99, top=0.95, hspace=0.3, wspace=0.1)
         i = 0
 
-        for resPair, meanDistanceMapResPair in sorted(mean_distance_map.items()):
-            print resPair
-            data = sorted(meanDistanceMapResPair.items(), key=lambda entry: entry[1])
+        for res_pair, mean_distance_map_res_pair in sorted(mean_distance_map.items()):
+            print res_pair
+            data = sorted(mean_distance_map_res_pair.items(), key=lambda entry: entry[1])
             x_names = [d[0] for d in data]
             x = np.arange(len(x_names))
             y = [d[1][0] for d in data]
@@ -77,7 +77,7 @@ def tools():
             axarr[i / 4, i % 4].errorbar(x, y, y_err)
             axarr[i / 4, i % 4].set_xticks(x)
             axarr[i / 4, i % 4].set_xticklabels(x_names, rotation=90, size="x-small")
-            axarr[i / 4, i % 4].text(0.05, .95, resPair, transform=axarr[i / 4, i % 4].transAxes, va="top")
+            axarr[i / 4, i % 4].text(0.05, .95, res_pair, transform=axarr[i / 4, i % 4].transAxes, va="top")
             i += 1
 
         plt.show()
@@ -143,7 +143,7 @@ def tools():
             if dca_mode:
                 j = 0
                 for d in dca:
-                    if not d.useContact:
+                    if not d.use_contact:
                         continue
                     j += 1
                     if j > 100:

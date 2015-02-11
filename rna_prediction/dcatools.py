@@ -51,7 +51,7 @@ def get_atoms_for_res_sequence(sequence):
     return atoms
 
 
-# the westhofVector can be used to apply different weights to the bonding family classes
+# the westhof_vector can be used to apply different weights to the bonding family classes
 def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=None, force_rebuild=False):
     # default: same weight for all families
     if not westhof_vector:
@@ -112,17 +112,17 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
                     residues.append(None)
 
             # loop over all pdbcodes and their index in the list (0-11)
-            for index, pdbCode in enumerate(pdb_codes):
+            for index, pdb_code in enumerate(pdb_codes):
                 # skip if we don't have any entry for this family
-                if pdbCode is None:
+                if pdb_code is None:
                     continue
 
                 # download pdb if necessary
-                if pdbCode not in pdb_structure_dict:
-                    pdb_structure_dict[pdbCode] = pdbtools.get_pdb_by_code(pdbCode)
+                if pdb_code not in pdb_structure_dict:
+                    pdb_structure_dict[pdb_code] = pdbtools.get_pdb_by_code(pdb_code)
 
                 # extract model from pdb
-                model = pdb_structure_dict[pdbCode][0]
+                model = pdb_structure_dict[pdb_code][0]
 
                 # try to find the residue contact specified. this is done by looping over all chains in the model,
                 # and checking if the residue is in there and is the correct nucleotide
@@ -145,9 +145,9 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
                         res2 = None
 
                 if not res1 or not res2:
-                    raise Exception("Could not find residue contact in pdb file: %s-%s %s %s %s" % (nt1, nt2, pdbCode, residues[index][0], residues[index][1]))
+                    raise Exception("Could not find residue contact in pdb file: %s-%s %s %s %s" % (nt1, nt2, pdb_code, residues[index][0], residues[index][1]))
 
-                print "%s-%s %s %s %s" % (nt1, nt2, pdbCode, residues[index][0], residues[index][1])
+                print "%s-%s %s %s %s" % (nt1, nt2, pdb_code, residues[index][0], residues[index][1])
 
                 # add all atom-atom contacts to the distance map for the current residue pair
                 for atom1 in res1:
@@ -172,14 +172,14 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
 
 def get_contact_distance_map_mean(distance_map, mean_cutoff=None, std_cutoff=None):
     mean_distance_map = {}
-    for resPair, distanceMapResPair in distance_map.iteritems():
+    for res_pair, distance_map_res_pair in distance_map.iteritems():
         mean_distance_map_res = {}
-        for atomPair, distancesAtomPair in distanceMapResPair.iteritems():
-            mean = np.asarray(distancesAtomPair).mean()
-            std = np.asarray(distancesAtomPair).std()
+        for atom_pair, distances_atom_pair in distance_map_res_pair.iteritems():
+            mean = np.asarray(distances_atom_pair).mean()
+            std = np.asarray(distances_atom_pair).std()
             if (mean_cutoff is None or mean < mean_cutoff) and (std_cutoff is None or std < std_cutoff):
-                mean_distance_map_res[atomPair] = [mean, std]
-        mean_distance_map[resPair] = mean_distance_map_res
+                mean_distance_map_res[atom_pair] = [mean, std]
+        mean_distance_map[res_pair] = mean_distance_map_res
     return mean_distance_map
 
 
@@ -276,7 +276,7 @@ def get_contact_information_in_pdb_chain(dca_contact, pdb_chain):
 def build_cst_info_from_dca_contacts(dca_data, sequence, mapping_mode, cst_function, number_dca_predictions, quiet=False):
     mapping_mode = mapping_mode.lower()
     if mapping_mode not in ["allatomwesthof", "ponly"]:
-        raise DcaException("buildCstInfo: Invalid mapping mode given: %s" % mapping_mode)
+        raise DcaException("build_cst_info: Invalid mapping mode given: %s" % mapping_mode)
 
     if mapping_mode == "allatomwesthof":
         # load contact map for atom-atom contacts
@@ -298,7 +298,7 @@ def build_cst_info_from_dca_contacts(dca_data, sequence, mapping_mode, cst_funct
             print "Contact %d: %s" % (i + 1, d)
 
         # skip contact completely?
-        if not d.useContact:
+        if not d.use_contact:
             if not quiet:
                 print "  Dca contact skipped."
             continue
@@ -335,11 +335,11 @@ class DcaContact(object):
     def __init__(self, res1, res2, use_contact=True, weight=1):
         self.res1 = res1
         self.res2 = res2
-        self.useContact = use_contact
+        self.use_contact = use_contact
         self.weight = weight
 
     def __str__(self):
-        return "[%s, %s], useContact=%s, weight=%f" % (self.res1, self.res2, self.useContact, self.weight)
+        return "[%s, %s], use_contact=%s, weight=%f" % (self.res1, self.res2, self.use_contact, self.weight)
 
     def get_rosetta_function(self, function="FADE -100 26 20 -2 2"):
         function = function.split()
@@ -369,10 +369,10 @@ class DcaContact(object):
 def filter_dca_data(dca_data, dca_filter_chain, quiet=False):
     if dca_filter_chain is None:
         return dca_data
-    for dcaFilter in dca_filter_chain:
-        if dcaFilter is not None:
+    for dca_filter in dca_filter_chain:
+        if dca_filter is not None:
             for d in dca_data:
-                dcaFilter(d, quiet)
+                dca_filter(d, quiet)
 
 
 # parses a text string and turns it into a filter chain
@@ -422,7 +422,7 @@ def dca_filter_threshold_minimum_keep_above(threshold, pdb_chain):
 def _dca_filter_threshold_minimum_keep(threshold, pdb_chain, below=True):
     def f(contact, quiet):
         # do not touch contacts that are already disabled
-        if not contact.useContact:
+        if not contact.use_contact:
             return
 
         # get contact information
@@ -432,7 +432,7 @@ def _dca_filter_threshold_minimum_keep(threshold, pdb_chain, below=True):
 
         # set contact to disabled if filter failed
         if (below and minimum_heavy >= threshold) or (not below and minimum_heavy <= threshold):
-            contact.useContact = False
+            contact.use_contact = False
 
     # return filter function
     return f

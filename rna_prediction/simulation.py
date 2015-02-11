@@ -901,7 +901,7 @@ class RNAPrediction(object):
         for i in range(n_motifs):
             merge_silent_files("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
 
-    # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with createMotifs, it is distributed.
+    # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with create_motifs, it is distributed.
     def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1):
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
@@ -1172,12 +1172,12 @@ class RNAPrediction(object):
                     models_sorted = sorted(eval_data["models"].items(), key=lambda x: x[1]["score"])
                 tag = models_sorted[model_i - 1][0]
             else:
-                raise SimulationException("getModels: Invalid 'kind' parameter: '%s'" % kind)
+                raise SimulationException("get_models: Invalid 'kind' parameter: '%s'" % kind)
 
             try:
                 m = eval_data["models"][tag]
             except:
-                raise SimulationException("getModels: Invalid tag: '%s'" % tag)
+                raise SimulationException("get_models: Invalid tag: '%s'" % tag)
 
             # add pdb path to the model dict
             if kind == "cluster":
@@ -1190,7 +1190,7 @@ class RNAPrediction(object):
 
     # create a reasonable output filename from
     # output format uses placeholders for input name, number of predictions, and function
-    # TODO: include mappingMode?
+    # TODO: include mapping_mode?
     @staticmethod
     def _create_constraints_output_filename(input_filename, output_filename, cst_function, number_dca_predictions=None, output_format="%n_%f"):
         source_basename = splitext(basename(input_filename))[0]
@@ -1256,10 +1256,10 @@ class RNAPrediction(object):
             raise SimulationException("Input and output filename cannot be the same")
 
         pattern = re.compile(r"^(\S+\s+\d+\s+\S+\s+\d+)\s+(\S+)\s+.+$")
-        with open(output_filename, "w") as outputFd:
+        with open(output_filename, "w") as output_fd:
             for line in utils.read_file_line_by_line(input_filename):
                 m = pattern.match(line)
-                outputFd.write("%s %s\n" % (m.group(1), cst_function))
+                output_fd.write("%s %s\n" % (m.group(1), cst_function))
 
     def print_status(self):
         self.check_config()

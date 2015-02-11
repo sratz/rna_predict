@@ -99,7 +99,7 @@ def get_center_of_res(res):
 
 
 def align_structure(ref_pdb, moving_pdb, assign_b_factors=True):
-    """Aligns moving_pdb to ref_pdb. Returns (resDists, atomDists, rmsd, transformationMatrix)"""
+    """Aligns moving_pdb to ref_pdb. Returns (res_dists, atom_dists, rmsd, transformation_matrix)"""
     chain_ref = ref_pdb[0].child_list[0]
     chain_sample = moving_pdb[0].child_list[0]
 
