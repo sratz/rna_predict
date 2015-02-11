@@ -1296,6 +1296,7 @@ class RNAPrediction(object):
             if os.path.isfile(dir_output + "/cluster_1.pdb"):
                 done_evaluation = "X"
 
+            # noinspection PyShadowingNames
             def print_status_line(cst_name, status_list):
                 line = "  %-035s" % cst_name
                 line += " " + " ".join(status_list)

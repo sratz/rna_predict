@@ -345,6 +345,7 @@ class DcaContact(object):
         function = function.split()
 
         # parse numeric arguments
+        # noinspection PyShadowingNames
         def parse_function(function, types):
             for arg, argtype in types:
                 try:
