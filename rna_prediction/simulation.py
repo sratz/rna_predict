@@ -1212,7 +1212,6 @@ class RNAPrediction(object):
         return output_filename
 
     def make_constraints(self, dca_prediction_filename="dca/dca.txt", output_filename=None, number_dca_predictions=100, cst_function="FADE -100 26 20 -2 2", filter_text=None, mapping_mode="allAtomWesthof"):
-        # TODO: make this dependable on the prepare step? Or separate the whole constraints creation into an independent application?
         self.check_config()
         output_filename = self._create_constraints_output_filename(dca_prediction_filename, output_filename, cst_function, number_dca_predictions, "%d%n_%f")
         print "Constraints creation:"
