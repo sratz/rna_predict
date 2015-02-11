@@ -154,7 +154,7 @@ def tools():
                     atom1, res1, atom2, res2, fuction = cst
                     try:
                         dists.append(chain[res1][atom1] - chain[res2][atom2])
-                    except:
+                    except KeyError:
                         print atom1, res1, atom2, res2, "   NOT FOUND"
 
             print "  Average distance:", np.average(dists)

@@ -86,7 +86,7 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
                 if cache_ok:
                     with open(CACHE_DISTANCEMAP, "r") as f:
                         return pickle.load(f)
-        except Exception:
+        except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError):
             print "Contact map cache broken. Rebuilding..."
 
     print "Building contact distance map:"

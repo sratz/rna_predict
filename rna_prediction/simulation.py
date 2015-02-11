@@ -38,7 +38,7 @@ def delete_glob(pattern, print_notice=True):
                 shutil.rmtree(f, ignore_errors=True)
             else:
                 os.remove(f)
-        except:
+        except IOError:
             pass
 
 
@@ -242,10 +242,7 @@ class RNAPrediction(object):
         except:
             # kill all other processes
             for p in processes:
-                try:
-                    p.kill()
-                except:
-                    pass
+                p.kill()
             raise
         finally:
             if stdout is not None:
@@ -1115,7 +1112,7 @@ class RNAPrediction(object):
                 with open("predictions/%s/output/evaldata.dat" % cst_name, "r") as f:
                     eval_data = pickle.load(f)
                     next(eval_data["models"].itervalues())["native_rmsd"]
-            except:
+            except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError):
                 print_comparison_line(cst_name, ["-", "-", "-"])
                 continue
             comparisons = []
