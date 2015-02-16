@@ -1140,6 +1140,12 @@ class RNAPrediction(object):
         self.execute_command(["rna_extract", "-in:file:silent", "%s/%s" % (dir_assembly, model["source_file"]), "-out:prefix", prefix, "-tags", model["tag_source"]], add_suffix="rosetta", quiet=True)
         shutil.move("%s/tmp_%s.pdb" % (dir_tmp, model["tag_source"]), "%s/%s.pdb" % (dir_tmp, model["tag"]))
 
+    def get_model_count(self, constraints):
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
+        with open("predictions/%s/output/evaldata.dat" % cst_name, "r") as f:
+            eval_data = pickle.load(f)
+        return len(eval_data["models"])
+
     # retrieve a list for models by kind:
     # "tag": string: internal name such as S_000123_5
     # "top": number: models ordered by score
