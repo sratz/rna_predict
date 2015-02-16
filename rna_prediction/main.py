@@ -94,6 +94,7 @@ USAGE
     subparsers.add_parser("status", help="print status summary")
     parser_config = subparsers.add_parser("config", help="modify config variable")
     parser_tools = subparsers.add_parser("tools", help="various plot generation tools")
+    parser_printmodels = subparsers.add_parser("print-models", help="print models")
 
     parser_prepare.add_argument("--name", dest="name", help="simulation name (for example the analyzed pdb) [default: basename of directory]")
     parser_prepare.add_argument("--native", dest="native", help="native pdb [default: %(default)s]")
@@ -113,12 +114,14 @@ USAGE
     parser_config.add_argument("key", help="config key")
     parser_config.add_argument("value", help="config value")
     parser_tools.add_argument("positional", nargs="*")
+    parser_printmodels.add_argument("--mode", dest="model_mode", help="model selection mode (tag, top, ntop, cluster) [default: %(default)s]", default="tag")
+    parser_printmodels.add_argument("model_list", metavar="model", help="model number or tag, depending on mode argument", nargs="+")
 
     for p in (parser_motifs, parser_assemble):
         p.add_argument("--seed", dest="seed", help="force random seed (when multithreading, this will be incremented for each process) [default: %(default)s]", default=None, type=int)
         p.add_argument("--use-native", dest="use_native", action="store_true", help="use native information for motif generation and assembly [default: %(default)s]")
 
-    for p in (parser_preparecst, parser_motifs, parser_assemble, parser_editconstraints, parser_evaluate):
+    for p in (parser_preparecst, parser_motifs, parser_assemble, parser_editconstraints, parser_evaluate, parser_printmodels):
         p.add_argument("--cst", dest="cst", help="constraint selection [default: %(default)s]", default=None)
 
     for p in (parser_makeconstraints, parser_editconstraints):
@@ -179,6 +182,8 @@ USAGE
             p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
         elif args.subcommand == "compare":
             p.compare()
+        elif args.subcommand == "print-models":
+            p.print_models(constraints=args.cst, model_list=args.model_list, kind=args.model_mode)
 
         return 0
 
