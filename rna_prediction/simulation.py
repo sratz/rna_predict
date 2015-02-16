@@ -1113,7 +1113,7 @@ class RNAPrediction(object):
                 with open("predictions/%s/output/evaldata.dat" % cst_name, "r") as f:
                     eval_data = pickle.load(f)
                     # noinspection PyStatementEffect
-                    next(eval_data["models"].itervalues())["native_rmsd"]  # raise an exception if dict entry not found
+                    next(eval_data["models"].itervalues())["rmsd_native"]  # raise an exception if dict entry not found
             except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError):
                 print_comparison_line(cst_name, ["-", "-", "-"])
                 continue
@@ -1125,7 +1125,7 @@ class RNAPrediction(object):
                 min_rmsd = 999
                 for c2 in range(1, c + 1):
                     model = eval_data["clusters"][c2]["primary_model"]
-                    rmsd = eval_data["models"][model]["native_rmsd"]
+                    rmsd = eval_data["models"][model]["rmsd_native"]
                     if rmsd < min_rmsd:
                         min_rmsd = rmsd
                 comparisons.append("%.2f" % min_rmsd)
