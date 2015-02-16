@@ -10,6 +10,7 @@ import glob
 import struct
 import re
 import os
+import pprint
 import subprocess
 import sys
 import string
@@ -1227,6 +1228,12 @@ class RNAPrediction(object):
             results.append(m)
 
         return results
+
+    def print_models(self, constraints, model_list, kind="tag"):
+        models = self.get_models(constraints, model_list, kind)
+        for model in models:
+            print "Model: %s" % model["tag"]
+            pprint.pprint(model)
 
     # create a reasonable output filename from
     # output format uses placeholders for input name, number of predictions, and function
