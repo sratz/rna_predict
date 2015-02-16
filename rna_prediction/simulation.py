@@ -195,14 +195,19 @@ class RNAPrediction(object):
         command = c.get_full_command(self.sysconfig)
         if print_commands:
             print " ".join(command)
-        p = subprocess.Popen(c.get_full_command(self.sysconfig), stdin=(subprocess.PIPE if c.stdin is not None else None), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        if c.stdin is not None:
-            p.stdin.write(c.stdin)
+        try:
+            p = subprocess.Popen(command, stdin=(subprocess.PIPE if c.stdin is not None else None), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            if c.stdin is not None:
+                p.stdin.write(c.stdin)
+        except OSError, e:
+            raise SimulationException("Failed to execute command: %s, Reason: %s" % (" ".join(c.command), e))
         for line in p.stdout:
             if not quiet:
                 sys.stdout.write(line)
             yield line
         p.wait()
+        if p.returncode != 0:
+            raise SimulationException("Non-zero return code from executed command: %s" % " ".join(c.command))
 
     def execute_commands(self, commands, threads=1):
         processes = []
