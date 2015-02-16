@@ -1174,6 +1174,7 @@ class RNAPrediction(object):
     # retrieve a list for models by kind:
     # "tag": string: internal name such as S_000123_5
     # "top": number: models ordered by score
+    # "ntop": number: models ordered by rmsd_native
     # "cluster": number: nth cluster decoy
     def get_models(self, constraints, model_list, kind="tag"):
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
@@ -1201,6 +1202,14 @@ class RNAPrediction(object):
                 # do we need to create a sorted list?
                 if models_sorted is None:
                     models_sorted = sorted(eval_data["models"].items(), key=lambda x: x[1]["score"])
+                tag = models_sorted[model_i - 1][0]
+            elif kind == "ntop":
+                model_i = int(model_i)
+                if models_sorted is None:
+                    try:
+                        models_sorted = sorted(eval_data["models"].items(), key=lambda x: x[1]["rmsd_native"])
+                    except KeyError:
+                        raise SimulationException("get_models: No native rmsd information stored")
                 tag = models_sorted[model_i - 1][0]
             else:
                 raise SimulationException("get_models: Invalid 'kind' parameter: '%s'" % kind)
