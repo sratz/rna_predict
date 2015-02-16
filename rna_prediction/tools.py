@@ -214,11 +214,21 @@ def tools():
     # usage: rna_tools rmsdscore <cst> <max_models> [output_image]
     if sys.argv[1] == "rmsdscore":
         cst = sys.argv[2]
-        number = int(sys.argv[3])
+        number = None
+        factor = 0.99
+        if len(sys.argv) >= 4:
+            try:
+                number = int(sys.argv[3])
+                factor = 1
+            except ValueError:
+                factor = float(sys.argv[3])
 
         sim = RNAPrediction(SysConfig(), ".")
         cst_name, cst_file = sim.parse_cst_name_and_filename(cst)
-        models = sim.get_models(cst_name, range(1, number), "top")
+        if number is None:
+            number = int(sim.get_model_count(cst) * factor)
+        models = sim.get_models(cst_name, range(1, number + 1), "top")
+        print models
 
         # TODO: this only works for max 10 clusters so far
         colors = ['w', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF', '#ff6600', '#006000', '#600060', '#F7C2CA']
