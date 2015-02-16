@@ -231,7 +231,7 @@ def tools():
 
         # cluster0
         models_c.append([m for m in models if "cluster" not in m])
-        descs.append("no cluster")
+        descs.append("no cluster (%d)" % (len(models_c[0])))
 
         n_clusters = 10
 
