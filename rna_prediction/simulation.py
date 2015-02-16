@@ -1023,25 +1023,45 @@ class RNAPrediction(object):
         # create dict to store evaluation data
         eval_data = {"models": {}, "clusters": {}}
 
+        # store all the rosetta scores in a dict
+        scores_headers = None
+
         # loop over all out files matching the constraint
         for i, f in enumerate(files_assembly):
             print "  processing rosetta silent file: %s..." % f
 
             # read out file and store a dict of the scores and the full score line
-            regex_score = re.compile("^SCORE:\s+([-0-9.]+)\s.*(S_[0-9_]+)$")
+            regex_score = re.compile("^SCORE:\s+(.*)$")
             for line in utils.read_file_line_by_line(f):
                 m = regex_score.match(line)
                 if m:
+                    # split rosetta score entries into a list
+                    scores = m.group(1).split()
+                    # store the header names if not already known
+                    if scores[-1] == "description":
+                        if not scores_headers:
+                            scores_headers = scores
+                        continue
+                    # create a score dict
+                    scores_dict = {}
+                    for s_index, s_name in enumerate(scores_headers):
+                        # store float values as float
+                        try:
+                            scores_dict[scores_headers[s_index]] = float(scores[s_index])
+                        except ValueError:
+                            scores_dict[scores_headers[s_index]] = scores[s_index]
+
                     # name models exactly like rosetta would (that is, append _<num> when already present)
                     j = 1
-                    tag = m.group(2)
+                    tag = scores_dict["description"]
                     while tag in eval_data["models"]:
-                        tag = "%s_%d" % (m.group(2), j)
+                        tag = "%s_%d" % (scores_dict["description"], j)
                         j += 1
                     eval_data["models"][tag] = {"source_file": basename(f),
-                                                "score": float(m.group(1)),
+                                                "score": scores_dict["score"],
                                                 "tag": tag,
-                                                "tag_source": m.group(2)}
+                                                "tag_source": scores_dict["description"],
+                                                "rosetta_scores": scores_dict}
 
         # clustering
         print "  clustering models..."
