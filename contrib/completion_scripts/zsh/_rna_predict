@@ -89,6 +89,14 @@ _rna_predict-compare() {
 _rna_predict-status() {
 }
 
+_rna_predict-print-models() {
+  local cst_option
+  __rna_predict_setup_cst_option
+  _arguments -s -w \
+    '--mode=[model selection mode (tag, top, ntop, cluster) (default: tag)]:selection mode:(tag top ntop cluster)' \
+    $cst_option \
+    '*: :_guard "(|S_)[0-9]#(|_[0-9]#)" "number or tag"'
+}
 
 # config::key:(fasta_file name native_pdb_file params_file torsions_file):value:
 
@@ -106,6 +114,7 @@ _rna_predict_commands() {
     'compare:print comparison of prediction to native structure'
     'config:modify config variable'
     'status:print status information'
+    'print-models: print a selection of models'
   )
   _describe -t commands command commands && ret=0
 }
