@@ -254,8 +254,8 @@ def tools():
             models_c.append(models_current_cluster)
             descs.append("cluster %d (%d)" % (i, len(models_current_cluster)))
 
-        if "native_rmsd" in models_c[1][0]:
-            comparison = "native_rmsd"
+        if "rmsd_native" in models_c[1][0]:
+            comparison = "rmsd_native"
             plt.xlabel("native rmsd / A")
         else:
             comparison = "rmsd_cluster_1"
