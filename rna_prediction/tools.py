@@ -228,7 +228,6 @@ def tools():
         if number is None:
             number = int(sim.get_model_count(cst) * factor)
         models = sim.get_models(cst_name, range(1, number + 1), "top")
-        print models
 
         models_c = []
         plots = []
