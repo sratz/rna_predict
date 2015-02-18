@@ -18,6 +18,7 @@ from os.path import basename, splitext
 from rna_prediction import dcatools
 from rna_prediction import pdbtools
 from rna_prediction.simulation import RNAPrediction
+from rna_prediction.simulation import EvalData
 from rna_prediction.sysconfig import SysConfig
 
 
@@ -83,14 +84,14 @@ def tools():
         plt.show()
 
     if sys.argv[1] == "comp2":
-        sim = RNAPrediction(SysConfig(), ".")
-        models = sim.get_models("100rna_r26_w2", [1, 10, 50, 100, 500], "top")
+        eval_data = EvalData.load_from_cst("100AVrna_r26_w2")
+        models = eval_data.get_models([1, 10, 50, 100, 500], "top")
         pprint.pprint(models)
         print
-        models = sim.get_models("100rna_r26_w2", [1, 2, 10], "cluster")
+        models = eval_data.get_models([1, 2, 10], "cluster")
         pprint.pprint(models)
         print
-        models = sim.get_models("100rna_r26_w2", ["S_000123_5", "S_000100"], "tag")
+        models = eval_data.get_models(["S_000123_5", "S_000100"], "tag")
         pprint.pprint(models)
 
     if sys.argv[1] == "comp":
@@ -124,7 +125,7 @@ def tools():
                 _, dca_file, filtertext = arg.split(":", 2)
                 print "  Applying filters: %s" % filtertext
                 dca = dcatools.parse_dca_data(dca_file)
-                dca_filter_chain = dcatools.parse_filter_line(filtertext, sim)
+                dca_filter_chain = sim.parse_dca_filter_string(filtertext)
                 dcatools.filter_dca_data(dca_data=dca, dca_filter_chain=dca_filter_chain, quiet=True)
 
                 if not dca_mode:
@@ -225,9 +226,10 @@ def tools():
 
         sim = RNAPrediction(SysConfig(), ".")
         cst_name, cst_file = sim.parse_cst_name_and_filename(cst)
+        eval_data = EvalData.load_from_cst(cst_name)
         if number is None:
-            number = int(sim.get_model_count(cst) * factor)
-        models = sim.get_models(cst_name, range(1, number + 1), "top")
+            number = int(eval_data.get_model_count() * factor)
+        models = eval_data.get_models(range(1, number + 1), "top")
 
         models_c = []
         plots = []

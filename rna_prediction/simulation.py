@@ -16,6 +16,7 @@ import sys
 import string
 import pickle
 from . import dcatools
+from . import pdbtools
 from . import utils
 from os.path import splitext, basename, abspath
 
@@ -133,6 +134,83 @@ class Command(object):
         if sysconfig.subprocess_buffsize is not None:
             com = ["stdbuf", "-o", sysconfig.subprocess_buffsize] + com
         return com
+
+
+class EvalData(object):
+    def __init__(self):
+        self.models = {}
+        self.clusters = {}
+        self.cluster_cutoff = 0.0
+
+    @staticmethod
+    def load_from_cst(constraints):
+        cst_name, cst_file = RNAPrediction.parse_cst_name_and_filename(constraints)
+        return EvalData.load_from_file("predictions/%s/output/evaldata.dat" % cst_name)
+
+    @staticmethod
+    def load_from_file(filename):
+        with open(filename, "r") as f:
+            try:
+                eval_data = pickle.load(f)
+                assert "rmsd_cluster_1" in next(eval_data.models.itervalues())
+                return eval_data
+            except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError, AssertionError):
+                # file broken or missing, force full evaluation
+                raise SimulationException("evaluation data file '%s' missing or broken" % filename)
+
+    def save_to_file(self, filename):
+        with open(filename, "w") as f:
+            pickle.dump(self, f)
+
+    def get_model_count(self):
+        return len(self.models)
+
+    # retrieve a list for models by kind:
+    # "tag": string: internal name such as S_000123_5
+    # "top": number: models ordered by score
+    # "ntop": number: models ordered by rmsd_native
+    # "cluster": number: nth cluster decoy
+    def get_models(self, model_list, kind="tag"):
+        # initialize list
+        models_sorted = None
+
+        results = []
+
+        for model_i in model_list:
+            # decide which model we want
+            if kind == "cluster":
+                model_i = int(model_i)
+                tag = self.clusters[model_i]["primary_model"]
+            elif kind == "tag":
+                tag = model_i
+            elif kind == "top":
+                model_i = int(model_i)
+                # do we need to create a sorted list?
+                if models_sorted is None:
+                    models_sorted = sorted(self.models.items(), key=lambda x: x[1]["score"])
+                tag = models_sorted[model_i - 1][0]
+            elif kind == "ntop":
+                model_i = int(model_i)
+                if models_sorted is None:
+                    try:
+                        models_sorted = sorted(self.models.items(), key=lambda x: x[1]["rmsd_native"])
+                    except KeyError:
+                        raise SimulationException("get_models: No native rmsd information stored")
+                tag = models_sorted[model_i - 1][0]
+            else:
+                raise SimulationException("get_models: Invalid 'kind' parameter: '%s'" % kind)
+
+            if tag not in self.models:
+                raise SimulationException("get_models: Invalid tag: '%s'" % tag)
+            results.append(self.models[tag])
+
+        return results
+
+    def print_models(self, model_list, kind="tag"):
+        models = self.get_models(model_list, kind)
+        for model in models:
+            print "Model: %s" % model["tag"]
+            pprint.pprint(model)
 
 
 class RNAPrediction(object):
@@ -1021,10 +1099,8 @@ class RNAPrediction(object):
                 full_evaluation = True
             else:
                 try:
-                    with open(file_evaldata, "r") as f:
-                        eval_data = pickle.load(f)
-                    assert "rmsd_cluster_1" in next(eval_data["models"].itervalues())
-                except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError, AssertionError):
+                    eval_data = EvalData.load_from_file(file_evaldata)
+                except SimulationException:
                     # file broken or missing, force full evaluation
                     print "Warning: %s missing or broken, running full evaluation." % file_evaldata
                     full_evaluation = True
@@ -1034,15 +1110,15 @@ class RNAPrediction(object):
         # cleanup
         if full_evaluation:
             delete_glob(file_evaldata)
-            # create empty dict to store evaluation data
-            eval_data = {"models": {}}
+            # create empty evaluation data
+            eval_data = EvalData()
         else:
             # clean out old cluster information from models
-            for model in eval_data["models"].itervalues():
+            for model in eval_data.models.itervalues():
                 if "cluster" in model:
                     del model["cluster"]
 
-        eval_data["clusters"] = {}
+        eval_data.clusters = {}
 
         delete_glob(dir_output + os.sep + "*.pdb")
         delete_glob(dir_output + os.sep + "*.out")
@@ -1083,17 +1159,17 @@ class RNAPrediction(object):
                         # name models exactly like rosetta would (that is, append _<num> when already present)
                         j = 1
                         tag = scores_dict["description"]
-                        while tag in eval_data["models"]:
+                        while tag in eval_data.models:
                             tag = "%s_%d" % (scores_dict["description"], j)
                             j += 1
-                        eval_data["models"][tag] = {"source_file": basename(f),
-                                                    "score": scores_dict["score"],
-                                                    "tag": tag,
-                                                    "tag_source": scores_dict["description"],
-                                                    "rosetta_scores": scores_dict}
+                        eval_data.models[tag] = {"source_file": basename(f),
+                                                 "score": scores_dict["score"],
+                                                 "tag": tag,
+                                                 "tag_source": scores_dict["description"],
+                                                 "rosetta_scores": scores_dict}
 
         # clustering
-        eval_data["cluster_cutoff"] = cluster_cutoff
+        eval_data.cluster_cutoff = cluster_cutoff
         print "clustering models..."
         filename_clusters = "%s/clusters.out" % dir_output
         sys.stdout.write("  ")
@@ -1102,9 +1178,9 @@ class RNAPrediction(object):
         for line in self.execute_command_and_capture(["rna_cluster", "-in:file:silent"] + files_assembly + ["-cluster:radius", "%s" % cluster_cutoff, "-nstruct", str(cluster_limit), "-out:file:silent", filename_clusters], add_suffix="rosetta", quiet=True):
             m = regex_clusters.match(line)
             if m:
-                eval_data["models"][m.group(4)]["cluster"] = int(m.group(2))
+                eval_data.models[m.group(4)]["cluster"] = int(m.group(2))
                 if m.group(1) == "new":
-                    eval_data["clusters"][int(m.group(2))] = {"primary_model": m.group(4)}
+                    eval_data.clusters[int(m.group(2))] = {"primary_model": m.group(4)}
                 print "  %s cluster: %02s, model: %-10s, score: %.3f" % ("new" if m.group(1) == "new" else "   ", m.group(2), m.group(4), float(m.group(3)))
 
         # extract cluster pdbs
@@ -1133,7 +1209,7 @@ class RNAPrediction(object):
                 m = regex_rmsd.match(line)
                 if m:
                     print m.group(1), m.group(2)
-                    eval_data["models"][m.group(1)]["rmsd_%s" % name] = float(m.group(2))
+                    eval_data.models[m.group(1)]["rmsd_%s" % name] = float(m.group(2))
 
             delete_glob(filename_tmp, print_notice=False)
 
@@ -1147,8 +1223,7 @@ class RNAPrediction(object):
             calculate_rmsd("cluster_1", "%s/cluster_1.pdb" % dir_output)
 
         # save evaluation data
-        with open(file_evaldata, "w") as f:
-            pickle.dump(eval_data, f)
+        eval_data.save_to_file(file_evaldata)
 
     def compare(self):
         self.check_config()
@@ -1167,104 +1242,40 @@ class RNAPrediction(object):
         cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
         for cst_name in sorted(set(cst_names), key=natural_sort_key):
             try:
-                with open("predictions/%s/output/evaldata.dat" % cst_name, "r") as f:
-                    eval_data = pickle.load(f)
-                    # noinspection PyStatementEffect
-                    next(eval_data["models"].itervalues())["rmsd_native"]  # raise an exception if dict entry not found
-            except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError):
+                eval_data = EvalData.load_from_cst(cst_name)
+                assert "rmsd_native" in next(eval_data.models.itervalues())
+            except (SimulationException, AssertionError):
                 print_comparison_line(cst_name, ["-", "-", "-"])
                 continue
             comparisons = []
             for c in (1, 5, 10):
-                if c > len(eval_data["clusters"]):
+                if c > len(eval_data.clusters):
                     comparisons.append("-")
                     continue
                 min_rmsd = 999
                 for c2 in range(1, c + 1):
-                    model = eval_data["clusters"][c2]["primary_model"]
-                    rmsd = eval_data["models"][model]["rmsd_native"]
+                    model = eval_data.clusters[c2]["primary_model"]
+                    rmsd = eval_data.models[model]["rmsd_native"]
                     if rmsd < min_rmsd:
                         min_rmsd = rmsd
                 comparisons.append("%.2f" % min_rmsd)
             print_comparison_line(cst_name, comparisons)
 
     # extract pdb of a model to the tmp directory
+    # returns the path to the extracted pdb file
     def extract_pdb(self, constraints, model):
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         dir_assembly = "predictions/%s/assembly" % cst_name
         dir_tmp = "predictions/%s/temp" % cst_name
         prefix = dir_tmp + os.path.sep + "tmp_"
+        pdbfile = "%s/%s.pdb" % (dir_tmp, model["tag"])
         self.execute_command(["rna_extract", "-in:file:silent", "%s/%s" % (dir_assembly, model["source_file"]), "-out:prefix", prefix, "-tags", model["tag_source"]], add_suffix="rosetta", quiet=True)
-        shutil.move("%s/tmp_%s.pdb" % (dir_tmp, model["tag_source"]), "%s/%s.pdb" % (dir_tmp, model["tag"]))
+        shutil.move("%s/tmp_%s.pdb" % (dir_tmp, model["tag_source"]), pdbfile)
+        return pdbfile
 
-    def get_model_count(self, constraints):
-        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
-        with open("predictions/%s/output/evaldata.dat" % cst_name, "r") as f:
-            eval_data = pickle.load(f)
-        return len(eval_data["models"])
-
-    # retrieve a list for models by kind:
-    # "tag": string: internal name such as S_000123_5
-    # "top": number: models ordered by score
-    # "ntop": number: models ordered by rmsd_native
-    # "cluster": number: nth cluster decoy
-    def get_models(self, constraints, model_list, kind="tag"):
-        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
-
-        dir_output = "predictions/%s/output" % cst_name
-        dir_tmp = "predictions/%s/temp" % cst_name
-
-        with open("predictions/%s/output/evaldata.dat" % cst_name, "r") as f:
-            eval_data = pickle.load(f)
-
-        # initialize list
-        models_sorted = None
-
-        results = []
-
-        for model_i in model_list:
-            # decide which model we want
-            if kind == "cluster":
-                model_i = int(model_i)
-                tag = eval_data["clusters"][model_i]["primary_model"]
-            elif kind == "tag":
-                tag = model_i
-            elif kind == "top":
-                model_i = int(model_i)
-                # do we need to create a sorted list?
-                if models_sorted is None:
-                    models_sorted = sorted(eval_data["models"].items(), key=lambda x: x[1]["score"])
-                tag = models_sorted[model_i - 1][0]
-            elif kind == "ntop":
-                model_i = int(model_i)
-                if models_sorted is None:
-                    try:
-                        models_sorted = sorted(eval_data["models"].items(), key=lambda x: x[1]["rmsd_native"])
-                    except KeyError:
-                        raise SimulationException("get_models: No native rmsd information stored")
-                tag = models_sorted[model_i - 1][0]
-            else:
-                raise SimulationException("get_models: Invalid 'kind' parameter: '%s'" % kind)
-
-            try:
-                m = eval_data["models"][tag]
-            except:
-                raise SimulationException("get_models: Invalid tag: '%s'" % tag)
-
-            # add pdb path to the model dict
-            if kind == "cluster":
-                m["pdbfile"] = "%s/cluster_%d.pdb" % (dir_output, model_i)
-            else:
-                m["pdbfile"] = "%s/%s.pdb" % (dir_tmp, tag)
-            results.append(m)
-
-        return results
-
-    def print_models(self, constraints, model_list, kind="tag"):
-        models = self.get_models(constraints, model_list, kind)
-        for model in models:
-            print "Model: %s" % model["tag"]
-            pprint.pprint(model)
+    @staticmethod
+    def print_models(constraints, model_list, kind="tag"):
+        EvalData.load_from_cst(constraints).print_models(model_list=model_list, kind=kind)
 
     # create a reasonable output filename from
     # output format uses placeholders for input name, number of predictions, and function
@@ -1289,6 +1300,38 @@ class RNAPrediction(object):
         output_filename = output_filename.replace("%f", cst_function_underscore).replace("%n", source_basename).replace("%d", str(number_dca_predictions))
         return output_filename
 
+    # parses a text string and turns it into a dca filter chain
+    # multiple filters are separated b "," and their fields are separated using ":"
+    # example: threshold:8.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1
+    # TODO: document filter format
+    def parse_dca_filter_string(self, line):
+        filter_chain = []
+
+        # filters are split by ","
+        for filtertext in line.split(","):
+            # initialize to None to suppress warning
+            dca_filter = None
+            # filter fields are split by ":"
+            fields = filtertext.split(":")
+            if fields[0] == "none":
+                continue
+            elif fields[0] == "threshold":
+                threshold = float(fields[1])
+                cst_name = fields[2]
+                model_kind = fields[3]
+                model_i = fields[4]
+                eval_data = EvalData.load_from_cst(cst_name)
+                model = eval_data.get_models([model_i], model_kind)[0]
+                pdbfile = self.extract_pdb(cst_name, model)
+                filter_pdb_chain = pdbtools.parse_pdb("", pdbfile)[0].child_list[0]
+                if threshold > 0:
+                    dca_filter = dcatools.dca_filter_threshold_minimum_keep_below(threshold, filter_pdb_chain)
+                else:
+                    dca_filter = dcatools.dca_filter_threshold_minimum_keep_above(abs(threshold), filter_pdb_chain)
+            filter_chain.append(dca_filter)
+
+        return filter_chain
+
     def make_constraints(self, dca_prediction_filename="dca/dca.txt", output_filename=None, number_dca_predictions=100, cst_function="FADE -100 26 20 -2 2", filter_text=None, mapping_mode="allAtomWesthof"):
         self.check_config()
         output_filename = self._create_constraints_output_filename(dca_prediction_filename, output_filename, cst_function, number_dca_predictions, "%d%n_%f")
@@ -1307,7 +1350,7 @@ class RNAPrediction(object):
         # filter dca data
         if filter_text is not None:
             print "Filtering dca data:"
-            dca_filter_chain = dcatools.parse_filter_line(filter_text, self)
+            dca_filter_chain = self.parse_dca_filter_string(filter_text)
             dcatools.filter_dca_data(dca_data=dca, dca_filter_chain=dca_filter_chain)
 
         # create constraints
