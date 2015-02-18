@@ -1093,6 +1093,7 @@ class RNAPrediction(object):
                                                     "rosetta_scores": scores_dict}
 
         # clustering
+        eval_data["cluster_cutoff"] = cluster_cutoff
         print "clustering models..."
         filename_clusters = "%s/clusters.out" % dir_output
         sys.stdout.write("  ")
