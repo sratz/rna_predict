@@ -1277,6 +1277,11 @@ class RNAPrediction(object):
     def print_models(constraints, model_list, kind="tag"):
         EvalData.load_from_cst(constraints).print_models(model_list=model_list, kind=kind)
 
+    def extract_models(self, constraints, model_list, kind="tag"):
+        for model in EvalData.load_from_cst(constraints).get_models(model_list=model_list, kind=kind):
+            pdbfile = self.extract_pdb(constraints, model)
+            print "Extracted: %s" % pdbfile
+
     # create a reasonable output filename from
     # output format uses placeholders for input name, number of predictions, and function
     # TODO: include mapping_mode?

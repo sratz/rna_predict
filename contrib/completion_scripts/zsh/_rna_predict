@@ -6,6 +6,14 @@ __rna_predict_setup_cst_option() {
   )
 }
 
+__rna_predict_setup_model_options() {
+  model_options=(
+    '--mode=[model selection mode (tag, top, ntop, cluster) (default: tag)]:selection mode:(tag top ntop cluster)'
+    '*: :_guard "(|S_)[0-9]#(|_[0-9]#)" "number or tag"'
+  )
+}
+
+
 __rna_predict_setup_editmake_constraints_options() {
   editmake_constraints_options=(
     '--cst-out-file=[output cst file (default: inferred from dca input file)]:constraints file:_files -g \*.cst'
@@ -93,10 +101,21 @@ _rna_predict-status() {
 _rna_predict-print-models() {
   local cst_option
   __rna_predict_setup_cst_option
+  local model_options
+  __rna_predict_setup_model_options
   _arguments -s -w \
-    '--mode=[model selection mode (tag, top, ntop, cluster) (default: tag)]:selection mode:(tag top ntop cluster)' \
-    $cst_option \
-    '*: :_guard "(|S_)[0-9]#(|_[0-9]#)" "number or tag"'
+    $model_options \
+    $cst_option
+}
+
+_rna_predict-extract-models() {
+  local cst_option
+  __rna_predict_setup_cst_option
+  local model_options
+  __rna_predict_setup_model_options
+  _arguments -s -w \
+    $model_options \
+    $cst_option
 }
 
 # config::key:(fasta_file name native_pdb_file params_file torsions_file):value:
@@ -116,6 +135,7 @@ _rna_predict_commands() {
     'config:modify config variable'
     'status:print status information'
     'print-models: print a selection of models'
+    'extract-models: extract models as pdb files'
   )
   _describe -t commands command commands && ret=0
 }
