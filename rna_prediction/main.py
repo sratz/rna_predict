@@ -107,6 +107,7 @@ USAGE
     parser_assemble.add_argument("--nstruct-assembly", dest="nstruct_assembly", help="number of assembly structures to create [default: %(default)s]", default=50000, type=int)
     parser_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in angström [default: %(default)s]", default=4.1, type=float)
     parser_evaluate.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
+    parser_evaluate.add_argument("--full-eval", dest="full_eval", action="store_true", help="force full evaulation (scores and rmsd) instead of clustering only [default: %(default)s]")
     parser_makeconstraints.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
     parser_makeconstraints.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
     parser_makeconstraints.add_argument("--mapping-mode", dest="mapping_mode", help="mapping mode to use for constraints creation [default: %(default)s", default="allAtomWesthof")
@@ -179,7 +180,7 @@ USAGE
         elif args.subcommand == "assemble":
             p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
         elif args.subcommand == "evaluate":
-            p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff)
+            p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff, full_evaluation=args.full_eval)
         elif args.subcommand == "compare":
             p.compare()
         elif args.subcommand == "print-models":

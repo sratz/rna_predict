@@ -995,7 +995,7 @@ class RNAPrediction(object):
         self.execute_commands(commands, threads=threads)
 
     # TODO: set the cutoff value back to 4.0? It was set to 4.1 because the old bash script used integer comparison and even 4.09 was treated as 4.0
-    def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=4.1):
+    def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=4.1, full_evaluation=False):
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Evaluation configuration:"
@@ -1015,54 +1015,82 @@ class RNAPrediction(object):
         if len(files_assembly) == 0:
             raise SimulationException("No assembly files for constraint '%s' found! Maybe you should assemble first?" % cst_name)
 
+        if not full_evaluation:
+            if not os.path.isdir(dir_output) or not os.path.isfile(file_evaldata):
+                # first time, silently do a full eval
+                full_evaluation = True
+            else:
+                try:
+                    with open(file_evaldata, "r") as f:
+                        eval_data = pickle.load(f)
+                    assert "rmsd_cluster_1" in next(eval_data["models"].itervalues())
+                except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError, AssertionError):
+                    # file broken or missing, force full evaluation
+                    print "Warning: %s missing or broken, running full evaluation." % file_evaldata
+                    full_evaluation = True
+
+        print "    full_evaluation: %s" % full_evaluation
+
         # cleanup
-        delete_glob(dir_output)
+        if full_evaluation:
+            delete_glob(file_evaldata)
+            # create empty dict to store evaluation data
+            eval_data = {"models": {}}
+        else:
+            # clean out old cluster information from models
+            for model in eval_data["models"].itervalues():
+                if "cluster" in model:
+                    del model["cluster"]
+
+        eval_data["clusters"] = {}
+
+        delete_glob(dir_output + os.sep + "*.pdb")
+        delete_glob(dir_output + os.sep + "*.out")
         delete_glob(dir_tmp)
         utils.mkdir_p(dir_output)
         utils.mkdir_p(dir_tmp)
 
-        # create dict to store evaluation data
-        eval_data = {"models": {}, "clusters": {}}
+        # extract info from .out files
+        if full_evaluation:
+            # store all the rosetta scores in a dict
+            scores_headers = None
 
-        # store all the rosetta scores in a dict
-        scores_headers = None
+            # loop over all out files matching the constraint
+            for i, f in enumerate(files_assembly):
+                print "  processing rosetta silent file: %s..." % f
 
-        # loop over all out files matching the constraint
-        for i, f in enumerate(files_assembly):
-            print "  processing rosetta silent file: %s..." % f
+                # read out file and store a dict of the scores and the full score line
+                regex_score = re.compile("^SCORE:\s+(.*)$")
+                for line in utils.read_file_line_by_line(f):
+                    m = regex_score.match(line)
+                    if m:
+                        # split rosetta score entries into a list
+                        scores = m.group(1).split()
+                        # store the header names if not already known
+                        if scores[-1] == "description":
+                            if not scores_headers:
+                                scores_headers = scores
+                            continue
+                        # create a score dict
+                        scores_dict = {}
+                        for s_index, s_name in enumerate(scores_headers):
+                            # store float values as float
+                            try:
+                                scores_dict[scores_headers[s_index]] = float(scores[s_index])
+                            except ValueError:
+                                scores_dict[scores_headers[s_index]] = scores[s_index]
 
-            # read out file and store a dict of the scores and the full score line
-            regex_score = re.compile("^SCORE:\s+(.*)$")
-            for line in utils.read_file_line_by_line(f):
-                m = regex_score.match(line)
-                if m:
-                    # split rosetta score entries into a list
-                    scores = m.group(1).split()
-                    # store the header names if not already known
-                    if scores[-1] == "description":
-                        if not scores_headers:
-                            scores_headers = scores
-                        continue
-                    # create a score dict
-                    scores_dict = {}
-                    for s_index, s_name in enumerate(scores_headers):
-                        # store float values as float
-                        try:
-                            scores_dict[scores_headers[s_index]] = float(scores[s_index])
-                        except ValueError:
-                            scores_dict[scores_headers[s_index]] = scores[s_index]
-
-                    # name models exactly like rosetta would (that is, append _<num> when already present)
-                    j = 1
-                    tag = scores_dict["description"]
-                    while tag in eval_data["models"]:
-                        tag = "%s_%d" % (scores_dict["description"], j)
-                        j += 1
-                    eval_data["models"][tag] = {"source_file": basename(f),
-                                                "score": scores_dict["score"],
-                                                "tag": tag,
-                                                "tag_source": scores_dict["description"],
-                                                "rosetta_scores": scores_dict}
+                        # name models exactly like rosetta would (that is, append _<num> when already present)
+                        j = 1
+                        tag = scores_dict["description"]
+                        while tag in eval_data["models"]:
+                            tag = "%s_%d" % (scores_dict["description"], j)
+                            j += 1
+                        eval_data["models"][tag] = {"source_file": basename(f),
+                                                    "score": scores_dict["score"],
+                                                    "tag": tag,
+                                                    "tag_source": scores_dict["description"],
+                                                    "rosetta_scores": scores_dict}
 
         # clustering
         print "  clustering models..."
@@ -1108,12 +1136,14 @@ class RNAPrediction(object):
 
             delete_glob(filename_tmp, print_notice=False)
 
-        # calculate rmsd to native structure if native pdb available
-        if self.config["native_pdb_file"] is not None:
-            calculate_rmsd("native", self.config["native_pdb_file"])
+        # only calculate rmsds if full_evalation is needed or wanted
+        if full_evaluation:
+            # calculate rmsd to native structure if native pdb available
+            if self.config["native_pdb_file"] is not None:
+                calculate_rmsd("native", self.config["native_pdb_file"])
 
-        # calculate rmsd to best model
-        calculate_rmsd("cluster_1", "%s/cluster_1.pdb" % dir_output)
+            # calculate rmsd to best model
+            calculate_rmsd("cluster_1", "%s/cluster_1.pdb" % dir_output)
 
         # save evaluation data
         with open(file_evaldata, "w") as f:
