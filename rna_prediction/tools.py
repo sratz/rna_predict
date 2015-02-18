@@ -230,29 +230,26 @@ def tools():
         models = sim.get_models(cst_name, range(1, number + 1), "top")
         print models
 
-        # TODO: this only works for max 10 clusters so far
-        colors = ['w', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF', '#ff6600', '#006000', '#600060', '#F7C2CA']
-
         models_c = []
         plots = []
         descs = []
 
         plt.figure(figsize=(14, 8))
 
-        # cluster0
+        # no cluster
         models_c.append([m for m in models if "cluster" not in m])
         descs.append("no cluster (%d)" % (len(models_c[0])))
 
-        n_clusters = 10
-
-        # cluster1-10
-        for i in range(1, n_clusters + 1):
+        # clusters
+        i = 1
+        while True:
             models_current_cluster = [m for m in models if "cluster" in m and m["cluster"] == i]
             if len(models_current_cluster) == 0:
                 n_clusters = i - 1
                 break
             models_c.append(models_current_cluster)
             descs.append("cluster %d (%d)" % (i, len(models_current_cluster)))
+            i += 1
 
         if "rmsd_native" in models_c[1][0]:
             comparison = "rmsd_native"
@@ -262,8 +259,13 @@ def tools():
             plt.xlabel("rmsd to best structure / A")
 
         # create plots
+        colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF', '#ff6600', '#006000', '#600060', '#F7C2CA']
+        shapes = ['o', 'D', 's', 'p']
+
         for i in range(0, n_clusters + 1):
-            plots.append(plt.scatter([x[comparison] for x in models_c[i]], [x["score"] for x in models_c[i]], s=50, c=colors[i]))
+            color = "w" if i == 0 else colors[(i - 1) % len(colors)]
+            shape = "o" if i == 0 else shapes[((i - 1) / len(colors)) % len(shapes)]
+            plots.append(plt.scatter([x[comparison] for x in models_c[i]], [x["score"] for x in models_c[i]], s=35, c=color, marker=shape))
 
         plt.title("model clusters %s, constraints: %s" % (sim.config["name"], cst_name))
         plt.ylabel("rosetta score")
