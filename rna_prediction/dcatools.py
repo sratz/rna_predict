@@ -227,11 +227,11 @@ def read_pdb_mapping_from_file(dca_prediction_filename):
 def parse_dca_data(dca_prediction_filename):
     print "Parsing dca file %s..." % dca_prediction_filename
     # read pdb mapping from file
-    pdb_apping_text = read_pdb_mapping_from_file(dca_prediction_filename)
-    pdb_apping = create_pdb_mapping_from_string(pdb_apping_text)
-    print "pdb-mapping: %s" % pdb_apping_text
+    pdb_mapping_text = read_pdb_mapping_from_file(dca_prediction_filename)
+    pdb_mapping = create_pdb_mapping_from_string(pdb_mapping_text)
+    print "pdb-mapping: %s" % pdb_mapping_text
 
-    if pdb_apping_text is None:
+    if pdb_mapping_text is None:
         print "Warning: no pdb-mapping found in header of dca file %s, assuming '1-N'" % dca_prediction_filename
 
     dca = []
@@ -240,10 +240,10 @@ def parse_dca_data(dca_prediction_filename):
             continue
         # data line
         parts = line.split(" ")
-        if pdb_apping is not None:
+        if pdb_mapping is not None:
             try:
-                res1 = pdb_apping[int(parts[0])]
-                res2 = pdb_apping[int(parts[1])]
+                res1 = pdb_mapping[int(parts[0])]
+                res2 = pdb_mapping[int(parts[1])]
             except:
                 raise DcaException("Invalid PDB mapping. Could not access residue: %s" % (parts[:2]))
         else:
