@@ -1057,7 +1057,7 @@ class RNAPrediction(object):
 
             # loop over all out files matching the constraint
             for i, f in enumerate(files_assembly):
-                print "  processing rosetta silent file: %s..." % f
+                print "processing rosetta silent file: %s..." % f
 
                 # read out file and store a dict of the scores and the full score line
                 regex_score = re.compile("^SCORE:\s+(.*)$")
@@ -1093,9 +1093,9 @@ class RNAPrediction(object):
                                                     "rosetta_scores": scores_dict}
 
         # clustering
-        print "  clustering models..."
+        print "clustering models..."
         filename_clusters = "%s/clusters.out" % dir_output
-        sys.stdout.write("    ")
+        sys.stdout.write("  ")
 
         regex_clusters = re.compile("^.*RNA_PREDICT (old|new) cluster ([0-9]+) score ([-0-9.]+) model (S_[0-9_]+)$")
         for line in self.execute_command_and_capture(["rna_cluster", "-in:file:silent"] + files_assembly + ["-cluster:radius", "%s" % cluster_cutoff, "-nstruct", str(cluster_limit), "-out:file:silent", filename_clusters], add_suffix="rosetta", quiet=True):
@@ -1104,10 +1104,10 @@ class RNAPrediction(object):
                 eval_data["models"][m.group(4)]["cluster"] = int(m.group(2))
                 if m.group(1) == "new":
                     eval_data["clusters"][int(m.group(2))] = {"primary_model": m.group(4)}
-                print "    %s cluster: %02s, model: %-10s, score: %.3f" % ("new" if m.group(1) == "new" else "   ", m.group(2), m.group(4), float(m.group(3)))
+                print "  %s cluster: %02s, model: %-10s, score: %.3f" % ("new" if m.group(1) == "new" else "   ", m.group(2), m.group(4), float(m.group(3)))
 
         # extract cluster pdbs
-        print "  extracting cluster decoy pdbs..."
+        print "extracting cluster decoy pdbs..."
         owd = os.getcwd()
         try:
             os.chdir(dir_output)
@@ -1124,8 +1124,8 @@ class RNAPrediction(object):
         def calculate_rmsd(name, filename_comparison):
             # calculate native rmsd values for all models if native pdb available
             filename_tmp = "%s/rmsd.out" % dir_tmp
-            print "  caluculating rmsd values to %s for all models..." % name
-            sys.stdout.write("    ")
+            print "caluculating rmsd values to %s for all models..." % name
+            sys.stdout.write("  ")
 
             regex_rmsd = re.compile("^All atom rmsd over moving residues: (S_[0-9_]+) ([-0-9.]+)$")
             for line in self.execute_command_and_capture(["rna_score", "-in:file:silent"] + files_assembly + ["-in:file:native", filename_comparison, "-score:just_calc_rmsd", "-out:file:silent", filename_tmp], add_suffix="rosetta", quiet=True):
