@@ -1110,6 +1110,7 @@ class RNAPrediction(object):
         # cleanup
         if full_evaluation:
             delete_glob(dir_output)
+            delete_glob(dir_tmp)
             # create empty evaluation data
             eval_data = EvalData()
         else:
@@ -1122,7 +1123,6 @@ class RNAPrediction(object):
 
         delete_glob(dir_output + os.sep + "*.pdb")
         delete_glob(dir_output + os.sep + "*.out")
-        delete_glob(dir_tmp)
         utils.mkdir_p(dir_output)
         utils.mkdir_p(dir_tmp)
 
