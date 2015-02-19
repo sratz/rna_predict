@@ -1109,7 +1109,7 @@ class RNAPrediction(object):
 
         # cleanup
         if full_evaluation:
-            delete_glob(file_evaldata)
+            delete_glob(dir_output)
             # create empty evaluation data
             eval_data = EvalData()
         else:
