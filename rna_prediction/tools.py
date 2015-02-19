@@ -235,7 +235,7 @@ def tools():
         plots = []
         descs = []
 
-        plt.figure(figsize=(14, 8))
+        fig = plt.figure(figsize=(14, 8))
 
         # no cluster
         models_c.append([m for m in models if "cluster" not in m])
@@ -263,11 +263,18 @@ def tools():
         colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF', '#ff6600', '#006000', '#600060', '#F7C2CA']
         shapes = ['o', 'D', 's', 'p']
 
+        def pick_event(event):
+            cluster = plots.index(event.artist)
+            for ind in event.ind:
+                print "cluster %d: %s" % (cluster, models_c[cluster][ind]["tag"])
+                pprint.pprint(models_c[cluster][ind])
+
         for i in range(0, n_clusters + 1):
             color = "w" if i == 0 else colors[(i - 1) % len(colors)]
             shape = "o" if i == 0 else shapes[((i - 1) / len(colors)) % len(shapes)]
-            plots.append(plt.scatter([x[comparison] for x in models_c[i]], [x["score"] for x in models_c[i]], s=35, c=color, marker=shape))
+            plots.append(plt.scatter([x[comparison] for x in models_c[i]], [x["score"] for x in models_c[i]], s=35, c=color, marker=shape, picker=True))
 
+        fig.canvas.mpl_connect('pick_event', pick_event)
         plt.title("model clusters %s, constraints: %s" % (sim.config["name"], cst_name))
         plt.ylabel("rosetta score")
         plt.legend(plots, descs, loc="upper right", prop={'size': 12})
