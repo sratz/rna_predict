@@ -10,6 +10,7 @@ import glob
 import struct
 import re
 import os
+import numpy as np
 import pprint
 import subprocess
 import sys
@@ -1223,6 +1224,123 @@ class RNAPrediction(object):
             calculate_rmsd("cluster_1", "%s/cluster_1.pdb" % dir_output)
 
         # save evaluation data
+        eval_data.save_to_file(file_evaldata)
+
+    # custom scoring by inspecting neighboring residues of dca contact pairs
+    def evaluate_custom(self, constraints=None, dca_prediction_filename="dca/dca.txt", full_evaluation=False, threshold=7.5, radius=2, number_dca_predictions=100, threads=4):
+        self.check_config()
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
+        print "Evaluation configuration:"
+        print "    constraints: %s" % cst_name
+        print "    dca_file: %s" % dca_prediction_filename
+        print "    dca_count: %s" % number_dca_predictions
+        print "    threshold: %f" % threshold
+        print "    radius: %s" % radius
+
+        dir_assembly = "predictions/%s/assembly" % cst_name
+        dir_output = "predictions/%s/output" % cst_name
+        dir_tmp = "predictions/%s/temp" % cst_name
+        file_evaldata = "%s/evaldata.dat" % dir_output
+        file_matrices = "%s/matrices.dat" % dir_tmp
+
+        files_assembly = sorted(glob.glob("%s/assembly_*.out" % dir_assembly), key=natural_sort_key)
+
+        try:
+            eval_data = EvalData.load_from_file(file_evaldata)
+        except SimulationException:
+            raise SimulationException("Normal --evaluate step needs to be run before --evaluate-custom.")
+
+        slen = len(self.config["sequence"])
+
+        utils.mkdir_p(dir_output)
+        utils.mkdir_p(dir_tmp)
+
+        extract = full_evaluation
+        build_matrices = full_evaluation
+
+        # check if we can use existing data
+        if not build_matrices:
+            # try to load existing distance matrix
+            print "loading existing distance matrices..."
+            try:
+                with open(file_matrices, "r") as f:
+                    distance_matrices = pickle.load(f)
+            except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError):
+                print "error loading existing matrices. forcing rebuild..."
+                build_matrices = True
+
+                # check if we need to extract pdb files
+                if not os.path.isfile("%s/%s.pdb" % (dir_tmp, next(eval_data.models.iterkeys()))):
+                    print "no extraced pdb files found. forcing extraction..."
+                    extract = True
+
+        # extract all pdb files to temp dir
+        if extract:
+            delete_glob(dir_tmp)
+            print "extracing pdb files..."
+            commands = []
+            for f in files_assembly:
+                commands.append(Command(["rna_extract", "-in:file:silent", f, "-in:file:silent_struct_type", "rna", "-out:prefix", dir_tmp + os.sep + splitext(basename(f))[0] + "_"], add_suffix="rosetta"))
+            self.execute_commands(commands, threads=threads)
+
+            for model in eval_data.models.itervalues():
+                shutil.move(dir_tmp + os.sep + splitext(basename(model["source_file"]))[0] + "_" + model["tag_source"] + ".pdb", dir_tmp + os.sep + model["tag"] + ".pdb")
+
+        # build residue distance matrix for all models
+        if build_matrices:
+            delete_glob(file_matrices)
+            print "building matrices for %d models..." % len(eval_data.models)
+            distance_matrices = {}
+            x = 1
+            for model in eval_data.models.itervalues():
+                matrix = np.zeros([len(self.config["sequence"]), len(self.config["sequence"])])
+                chain = pdbtools.parse_pdb("", dir_tmp + os.sep + model["tag"] + ".pdb")[0].child_list[0]
+
+                for i in range(2, slen + 1):
+                    for j in range(2, slen + 1):
+                        if j == i:
+                            continue
+                        matrix[i - 1][j - 1] = chain[i]["P"] - chain[j]["P"]
+                distance_matrices[model["tag"]] = matrix
+                if x % 10 == 0:
+                    sys.stdout.write("%d..." % x)
+                    sys.stdout.flush()
+                x += 1
+            if x % 10 != 0:
+                print "%x..." % x
+            print "done."
+            with open(file_matrices, "w") as f:
+                pickle.dump(distance_matrices, f)
+
+        # calculate scores
+        print "calculating scores..."
+        dca = dcatools.parse_dca_data(dca_prediction_filename)
+        for model in eval_data.models.itervalues():
+            score_custom = 0
+            matrix = distance_matrices[model["tag"]]
+            c_count = 0
+            for contact in dca:
+                c_count += 1
+                if c_count > number_dca_predictions:
+                    break
+                found = False
+                for i in range(-radius, radius + 1):
+                    if contact.res1 + i < 1 or contact.res1 + i > slen:
+                        continue
+                    for j in range(-radius, radius + 1):
+                        if contact.res2 + j < 1 or contact.res2 + j > slen:
+                            continue
+                        if abs(contact.res1 + i - contact.res2 - j) <= 3:
+                            continue
+                        if matrix[contact.res1 + i - 1][contact.res2 + j - 1] < threshold:
+                            found = True
+                            score_custom -= 1
+                            break
+                    if found:
+                        break
+            print "model: %-11s, score: %8.3f, score_custom: %3d" % (model["tag"], model["score"], score_custom)
+            model["score_custom"] = score_custom
+
         eval_data.save_to_file(file_evaldata)
 
     def compare(self):

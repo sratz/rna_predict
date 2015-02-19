@@ -88,6 +88,7 @@ USAGE
     parser_motifs = subparsers.add_parser("create-motifs", help="create motifs")
     parser_assemble = subparsers.add_parser("assemble", help="assemble models")
     parser_evaluate = subparsers.add_parser("evaluate", help="evaluate data (clustering and rmsd calculation)")
+    parser_evaluatecustom = subparsers.add_parser("evaluate-custom", help="evaluate using custom scoring")
     subparsers.add_parser("compare", help="print comparison of prediction to native structure")
     parser_makeconstraints = subparsers.add_parser("make-constraints", help="create a constraints file from a dca prediction")
     parser_editconstraints = subparsers.add_parser("edit-constraints", help="replace rosetta function in a constraints file")
@@ -109,19 +110,26 @@ USAGE
     parser_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in angström [default: %(default)s]", default=4.1, type=float)
     parser_evaluate.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     parser_evaluate.add_argument("--full-eval", dest="full_eval", action="store_true", help="force full evaulation (scores and rmsd) instead of clustering only [default: %(default)s]")
-    parser_makeconstraints.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
-    parser_makeconstraints.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
+
+    for p in (parser_makeconstraints, parser_evaluatecustom):
+        p.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
+        p.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
+
     parser_makeconstraints.add_argument("--mapping-mode", dest="mapping_mode", help="mapping mode to use for constraints creation [default: %(default)s", default="allAtomWesthof")
     parser_makeconstraints.add_argument("--filter", dest="filter", help="run dca contacts though (a) filter(s). For syntax information refer to the documentation. [default: %(default)s", default=None)
     parser_config.add_argument("key", help="config key")
     parser_config.add_argument("value", help="config value")
     parser_tools.add_argument("positional", nargs="*")
 
+    parser_evaluatecustom.add_argument("--threshold", help="threshold to be treated as contact [default: %(default)s]", default=7.5, type=float)
+    parser_evaluatecustom.add_argument("--radius", help="number of neighboring residues in each direction to take into account [default: %(default)s]", default=2, type=int)
+    parser_evaluatecustom.add_argument("--full-eval", dest="full_eval", action="store_true", help="force full evaulation (scores and rmsd) instead of clustering only [default: %(default)s]")
+
     for p in (parser_motifs, parser_assemble):
         p.add_argument("--seed", dest="seed", help="force random seed (when multithreading, this will be incremented for each process) [default: %(default)s]", default=None, type=int)
         p.add_argument("--use-native", dest="use_native", action="store_true", help="use native information for motif generation and assembly [default: %(default)s]")
 
-    for p in (parser_preparecst, parser_motifs, parser_assemble, parser_editconstraints, parser_evaluate, parser_printmodels, parser_extractmodels):
+    for p in (parser_preparecst, parser_motifs, parser_assemble, parser_editconstraints, parser_evaluate, parser_printmodels, parser_extractmodels, parser_evaluatecustom):
         p.add_argument("--cst", dest="cst", help="constraint selection [default: %(default)s]", default=None)
 
     for p in (parser_makeconstraints, parser_editconstraints):
@@ -190,6 +198,8 @@ USAGE
             p.print_models(constraints=args.cst, model_list=args.model_list, kind=args.model_mode)
         elif args.subcommand == "extract-models":
             p.extract_models(constraints=args.cst, model_list=args.model_list, kind=args.model_mode)
+        elif args.subcommand == "evaluate-custom":
+            p.evaluate_custom(constraints=args.cst, dca_prediction_filename=args.dca_file, full_evaluation=args.full_eval, threshold=args.threshold, radius=args.radius, number_dca_predictions=args.dca_count, threads=args.threads)
 
         return 0
 
