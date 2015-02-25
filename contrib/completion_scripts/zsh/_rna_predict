@@ -159,21 +159,21 @@ _rna_predict_commands() {
     'extract-models: extract models as pdb files'
     'evaluate-custom: evaluate using custom scoring'
   )
-  _describe -t commands command commands && ret=0
+  _describe -t commands command commands
 }
 
 _rna_predict() {
   local curcontext=$curcontext state line
   integer ret=1
 
-_arguments -C -s -w \
-  {-h,--help}'[show help]' \
-  {-V,--version}'[show program version number and exit]' \
-  {-q,--quiet}'[do not print config on start]' \
-  {-n,--dry-run}'[do not execute and only print external commands]' \
-  {-j,--threads}'[maximum number of parallel subprocesses (default: 1)]: :_guard "[0-9]#" "threads"' \
-  '(-): :->command' \
-  '(-)*:: :->option-or-argument' && return
+  _arguments -C -s -w \
+    {-h,--help}'[show help]' \
+    {-V,--version}'[show program version number and exit]' \
+    {-q,--quiet}'[do not print config on start]' \
+    {-n,--dry-run}'[do not execute and only print external commands]' \
+    {-j,--threads}'[maximum number of parallel subprocesses (default: 1)]: :_guard "[0-9]#" "threads"' \
+    '(-): :->command' \
+    '(-)*:: :->option-or-argument' && ret=0
 
   case $state in
     (command)
@@ -190,6 +190,7 @@ _arguments -C -s -w \
       fi
       ;;
   esac
+  return ret
 }
 
 
