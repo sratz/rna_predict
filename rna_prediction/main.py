@@ -94,7 +94,6 @@ USAGE
     parser_editconstraints = subparsers.add_parser("edit-constraints", help="replace rosetta function in a constraints file")
     subparsers.add_parser("status", help="print status summary")
     parser_config = subparsers.add_parser("config", help="modify config variable")
-    parser_tools = subparsers.add_parser("tools", help="various plot generation tools")
     parser_printmodels = subparsers.add_parser("print-models", help="print models")
     parser_extractmodels = subparsers.add_parser("extract-models", help="extract models as pdb files")
 
@@ -119,7 +118,6 @@ USAGE
     parser_makeconstraints.add_argument("--filter", dest="filter", help="run dca contacts though (a) filter(s). For syntax information refer to the documentation. [default: %(default)s", default=None)
     parser_config.add_argument("key", help="config key")
     parser_config.add_argument("value", help="config value")
-    parser_tools.add_argument("positional", nargs="*")
 
     parser_evaluatecustom.add_argument("--threshold", help="threshold to be treated as contact [default: %(default)s]", default=7.5, type=float)
     parser_evaluatecustom.add_argument("--radius", help="number of neighboring residues in each direction to take into account [default: %(default)s]", default=2, type=int)
@@ -140,8 +138,36 @@ USAGE
         p.add_argument("--mode", dest="model_mode", help="model selection mode (tag, top, ntop, cluster) [default: %(default)s]", default="tag")
         p.add_argument("model_list", metavar="model", help="model number or tag, depending on mode argument", nargs="+")
 
+    # tools sub-parser and sub-sub-parser
+    parser_tools = subparsers.add_parser("tools", help="various plot generation tools", formatter_class=SubcommandHelpFormatter)
+    subparser_tools = parser_tools.add_subparsers(dest="subcommand_tool", title="tools", metavar="tool")
+    parser_tools_plot_contact_distances = subparser_tools.add_parser("plot-contact-distances", help="plot histogram for each nucleotide pair contact containing the distances of the atoms involved")
+    parser_tools_plot_contact_atoms = subparser_tools.add_parser("plot-contact-atoms", help="plot atoms involved in forming nucleotide contacts")
+    parser_tools_plot_constraint_quality = subparser_tools.add_parser("plot-constraint-quality", help="plot constraint quality")
+    parser_tools_plot_dca_contacts_in_pdb = subparser_tools.add_parser("plot-dca-contacts-in-pdb", help="visualize how well DCA contacts are fullfiled in PDB files")
+    parser_tools_plot_clusters = subparser_tools.add_parser("plot-clusters", help="plot score over native rmsd")
+    parser_tools_plot_pdb_comparison = subparser_tools.add_parser("plot-pdb-comparison", help="cmpare PDB files by plotting the distance of the residues")
+
+    parser_tools_plot_contact_atoms.add_argument("--mean-cutoff", dest="mean_cutoff", help="limit for average distance [default: '%(default)s']", type=float, default=6.0)
+    parser_tools_plot_contact_atoms.add_argument("--std-cutoff", dest="std_cutoff", help="limit for the standard deviation [default: '%(default)s']", type=float, default=3.0)
+
+    parser_tools_plot_constraint_quality.add_argument("--dca-mode", dest="dca_mode", action="store_true", help="visualize residue-residue DCA instead of atom-atom constraints [default: '%(default)s']")
+    parser_tools_plot_constraint_quality.add_argument("comparison_pdb", metavar="comparison-pdb", help="pdb filename to compare to")
+    parser_tools_plot_constraint_quality.add_argument("sources", help="list of dca files, constraints, or 'filter:...'", nargs="+")
+
+    parser_tools_plot_dca_contacts_in_pdb.add_argument("dca_file", metavar="dca-file",  help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
+    parser_tools_plot_dca_contacts_in_pdb.add_argument("pdb_files", metavar="pdb-files", help="list of pdb files", nargs="+")
+
+    parser_tools_plot_clusters.add_argument("cst", help="constraint selection")
+    parser_tools_plot_clusters.add_argument("--max-models", dest="max_models", help="limit to number of models if > 1, or relative percentage if <= 1 [default: %(default)s]", type=float, default=0.99)
+
+    parser_tools_plot_pdb_comparison.add_argument("ref_pdb", metavar="ref-pdb", help="reference PDB filename")
+    parser_tools_plot_pdb_comparison.add_argument("sample_pdbs", metavar="sample-pdbs", help="list of sample PDB filenames", nargs="+")
+
     # Process arguments
     args = parser.parse_args()
+
+    print args
 
     # system configuration
     sysconfig = SysConfig()
@@ -157,9 +183,18 @@ USAGE
 
     try:
         if args.subcommand == "tools":
-            # TODO: hack! introduce proper argument parsing for tools
-            sys.argv = sys.argv[1:]
-            tools.tools()
+            if args.subcommand_tool == "plot-contact-distances":
+                tools.plot_contact_distances()
+            elif args.subcommand_tool == "plot-contact-atoms":
+                tools.plot_contact_atoms(mean_cutoff=args.mean_cutoff, std_cutoff=args.std_cutoff)
+            elif args.subcommand_tool == "plot-constraint-quality":
+                tools.plot_constraint_quality(comparison_pdb=args.comparison_pdb, sources=args.sources, dca_mode=args.dca_mode)
+            elif args.subcommand_tool == "plot-dca-contacts-in-pdb":
+                tools.plot_dca_contacts_in_pdb(dca_prediction_filename=args.dca_file, pdb_files=args.pdb_files)
+            elif args.subcommand_tool == "plot-clusters":
+                tools.plot_clusters(cst=args.cst, max_models=args.max_models)
+            elif args.subcommand_tool == "plot-pdb-comparison":
+                tools.plot_pdb_comparison(pdb_ref_filename=args.ref_pdb, pdbs_sample_filenames=args.sample_pdbs)
             return 0
 
         # for all the other subcommannds we need a simulation

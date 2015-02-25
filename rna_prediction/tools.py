@@ -9,7 +9,6 @@ Created on Sep 22, 2014
 
 import itertools
 import pprint
-import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import os.path
@@ -334,48 +333,3 @@ def plot_pdb_comparison(pdb_ref_filename, pdbs_sample_filenames):
     plt.savefig("/tmp/rna_tools_seqdist_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
 
     plt.show()
-
-
-# TODO: use argparse for all this
-def tools():
-    if sys.argv[1] == "hist":
-        plot_contact_distances()
-
-    if sys.argv[1] == "hist2":
-        if len(sys.argv) >= 3:
-            mean_cutoff = float(sys.argv[2])
-        else:
-            mean_cutoff = 6.0
-        if len(sys.argv) >= 4:
-            std_cutoff = float(sys.argv[3])
-        else:
-            std_cutoff = 3.0
-        plot_contact_atoms(mean_cutoff, std_cutoff)
-
-    if sys.argv[1] == "comp":
-        if sys.argv[2] == "dca":
-            dca_mode = True
-            sys.argv.pop(2)
-        else:
-            dca_mode = False
-
-        comparison_pdb = sys.argv[2]
-        sources = sys.argv[3:]
-
-        plot_constraint_quality(comparison_pdb, sources, dca_mode)
-
-    if sys.argv[1] == "checkcontacts":
-        dca_prediction_filename = sys.argv[2]
-        pdb_files = sys.argv[3:]
-
-        plot_dca_contacts_in_pdb(dca_prediction_filename, pdb_files)
-
-    if sys.argv[1] == "rmsdscore":
-        plot_clusters(sys.argv[2], float(sys.argv[3]))
-
-    # align pdb files and plot distance for each atom/residue in the sequence
-    if sys.argv[1] == "seqdist":
-        pdb_ref_filename = sys.argv[2]
-        pdbs_sample_filenames = sys.argv[3:]
-
-        plot_pdb_comparison(pdb_ref_filename, pdbs_sample_filenames)
