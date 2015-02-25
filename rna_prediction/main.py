@@ -21,7 +21,7 @@ import os
 
 import argparse
 from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
+from argparse import HelpFormatter
 
 from rna_prediction.simulation import RNAPrediction
 from rna_prediction.simulation import SimulationException
@@ -66,9 +66,9 @@ def main():
 USAGE
 ''' % (program_shortdesc, str(__date__))
 
-    class SubcommandHelpFormatter(RawDescriptionHelpFormatter):
+    class SubcommandHelpFormatter(HelpFormatter):
         def _format_action(self, action):
-            parts = super(RawDescriptionHelpFormatter, self)._format_action(action)
+            parts = super(SubcommandHelpFormatter, self)._format_action(action)
             if action.nargs == argparse.PARSER:
                 parts = "\n".join(parts.split("\n")[1:])
             return parts
