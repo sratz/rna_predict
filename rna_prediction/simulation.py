@@ -150,14 +150,15 @@ class EvalData(object):
 
     @staticmethod
     def load_from_file(filename):
-        with open(filename, "r") as f:
-            try:
+        try:
+            with open(filename, "r") as f:
                 eval_data = pickle.load(f)
-                assert "rmsd_cluster_1" in next(eval_data.models.itervalues())
+                if "rmsd_cluster_1" not in next(eval_data.models.itervalues()):
+                    raise SimulationException("evaluation data file '%s' does not contain needed information" % filename)
                 return eval_data
-            except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError, AssertionError):
-                # file broken or missing, force full evaluation
-                raise SimulationException("evaluation data file '%s' missing or broken" % filename)
+        except (IOError, pickle.PickleError, AttributeError, EOFError, IndexError, KeyError):
+            # file broken or missing, force full evaluation
+            raise SimulationException("evaluation data file '%s' missing or broken" % filename)
 
     def save_to_file(self, filename):
         with open(filename, "w") as f:
