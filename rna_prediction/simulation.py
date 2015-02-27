@@ -1444,10 +1444,7 @@ class RNAPrediction(object):
                 model = eval_data.get_models([model_i], model_kind)[0]
                 pdbfile = self.extract_pdb(cst_name, model)
                 filter_pdb_chain = pdbtools.parse_pdb("", pdbfile)[0].child_list[0]
-                if threshold > 0:
-                    dca_filter = dcatools.dca_filter_threshold_minimum_keep_below(threshold, filter_pdb_chain)
-                else:
-                    dca_filter = dcatools.dca_filter_threshold_minimum_keep_above(abs(threshold), filter_pdb_chain)
+                dca_filter = dcatools.DcaFilterThreshold(filter_pdb_chain, abs(threshold), keep_below=threshold > 0, mode="minimum_heavy")
             filter_chain.append(dca_filter)
 
         return filter_chain
@@ -1461,7 +1458,7 @@ class RNAPrediction(object):
         print "    number_dca_predictions: %d" % number_dca_predictions
         print "    mode: %s" % mapping_mode
         print "    function: %s" % cst_function
-        print "    filter: %s" % filter_text  # TODO: make filters a class and add a __str__ representation
+        print "    filter: %s" % filter_text
         check_file_existence(dca_prediction_filename)
 
         # load dca contacts from file

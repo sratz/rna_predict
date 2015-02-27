@@ -378,34 +378,62 @@ def filter_dca_data(dca_data, dca_filter_chain, quiet=False):
         return dca_data
     for dca_filter in dca_filter_chain:
         if dca_filter is not None:
-            for d in dca_data:
-                dca_filter(d, quiet)
+            for contact in dca_data:
+                dca_filter.apply(contact, quiet)
 
 
-# use contact if realized minimum distance in a single pdb is smaller than a threshold
-def dca_filter_threshold_minimum_keep_below(threshold, pdb_chain):
-    return _dca_filter_threshold_minimum_keep(threshold, pdb_chain, below=True)
+class DcaFilter(object):
+    """Base class for DCA filters"""
+
+    def apply(self, contact, quiet=False):
+        """Apply filter to a DCA contact.
+
+        :param contact: DCA contact
+        :param quiet:
+        :return:
+        """
+        raise NotImplementedError
 
 
-# use contact if realized minimum distance is a single pdb is larger than a threshold
-def dca_filter_threshold_minimum_keep_above(threshold, pdb_chain):
-    return _dca_filter_threshold_minimum_keep(threshold, pdb_chain, below=False)
+class DcaFilterThreshold(DcaFilter):
+    """Skips DCA contact if below or above a threshold"""
 
+    def __init__(self, pdb_chain, threshold, keep_below=True, mode="minimum_heavy"):
+        """
+        Create a new threshold filter.
 
-def _dca_filter_threshold_minimum_keep(threshold, pdb_chain, below=True):
-    def f(contact, quiet):
+        :param pdb_chain: PDB chain
+        :param threshold: threshold below or above to keep a contact
+        :param keep_below: True to keep below threshold, False to keep above
+        :param mode: What distance to compare to (average_heavy, minimum_heavy)
+        """
+        self.pdb_chain = pdb_chain
+        self.threshold = threshold
+        self.keep_below = keep_below
+        self.mode = mode
+
+    def __repr__(self):
+        return "Threshold filter: keep %s %f (%s)" % ("below" if self.keep_below else "above", self.threshold, self.mode)
+
+    def apply(self, contact, quiet=False):
         # do not touch contacts that are already disabled
         if not contact.use_contact:
             return
 
         # get contact information
-        average_heavy, minimum_heavy, minimum_pair = get_contact_information_in_pdb_chain(contact, pdb_chain)
-        if not quiet:
-            print "Threshold filter: min_distance: %f, threshold: %f, keep %s" % (minimum_heavy, threshold, "below" if below else "above")
+        average_heavy, minimum_heavy, minimum_pair = get_contact_information_in_pdb_chain(contact, self.pdb_chain)
 
+        # which distance should be used?
+        if self.mode == "average_heavy":
+            distance = average_heavy
+        else:
+            distance = minimum_heavy
+
+        skip = False
         # set contact to disabled if filter failed
-        if (below and minimum_heavy >= threshold) or (not below and minimum_heavy <= threshold):
+        if (self.keep_below and distance >= self.threshold) or (not self.keep_below and distance <= self.threshold):
+            skip = True
             contact.use_contact = False
 
-    # return filter function
-    return f
+        if not quiet:
+            print "%s: %f --> %s" % (self, distance, "skip" if skip else "keep")
