@@ -34,9 +34,6 @@ __version__ = 0.1
 __date__ = '2014-08-13'
 __updated__ = '2014-08-13'
 
-DEBUG = 1
-TESTRUN = 0
-PROFILE = 0
 
 
 def main():
@@ -243,12 +240,7 @@ USAGE
         return 1
     except KeyboardInterrupt:
         return 1
-    except Exception, e:
-        if DEBUG or TESTRUN:
-            raise
-        else:
-            print_to_stderr(e)
-        return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())
