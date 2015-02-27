@@ -2,7 +2,6 @@ import os
 import pickle
 import numpy as np
 import re
-import sys
 from pkg_resources import ResourceManager
 
 from . import pdbtools
@@ -246,7 +245,7 @@ def parse_dca_data(dca_prediction_filename):
             except KeyError:
                 # our dca file might contain more than what we are interested in for the current prediction.
                 # simply ignore all dca pairs that don't fit the mapping range, but print a warning.
-                sys.stderr.write("Warning: At least one residue of contact %s not found in PDB-Mapping. Ignoring...\n" % (parts[:2]))
+                print "Warning: At least one residue of contact %s not found in PDB-Mapping. Ignoring..." % parts[:2]
         else:
             res1 = int(parts[0])
             res2 = int(parts[1])
