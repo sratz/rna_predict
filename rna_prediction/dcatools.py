@@ -127,23 +127,17 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
 
                 # try to find the residue contact specified. this is done by looping over all chains in the model,
                 # and checking if the residue is in there and is the correct nucleotide
-                res1 = None
-                for chain in model:
-                    try:
-                        res1 = chain[residues[index][0]]
-                        assert res1.get_resname().strip() == nt1
-                        break
-                    except (KeyError, AssertionError):
-                        res1 = None
+                def find_res(res, resname):
+                    for chain in model:
+                        try:
+                            if chain[res].get_resname().strip() == resname:
+                                return chain[res]
+                        except KeyError:
+                            pass
+                    return None
 
-                res2 = None
-                for chain in model:
-                    try:
-                        res2 = chain[residues[index][1]]
-                        assert res2.get_resname().strip() == nt2
-                        break
-                    except (KeyError, AssertionError):
-                        res2 = None
+                res1 = find_res(residues[index][0], nt1)
+                res2 = find_res(residues[index][1], nt2)
 
                 if not res1 or not res2:
                     raise Exception("Could not find residue contact in pdb file: %s-%s %s %s %s" % (nt1, nt2, pdb_code, residues[index][0], residues[index][1]))
