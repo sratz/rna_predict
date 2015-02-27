@@ -193,18 +193,22 @@ def create_pdb_mapping_from_string(mapping):
         i = 1
         ranges = mapping.split(",")
         for r in ranges:
-            r = r.split("-")
-            if len(r) == 1:
+            rs = r.split("-")
+            if len(rs) == 1:
                 # single number
-                pdb_mapping[int(r[0])] = i
+                pdb_mapping[int(rs[0])] = i
                 i += 1
             else:
                 # regular start-end
-                for x in range(int(r[0]), int(r[1]) + 1):
+                start = int(rs[0])
+                end = int(rs[1])
+                if start >= end:
+                    raise DcaException("Invalid pdb mapping string: Invalid range: %s" % r)
+                for x in range(start, end + 1):
                     pdb_mapping[x] = i
                     i += 1
         return pdb_mapping
-    except:
+    except ValueError:
         raise DcaException("Invalid pdb mapping string: %s" % mapping)
 
 
