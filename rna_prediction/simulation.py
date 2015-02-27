@@ -1357,10 +1357,14 @@ class RNAPrediction(object):
         cst_names += [splitext(basename(cst_file))[0] for cst_file in glob.glob("constraints/*.cst")]
         cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
         for cst_name in sorted(set(cst_names), key=natural_sort_key):
+            skip = False
             try:
                 eval_data = EvalData.load_from_cst(cst_name)
-                assert "rmsd_native" in next(eval_data.models.itervalues())
-            except (SimulationException, AssertionError):
+                if "rmsd_native" not in next(eval_data.models.itervalues()):
+                    skip = True
+            except SimulationException:
+                skip = True
+            if skip:
                 print_comparison_line(cst_name, ["-", "-", "-"])
                 continue
             comparisons = []
