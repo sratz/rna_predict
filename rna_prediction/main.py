@@ -198,7 +198,7 @@ USAGE
             return 0
 
         # for all the other subcommannds we need a simulation
-        p = RNAPrediction(sysconfig, os.getcwd())
+        p = RNAPrediction(sysconfig)
 
         # treat "config" special, because we want to print the configuartion after we change something
         if args.subcommand == "config":

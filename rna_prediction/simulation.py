@@ -255,15 +255,11 @@ class RNAPrediction(object):
         if not self.config:
             raise SimulationException("No config file found. Please run 'prepare' first!")
 
-    def __init__(self, sysconfig, path):
+    def __init__(self, sysconfig):
         """
         Create or load a prediction simulation
         """
         self.config = {}
-        try:
-            os.chdir(path)
-        except:
-            raise SimulationException("Invalid basepath: %s" % path)
         self.sysconfig = sysconfig
         self.load_config()
 

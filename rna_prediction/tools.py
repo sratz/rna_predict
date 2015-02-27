@@ -87,7 +87,7 @@ def plot_constraint_quality(comparison_pdb, sources, dca_mode=False):
     :param sources: list of dca files or constraints (depending on dca_mode). may also use 'filter:' to filter on-the-fly
     :param dca_mode: visualize residue-residue DCA instead of atom-atom constraints
     """
-    sim = RNAPrediction(SysConfig(), ".")
+    sim = RNAPrediction(SysConfig())
     pdb = pdbtools.parse_pdb("foo", comparison_pdb)
     chain = pdb[0].child_list[0]
 
@@ -211,7 +211,7 @@ def plot_clusters(cst, max_models=0.99):
     :param cst: constraints
     :param max_models: limit to number of models if > 1, or relative percentage if <= 1
     """
-    sim = RNAPrediction(SysConfig(), ".")
+    sim = RNAPrediction(SysConfig())
     cst_name, cst_file = sim.parse_cst_name_and_filename(cst)
     eval_data = EvalData.load_from_cst(cst_name)
 
@@ -282,7 +282,7 @@ def plot_pdb_comparison(pdb_ref_filename, pdbs_sample_filenames):
     pdb_ref = pdbtools.parse_pdb("foo", pdb_ref_filename)
     pdbs_sample = [pdbtools.parse_pdb(i, i) for i in pdbs_sample_filenames]
 
-    sim = RNAPrediction(SysConfig(), ".")
+    sim = RNAPrediction(SysConfig())
     print sim.config["sequence"]
     print sim.config["secstruc"]
 
