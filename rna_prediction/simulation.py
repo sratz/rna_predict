@@ -433,7 +433,8 @@ class RNAPrediction(object):
                         # check if the secondary structure watson-crick pair is allowed
                         if not self.config["sequence"][res1] in complement[self.config["sequence"][res2]]:
                             basepair_mismatch += [[res1, res2]]
-                assert (len(left_brackets) == 0)
+                if left_brackets:
+                    raise SimulationException("unbalanced paranthesis in secondary structure")
             else:
                 cols = string.split(line)
                 res1 = int(cols[0]) - 1
