@@ -2,16 +2,17 @@
 
 import itertools
 import pprint
-import matplotlib.pyplot as plt
 import numpy as np
 import os.path
 from os.path import basename, splitext
 
-from rna_prediction import dcatools
-from rna_prediction import pdbtools
-from rna_prediction.simulation import RNAPrediction
-from rna_prediction.simulation import EvalData
-from rna_prediction.sysconfig import SysConfig
+import matplotlib.pyplot as plt
+
+from . import dcatools
+from . import pdbtools
+from .simulation import RNAPrediction
+from .simulation import EvalData
+from .sysconfig import SysConfig
 
 
 def plot_contact_distances():

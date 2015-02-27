@@ -1,14 +1,14 @@
 # coding: utf-8
 
 import os
+from pkg_resources import ResourceManager
 import pickle
 import numpy as np
 import re
-from pkg_resources import ResourceManager
 
 from . import pdbtools
 from . import utils
-from sysconfig import SysConfig
+from .sysconfig import SysConfig
 
 
 INFO_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "structure_info"

@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import sys
-import os
-
 import argparse
 from argparse import ArgumentParser
 from argparse import HelpFormatter
+import os
+import sys
 
-from rna_prediction.simulation import RNAPrediction
-from rna_prediction.simulation import SimulationException
-from rna_prediction.sysconfig import SysConfig
 from .dcatools import DcaException
+from .simulation import RNAPrediction
+from .simulation import SimulationException
+from .sysconfig import SysConfig
 from . import tools
 from . import __version__
 

@@ -1,21 +1,22 @@
 # coding: utf-8
 
-import time
-import shutil
 import glob
-import struct
-import re
-import os
 import numpy as np
+import os
+from os.path import splitext, basename, abspath
+import pickle
 import pprint
+import re
+import shutil
+import string
+import struct
 import subprocess
 import sys
-import string
-import pickle
+import time
+
 from . import dcatools
 from . import pdbtools
 from . import utils
-from os.path import splitext, basename, abspath
 
 
 def check_file_existence(path, alternative_error_text=None):

@@ -4,11 +4,12 @@ import itertools
 import numpy as np
 import os
 import warnings
+
 import Bio.PDB
 from Bio.PDB.PDBExceptions import PDBConstructionWarning
 
-from sysconfig import SysConfig
 from . import utils
+from .sysconfig import SysConfig
 
 
 PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
