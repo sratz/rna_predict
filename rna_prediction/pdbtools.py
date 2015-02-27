@@ -1,8 +1,4 @@
-"""
-Created on Oct 13, 2014
-
-@author: sebastian
-"""
+# coding: utf-8
 
 import itertools
 import numpy as np

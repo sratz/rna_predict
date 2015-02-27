@@ -1,8 +1,4 @@
-"""
-Created on Sep 22, 2014
-
-@author: sebastian
-"""
+# coding: utf-8
 
 import re
 import ConfigParser

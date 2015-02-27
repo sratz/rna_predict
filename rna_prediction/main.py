@@ -1,20 +1,5 @@
-#!/usr/local/bin/python2.7
-# encoding: utf-8
-"""
-rna_prediction.main -- predict tertiary rna structure
-
-rna_prediction.main is a tool to predict tertiary rna structure based on secondary structure information and a set of constraints
-
-It defines classes_and_methods
-
-@author:     sra
-
-@copyright:  2014 SCC/MBS @ KIT. All rights reserved.
-
-@license:    license
-
-@contact:    sebastian.ratz@student.kit.edu
-"""
+#!/usr/bin/env python
+# coding: utf-8
 
 import sys
 import os
@@ -28,12 +13,7 @@ from rna_prediction.simulation import SimulationException
 from rna_prediction.sysconfig import SysConfig
 from .dcatools import DcaException
 from . import tools
-
-__all__ = []
-__version__ = 0.1
-__date__ = '2014-08-13'
-__updated__ = '2014-08-13'
-
+from . import __version__
 
 
 def main():
@@ -43,25 +23,7 @@ def main():
     sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
 
     def print_to_stderr(message, prefix="error"):
-        sys.stderr.write("%s: %s: %s\n" % (program_name, prefix, message))
-
-    '''Command line options.'''
-
-    program_name = os.path.basename(sys.argv[0])
-    program_version = "v%s" % __version__
-    program_build_date = str(__updated__)
-    program_version_message = '%%(prog)s %s (%s)' % (program_version, program_build_date)
-    program_shortdesc = __doc__.split("\n")[1]
-    program_license = '''%s
-
-  Created by sra on %s.
-  Copyright 2014 organization_name. All rights reserved.
-
-  Distributed on an "AS IS" basis without warranties
-  or conditions of any kind, either express or implied.
-
-USAGE
-''' % (program_shortdesc, str(__date__))
+        sys.stderr.write("%s: %s\n" % (prefix, message))
 
     class SubcommandHelpFormatter(HelpFormatter):
         def _format_action(self, action):
@@ -71,11 +33,11 @@ USAGE
             return parts
 
     # Setup argument parser
-    parser = ArgumentParser(description=program_license, formatter_class=SubcommandHelpFormatter)
+    parser = ArgumentParser(formatter_class=SubcommandHelpFormatter)
     subparsers = parser.add_subparsers(dest="subcommand", title="subcommands", metavar="subcommand")
 
     parser.add_argument('-j', '--threads', dest="threads", help="maximum number of parallel subprocesses [default: %(default)s]", default=1, type=int)
-    parser.add_argument('-V', '--version', action='version', version=program_version_message)
+    parser.add_argument('-V', '--version', action='version', version="%%(prog)s version %s" % __version__)
     parser.add_argument('-q', "--quiet", dest="quiet", action="store_true", help="don't print config on start [default: %(default)s]")
     parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute and only print external commands [default: %(default)s]")
 

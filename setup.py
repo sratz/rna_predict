@@ -1,17 +1,23 @@
 #!/usr/bin/env/python
-
-'''
-Created on Jan 19, 2015
-
-@author: sebastian
-'''
+# coding: utf-8
 
 from setuptools import setup
 
+
+def extract_metadata():
+    with open("rna_prediction/__init__.py") as f:
+        for line in f:
+            if line.startswith('__version__'):
+                exec(line.strip())
+    return locals()
+
+
+metadata = extract_metadata()
+
 setup(
     name="rna_prediction",
-    version="1.0",
-    description="RNA Structure Prediction",
+    version=metadata["__version__"],
+    description="RNA Tertiary Structure Prediction",
     author="Sebastian Ratz",
     author_email="sebastian.ratz@student.kit.edu",
     packages=["rna_prediction"],

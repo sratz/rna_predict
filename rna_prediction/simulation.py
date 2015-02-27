@@ -1,8 +1,4 @@
-"""
-Created on Aug 13, 2014
-
-@author: sebastian
-"""
+# coding: utf-8
 
 import time
 import shutil

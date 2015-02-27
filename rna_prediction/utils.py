@@ -1,8 +1,4 @@
-"""
-Created on Dec 19, 2014
-
-@author: sebastian
-"""
+# coding: utf-8
 
 import errno
 import os

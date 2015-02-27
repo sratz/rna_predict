@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import os
 import pickle
 import numpy as np
@@ -8,12 +10,6 @@ from . import pdbtools
 from . import utils
 from sysconfig import SysConfig
 
-
-'''
-Created on Sep 10, 2014
-
-@author: sebastian, blutz
-'''
 
 INFO_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "structure_info"
 CACHE_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "cache"

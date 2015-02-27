@@ -1,11 +1,4 @@
-#!/usr/bin/env python2
-# coding: utf8
-
-"""
-Created on Sep 22, 2014
-
-@author: sra
-"""
+# coding: utf-8
 
 import itertools
 import pprint
