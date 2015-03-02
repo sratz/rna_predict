@@ -3,6 +3,7 @@
 import itertools
 import numpy as np
 import os
+import urllib2
 import warnings
 
 import Bio.PDB
@@ -15,26 +16,25 @@ from .sysconfig import SysConfig
 PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
 
 
-def download_pdb_file(pdb_code, pdb_directory=PDB_DIRECTORY):
-    import urllib2
-
-    # make sure directory names have a trailing slash
-    pdb_directory = os.path.normpath(pdb_directory) + os.sep
-
-    response = urllib2.urlopen("http://www.rcsb.org/pdb/files/%s.pdb" % pdb_code.upper())
-    with open(pdb_directory + pdb_code + ".pdb", "w") as f:
-        f.write(response.read())
-
-
 def get_pdb_by_code(pdb_code, pdb_directory=PDB_DIRECTORY):
+    """
+    Get PDB file by code. Download if necessary.
+
+    :param pdb_code: PDB code to download
+    :param pdb_directory: directory lookup and store the PDB file, defaults to the rna_prediction PDB cache directory
+    :return: PDB filename
+    """
+
     # make sure directory names have a trailing slash
     pdb_directory = os.path.normpath(pdb_directory) + os.sep
 
     utils.mkdir_p(pdb_directory)
     pdb_file = pdb_directory + pdb_code + '.pdb'
     if not os.path.exists(pdb_file):
-        download_pdb_file(pdb_code, pdb_directory)
-    return parse_pdb(pdb_code, pdb_file)
+        response = urllib2.urlopen("http://www.rcsb.org/pdb/files/%s.pdb" % pdb_code.upper())
+        with open(pdb_file, "w") as f:
+            f.write(response.read())
+    return pdb_file
 
 
 def parse_pdb(pdb_code, pdb_file):

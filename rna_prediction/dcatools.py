@@ -115,7 +115,7 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
 
                 # download pdb if necessary
                 if pdb_code not in pdb_structure_dict:
-                    pdb_structure_dict[pdb_code] = pdbtools.get_pdb_by_code(pdb_code)
+                    pdb_structure_dict[pdb_code] = pdbtools.parse_pdb(pdb_code, pdbtools.get_pdb_by_code(pdb_code))
 
                 # extract model from pdb
                 model = pdb_structure_dict[pdb_code][0]
