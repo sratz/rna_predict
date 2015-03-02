@@ -15,39 +15,6 @@ from .sysconfig import SysConfig
 PDB_DIRECTORY = SysConfig.SYSCONFIG_LOCATION + os.sep + "pdbs"
 
 
-def write_pdb(filename, data, model=1, remark=None, append=False):
-    with open(filename, "a" if append else "w") as output_pdb_fd:
-        output_pdb_fd.write("MODEL %d\n" % model)
-        output_pdb_fd.write("REMARK %s\n" % remark)
-        output_pdb_fd.write(data)
-        output_pdb_fd.write("ENDMDL\n")
-
-
-def extract_p_only(filename):
-    def is_valid_atom(atom):
-        if atom == "P":
-            return True
-        if atom == "OP1":
-            return True
-        if atom == "OP2":
-            return True
-        return False
-
-    p_only = ""
-    # only extract first chain
-    chain_id = None
-    for line in utils.read_file_line_by_line(filename):
-        fields = line.split()
-        if fields[0] == "ATOM" and is_valid_atom(fields[2]):
-            if chain_id is None:
-                chain_id = fields[4]
-            elif chain_id != fields[4]:
-                break
-            p_only += line + "\n"
-    p_only += "TER\n"
-    return p_only
-
-
 def download_pdb_file(pdb_code, pdb_directory=PDB_DIRECTORY):
     import urllib2
 
