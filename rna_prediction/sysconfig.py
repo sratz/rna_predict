@@ -7,13 +7,14 @@ from os.path import expanduser
 
 
 class SysConfig(object):
+    """
+    Stores user and configuration
+    """
     SYSCONFIG_LOCATION = expanduser("~/.rna_predict")
     SYSCONFIG_FILE = SYSCONFIG_LOCATION + os.sep + "sysconfig"
 
     def __init__(self):
-        """
-        Load system configuration
-        """
+        """Load system configuration."""
         # defaults
         self.rosetta_exe_path = ""
         self.rosetta_exe_suffix = ".linuxgccrelease"
@@ -22,6 +23,7 @@ class SysConfig(object):
         self.load_sysconfig()
 
     def load_sysconfig(self):
+        """Load system configuration."""
         config = ConfigParser.RawConfigParser()
         config.read(SysConfig.SYSCONFIG_FILE)
         if config.has_section("rosetta"):
@@ -34,6 +36,11 @@ class SysConfig(object):
                 self.subprocess_buffsize = config.get("rna_predict", "subprocess_buffsize")
 
     def check_sysconfig(self):
+        """
+        Check if all external programs are accessible.
+
+        :return: dict containing lists of failed ("fail") and successful ("success") programm accesses
+        """
         def is_exe(fpath):
             return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -65,6 +72,9 @@ class SysConfig(object):
         return {"fail": fail, "success": success}
 
     def print_sysconfig(self):
+        """
+        Pretty-print configuration.
+        """
         print "System configuration:"
         for key, value in sorted(self.__dict__.items()):
             print "    %s: %s" % (key, "-" if value is None else value)

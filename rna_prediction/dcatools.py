@@ -17,15 +17,30 @@ CACHE_DISTANCEMAP = CACHE_DIRECTORY + os.sep + "distancemap.dat"
 
 
 class DcaException(Exception):
+    """
+    Custom exception class used for foreseeable, DCA related errors.
+    """
     pass
 
 
 def _get_atoms_backbone(term_phosphate=False):
+    """
+    Get list of backbone atoms.
+
+    :param term_phosphate: add P atoms
+    :return: list of atoms
+    """
     atoms = ["P", "OP1", "OP2"] if term_phosphate else []
     return atoms + ["O5'", "C5'", "C4'", "O4'", "C3'", "O3'", "C2'", "O2'", "C1'"]
 
 
 def get_atoms_for_res(res, term_phosphate=False):
+    """
+    Get list of atoms for residue.
+    :param res: nucleotide (A,U,G,C)
+    :param term_phosphate: add P atoms
+    :return: list of atoms
+    """
     atoms = _get_atoms_backbone(term_phosphate)
     if res == "A":
         return atoms + ["N9", "C8", "N7", "C5", "C6", "N6", "N1", "C2", "N3", "C4"]
@@ -38,6 +53,11 @@ def get_atoms_for_res(res, term_phosphate=False):
 
 
 def get_atoms_for_res_sequence(sequence):
+    """
+    Get list of atoms for a sequence of nucleotides
+    :param sequence: sequence as text
+    :return: list of atoms
+    """
     atoms = []
     first = True
     for res in sequence:
@@ -47,8 +67,16 @@ def get_atoms_for_res_sequence(sequence):
     return atoms
 
 
-# the westhof_vector can be used to apply different weights to the bonding family classes
 def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=None, force_rebuild=False):
+    """
+    Returns contact distance map
+
+    The contact distance map is cached it in the user directory and updated when newer files are found.
+
+    :param structure_directory: directory to look up structure information text files
+    :param westhof_vector: list of factors to apply different weights to the bonding family classes (defaults to [1, 1, ... ])
+    :param force_rebuild: force rebuilding the distance map
+    """
     # default: same weight for all families
     if not westhof_vector:
         westhof_vector = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -161,6 +189,13 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
 
 
 def get_contact_distance_map_mean(distance_map, mean_cutoff=None, std_cutoff=None):
+    """
+    Return an average distance map containing only those contacts with average distance and standard deviation satisfiying a cutoff.
+    :param distance_map: full distance map
+    :param mean_cutoff: limit for average
+    :param std_cutoff: limit for standard deviation
+    :return: average distance map
+    """
     mean_distance_map = {}
     for res_pair, distance_map_res_pair in distance_map.iteritems():
         mean_distance_map_res = {}
@@ -174,7 +209,15 @@ def get_contact_distance_map_mean(distance_map, mean_cutoff=None, std_cutoff=Non
 
 
 def create_pdb_mapping_from_string(mapping):
-    # parse a range in the form of 1-7,80,100-120,8-9
+    """
+    Create a number mapping dict to map residue numbers to 1,2,3,...
+
+    Parse a range in the form of 1-7,80,100-120,8-9 and creates a lookup dict:
+    {1: 1, 2: 2, ..., 80: 8, 81: 9, ...}
+
+    :param mapping: mapping string
+    :return: mapping dict
+    """
     if mapping is None or mapping == "":
         return None
     try:
@@ -201,8 +244,13 @@ def create_pdb_mapping_from_string(mapping):
         raise DcaException("Invalid pdb mapping string: %s" % mapping)
 
 
-# read a pdb mapping from dca file if present and return it as text
 def read_pdb_mapping_from_file(dca_prediction_filename):
+    """
+    Read a PDB mapping from DCA file if present and return it as text
+
+    :param dca_prediction_filename: DCA input filename
+    :return: PDB mapping text
+    """
     pattern_parameter = re.compile(r"^#\s(\S+)\s+(.*)$")
     for line in utils.read_file_line_by_line(dca_prediction_filename):
         if line[0] == "#":
@@ -217,8 +265,12 @@ def read_pdb_mapping_from_file(dca_prediction_filename):
     return None
 
 
-# reads a dca file and adjusts the sequence numbers to match the alignment of the pdb file
 def parse_dca_data(dca_prediction_filename):
+    """
+    Read a DCA file, adjust the sequence numbers to match the alignment of the PDB file, and create a list of DcaContacts
+    :param dca_prediction_filename: DCA input filename
+    :return: list of DcaContact objects
+    """
     print "Parsing dca file %s..." % dca_prediction_filename
     # read pdb mapping from file
     pdb_mapping_text = read_pdb_mapping_from_file(dca_prediction_filename)
@@ -250,8 +302,19 @@ def parse_dca_data(dca_prediction_filename):
     return dca
 
 
-# returns distance information about dca contact in a realized pdb chain
 def get_contact_information_in_pdb_chain(dca_contact, pdb_chain):
+    """
+    Returns distance information about a DCA contact in a realized PDB chain
+
+    Return value is a tuple of:
+      Average distance: Mean distance of all atoms in the contacts.
+      Minimum distance: Minimum distance between two atoms in the contact.
+      Minimum pair: List of [atom1, atom2] forming the minimal contact
+
+    :param dca_contact: DcaContact object
+    :param pdb_chain: PDB chain structure object
+    :return: tuple (average_dist, minimum_dist, minimum_pair)
+    """
     res1, res2 = (pdb_chain[dca_contact.res1], pdb_chain[dca_contact.res2])
     # calculate average distance
     average_heavy = np.linalg.norm(pdbtools.get_center_of_res(res1) - pdbtools.get_center_of_res(res2))
@@ -267,9 +330,18 @@ def get_contact_information_in_pdb_chain(dca_contact, pdb_chain):
     return average_heavy, minimum_heavy, minimum_pair
 
 
-# maps dca residue contacts to atom-atom constraints
-# mode: mapping mode, can be: allAtomWesthof,pOnly
 def build_cst_info_from_dca_contacts(dca_data, sequence, mapping_mode, cst_function, number_dca_predictions, quiet=False):
+    """
+    Maps DCA residue contacts to atom-atom constraints.
+
+    :param dca_data: list od DcaContacts
+    :param sequence: sequence as text
+    :param mapping_mode: atom-to-atom mapping mode to use, supported values: "allAtomWesthof" or "pOnly"
+    :param cst_function: rosetta function and parameters as text string
+    :param number_dca_predictions: maximum number of DCA predictions to use
+    :param quiet: reduce output verbosity
+    :return: list of constraint information
+    """
     mapping_mode = mapping_mode.lower()
     if mapping_mode not in ["allatomwesthof", "ponly"]:
         raise DcaException("build_cst_info: Invalid mapping mode given: %s" % mapping_mode)
@@ -328,7 +400,15 @@ def build_cst_info_from_dca_contacts(dca_data, sequence, mapping_mode, cst_funct
 
 
 class DcaContact(object):
+    """Class representing a DCA contact."""
     def __init__(self, res1, res2, use_contact=True, weight=1):
+        """
+        Create new DCA contact.
+        :param res1: number of first residue (from 1)
+        :param res2: number of second residue (from 1)
+        :param use_contact: True or False if contact is to be used
+        :param weight: assign a different weight to the contact (default 1)
+        """
         self.res1 = res1
         self.res2 = res2
         self.use_contact = use_contact
@@ -338,6 +418,12 @@ class DcaContact(object):
         return "[%s, %s], use_contact=%s, weight=%f" % (self.res1, self.res2, self.use_contact, self.weight)
 
     def get_rosetta_function(self, function="FADE -100 26 20 -2 2"):
+        """
+        Return Rosetta function of the contact as a list while applying weight.
+
+        :param function: rosetta function as text
+        :return: rosetta function as a list with applied weight
+        """
         function = function.split()
 
         # parse numeric arguments
@@ -361,8 +447,14 @@ class DcaContact(object):
 
 # DCA FILTERING
 
-# run dca data through a chain of filters
 def filter_dca_data(dca_data, dca_filter_chain, quiet=False):
+    """
+    Run list of DCA contacts through a chain of filters.
+
+    :param dca_data: list of DcaContact objects
+    :param dca_filter_chain: list of DcaFilter objects
+    :param quiet: reduce output verbosity
+    """
     if dca_filter_chain is None:
         return dca_data
     for dca_filter in dca_filter_chain:
@@ -372,20 +464,19 @@ def filter_dca_data(dca_data, dca_filter_chain, quiet=False):
 
 
 class DcaFilter(object):
-    """Base class for DCA filters"""
+    """Filter base class."""
 
     def apply(self, contact, quiet=False):
         """Apply filter to a DCA contact.
 
         :param contact: DCA contact
-        :param quiet:
-        :return:
+        :param quiet: reduce verbosity
         """
         raise NotImplementedError
 
 
 class DcaFilterThreshold(DcaFilter):
-    """Skips DCA contact if below or above a threshold"""
+    """Filter to skips DCA contact if below or above a threshold."""
 
     def __init__(self, pdb_chain, threshold, keep_below=True, mode="minimum_heavy"):
         """

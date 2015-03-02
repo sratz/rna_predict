@@ -38,12 +38,25 @@ def get_pdb_by_code(pdb_code, pdb_directory=PDB_DIRECTORY):
 
 
 def parse_pdb(pdb_code, pdb_file):
+    """
+    Parse PDB file using Biopyhon.
+    :param pdb_code: internal id
+    :param pdb_file: PDB filename
+    :return: PDB structure object
+    """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", PDBConstructionWarning)
         return Bio.PDB.PDBParser().get_structure(pdb_code, pdb_file)
 
 
 def filter_atoms(atoms, heavy_only=False, p_only=False):
+    """
+    Filter list of atoms.
+    :param atoms: list of atoms
+    :param heavy_only: only keep heavy atoms
+    :param p_only: only keep P atoms
+    :return: filtered list of atoms
+    """
     ret = []
     for atom in atoms:
         if p_only and atom.name != "P":
@@ -55,6 +68,11 @@ def filter_atoms(atoms, heavy_only=False, p_only=False):
 
 
 def get_center_of_res(res):
+    """
+    Calculate the center of a residue.
+    :param res: residue object
+    :return: center coordinates
+    """
     coords = []
     # loop over all atoms
     for atom in filter_atoms(res, heavy_only=True):
@@ -63,7 +81,14 @@ def get_center_of_res(res):
 
 
 def align_structure(ref_pdb, moving_pdb, assign_b_factors=True):
-    """Aligns moving_pdb to ref_pdb. Returns (res_dists, atom_dists, rmsd, transformation_matrix)"""
+    """
+    Align one PDB structure to another.
+
+    :param ref_pdb: reference PDB structure object
+    :param moving_pdb: moving PDB structure object
+    :param assign_b_factors: place distance values in the b-factor field
+    :return: tuple (res_dists, atom_dists, rmsd, transformation_matrix)
+    """
     chain_ref = ref_pdb[0].child_list[0]
     chain_sample = moving_pdb[0].child_list[0]
 

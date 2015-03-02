@@ -16,6 +16,7 @@ from . import __version__
 
 
 def main():
+    """rna_prediction main commandline parser."""
 
     # use line-buffered stdout and stderr
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)

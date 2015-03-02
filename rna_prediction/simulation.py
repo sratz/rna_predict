@@ -20,16 +20,34 @@ from . import utils
 
 
 def check_file_existence(path, alternative_error_text=None):
+    """
+    Make sure a file exists and raise an exception otherwise.
+
+    :param path: filename to check
+    :param alternative_error_text: alternative error text passed to exception
+    """
     if not os.path.isfile(path):
         raise SimulationException(alternative_error_text if alternative_error_text is not None else "Cannot find file: %s" % path)
 
 
 def check_dir_existence(path, alternative_error_text=None):
+    """
+    Make sure a directory exists and raise an exception otherwise.
+
+    :param path: directory to check
+    :param alternative_error_text: alternative error text passed to exception
+    """
     if not os.path.isdir(path):
         raise SimulationException(alternative_error_text if alternative_error_text is not None else "Cannot find directory: %s" % path)
 
 
 def delete_glob(pattern, print_notice=True):
+    """
+    Helper function to delete files while expanding shell globs.
+
+    :param pattern: pattern to delete
+    :param print_notice: if True print verbose notice
+    """
     for f in glob.glob(pattern):
         if print_notice:
             print "deleting %s..." % f
@@ -43,6 +61,16 @@ def delete_glob(pattern, print_notice=True):
 
 
 def merge_silent_files(target, sources):
+    """
+    Merges rosetta silent files (.out).
+
+    All source files are appended to target.
+    Model numbers are incremented uniquely.
+    Source files are deleted after a successful merge.
+
+    :param target: target filename
+    :param sources: source filenames
+    """
     n = 0
     pattern_header = re.compile("^(?:SEQUENCE:|SCORE:\s+score).*")
     pattern_normal = re.compile("^(.*)S_\d+$")
@@ -86,11 +114,18 @@ def merge_silent_files(target, sources):
 
 
 def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
+    """Helper function to be used as sort key in sorted() to naturally sort numeric parts."""
     return [int(text) if text.isdigit() else text.lower() for text in re.split(_nsre, s)]
 
 
 # TODO: Correcting atom names IS MOST LIKELY WRONG! It is commented out for now and can probably be removed completely.
 def fix_atom_names_in_cst(cst_info, sequence):
+    """
+    Switches N1 and N3 atom names in a residue.
+    :param cst_info: list of constraints
+    :param sequence: residue sequence in lower case
+    :return: modified list of constraints
+    """
     pyrimidines = ['c', 'u']
     purines = ['a', 'g']
     cst_info_new = []
@@ -113,11 +148,28 @@ def fix_atom_names_in_cst(cst_info, sequence):
 
 
 class SimulationException(Exception):
+    """
+    Custom exception class for foreseeable prediction errors.
+    """
     pass
 
 
 class Command(object):
+    """
+    Helper class to store external program calls plus additional flags.
+    """
+
     def __init__(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
+        """
+        Create a new command wrapper.
+
+        :param command: list of external command and parameters
+        :param add_suffix: type of suffix to first entry in command. currently only None or "rosetta" are supported
+        :param dry_run: don't actually execute anything
+        :param print_commands: print commandline when running
+        :param stdin: optional text to use as standard input
+        :param quiet: hide output of external program
+        """
         self.command = command
         self.add_suffix = add_suffix
         self.dry_run = dry_run
@@ -126,6 +178,11 @@ class Command(object):
         self.quiet = quiet
 
     def get_full_command(self, sysconfig):
+        """
+        If necessary, add the suffix to the command. Depending on user / system configuration.
+
+        :param sysconfig: instance of SysConfig
+        """
         com = self.command[:]
         if self.add_suffix == "rosetta":
             com[0] = sysconfig.rosetta_exe_path + com[0] + sysconfig.rosetta_exe_suffix
@@ -135,6 +192,9 @@ class Command(object):
 
 
 class EvalData(object):
+    """
+    Evaluation data storing model and cluster information.
+    """
     def __init__(self):
         self.models = {}
         self.clusters = {}
@@ -142,11 +202,21 @@ class EvalData(object):
 
     @staticmethod
     def load_from_cst(constraints):
+        """
+        Load evaluation data from a prediction.
+
+        :param constraints: name of a prediction
+        """
         cst_name, cst_file = RNAPrediction.parse_cst_name_and_filename(constraints)
         return EvalData.load_from_file("predictions/%s/output/evaldata.dat" % cst_name)
 
     @staticmethod
     def load_from_file(filename):
+        """
+        Load evaluation data from a file.
+
+        :param filename: path to a file containing the evaluation data
+        """
         try:
             with open(filename, "r") as f:
                 eval_data = pickle.load(f)
@@ -158,18 +228,32 @@ class EvalData(object):
             raise SimulationException("evaluation data file '%s' missing or broken" % filename)
 
     def save_to_file(self, filename):
+        """
+        Dump evaldata to a file.
+
+        :param filename: path to a file to store the data
+        """
         with open(filename, "w") as f:
             pickle.dump(self, f)
 
     def get_model_count(self):
+        """
+        Returns the number of models in the vaulation data
+
+        :return: number of models
+        """
         return len(self.models)
 
-    # retrieve a list for models by kind:
-    # "tag": string: internal name such as S_000123_5
-    # "top": number: models ordered by score
-    # "ntop": number: models ordered by rmsd_native
-    # "cluster": number: nth cluster decoy
     def get_models(self, model_list, kind="tag"):
+        """Returns a selection of models with specific properties
+
+        :param model_list: list of models to get. might a list of numbers, or a list of model names
+        :param kind: model selection mode: "tag": string: internal name such as S_000123_5
+                                           "top": number: models ordered by score
+                                           "ntop": number: models ordered by rmsd_native
+                                           "cluster": number: nth cluster decoy
+        :return: list of selected models
+        """
         # initialize list
         models_sorted = None
 
@@ -206,6 +290,12 @@ class EvalData(object):
         return results
 
     def print_models(self, model_list, kind="tag"):
+        """
+        Print a list of models
+
+        :param model_list: see get_models
+        :param kind: see get_models
+        """
         models = self.get_models(model_list, kind)
         for model in models:
             print "Model: %s" % model["tag"]
@@ -220,17 +310,20 @@ class RNAPrediction(object):
     CONFIG_FILE = ".config"
 
     def load_config(self):
+        """Load simulation configuration of current directory"""
         if os.path.exists(RNAPrediction.CONFIG_FILE):
             c = open(RNAPrediction.CONFIG_FILE)
             self.config = pickle.load(c)
             c.close()
 
     def save_config(self):
+        """Save simulation configuration of current directorx"""
         c = open(RNAPrediction.CONFIG_FILE, "w")
         pickle.dump(self.config, c)
         c.close()
 
     def print_config(self):
+        """Print simulation configuration."""
         print "Simulation configuration:"
         print "    path: %s" % (abspath(os.getcwd()))
         if self.config:
@@ -244,27 +337,53 @@ class RNAPrediction(object):
 
     # TODO: support different data types?
     def modify_config(self, key, value):
+        """
+        Modify configuration entry.
+
+        :param key: setting to modify
+        :param value: new value ("-" to store None)
+        """
         if key in self.config:
             self.config[key] = None if value == "-" else value
         else:
             raise SimulationException("No such config entry: %s" % key)
 
     def check_config(self):
+        """Check if current directory contains a valid configuraion."""
         if not self.config:
             raise SimulationException("No config file found. Please run 'prepare' first!")
 
     def __init__(self, sysconfig):
-        """
-        Create or load a prediction simulation
-        """
+        """Create a prediction simulation for the current directory and try to load an existing configuration."""
         self.config = {}
         self.sysconfig = sysconfig
         self.load_config()
 
     def execute_command(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
+        """
+        Execute an external command.
+
+        :param command: list of external command and parameters
+        :param add_suffix: type of suffix to first entry in command. currently only None or "rosetta" are supported
+        :param dry_run: don't actually execute anything
+        :param print_commands: print commandline when running
+        :param stdin: optional text to use as standard input
+        :param quiet: hide output of external program
+        """
         self.execute_commands([Command(command, add_suffix, dry_run, print_commands, stdin, quiet)])
 
     def execute_command_and_capture(self, command, add_suffix=None, dry_run=False, print_commands=True, stdin=None, quiet=False):
+        """
+        Execute an external command while capturing output.
+
+        :param command: list of external command and parameters
+        :param add_suffix: type of suffix to first entry in command. currently only None or "rosetta" are supported
+        :param dry_run: don't actually execute anything
+        :param print_commands: print commandline when running
+        :param stdin: optional text to use as standard input
+        :param quiet: hide output of external program
+        :return: generator over lines of standard output
+        """
         c = Command(command, add_suffix, dry_run, print_commands, stdin, quiet)
         command = c.get_full_command(self.sysconfig)
         if print_commands:
@@ -284,6 +403,12 @@ class RNAPrediction(object):
             raise SimulationException("Non-zero return code from executed command: %s" % " ".join(c.command))
 
     def execute_commands(self, commands, threads=1):
+        """
+        Execute a list of commands parallelly.
+
+        :param commands: list of Commands
+        :param threads: number of parallel invocations
+        """
         processes = []
         stdout = None
         try:
@@ -330,6 +455,14 @@ class RNAPrediction(object):
 
     @staticmethod
     def _make_tag_with_dashes(int_vector):
+        """
+        Transform a list of values into a list of strings while using "n-m" for adjacent values.
+
+        Example: [1, 2, 3, 5, 7, 8] -> ["1-3", "5", "7-8"]
+
+        :param int_vector: list of values
+        :return: list of strings
+        """
         tag = []
 
         start_res = int_vector[0]
@@ -348,6 +481,16 @@ class RNAPrediction(object):
         return tag
 
     def prepare(self, fasta_file="sequence.fasta", params_file="secstruct.txt", native_pdb_file=None, data_file=None, torsions_file=None, name=None):
+        """
+        Preparation step. Parse out stems and motifs from sequence and secondary structure information and create necessary base files.
+
+        :param fasta_file: fasta file containing the sequence
+        :param params_file: text file containing the secondary structure
+        :param native_pdb_file: native pdb file if available
+        :param data_file: additional data file if available
+        :param torsions_file: additional torsions file if available
+        :param name: optional name for this set of predictions
+        """
         if name is None:
             name = os.path.basename(os.path.abspath(os.getcwd()))
         for f in [fasta_file, params_file, native_pdb_file, data_file, torsions_file]:
@@ -762,6 +905,12 @@ class RNAPrediction(object):
         print 'Created: ', assemble_cst_file
 
     def create_helices(self, dry_run=False, threads=1):
+        """
+        Helix creation step. Create one ideal helix model for each helix.
+
+        :param dry_run: don't actually run any external command
+        :param threads: number of threads to use
+        """
         self.check_config()
         commands = list()
         delete_glob("preparation/stem*.out")
@@ -784,6 +933,12 @@ class RNAPrediction(object):
 
     @staticmethod
     def parse_cst_name_and_filename(constraints):
+        """
+        Find and clean up constraints by name or filename
+
+        :param constraints: constraints name or filename
+        :return: tuple of constraints name and filename
+        """
         if constraints is None or constraints == "none":
             cst_name = "none"
             cst_file = None
@@ -801,6 +956,12 @@ class RNAPrediction(object):
 
     @staticmethod
     def parse_cst_file(constraints_file):
+        """
+        Parse .cst file as a list of constraints
+
+        :param constraints_file: path to a .cst file
+        :return: list of constraints
+        """
         cst_info = []
         for line in utils.read_file_line_by_line(constraints_file):
             if len(line) > 6 and line[0] != '[':
@@ -812,9 +973,13 @@ class RNAPrediction(object):
                 cst_info.append([atom_name1, res1, atom_name2, res2, cols[4:]])
         return cst_info
 
-    # prepare constraints files for motif generation and assembly
-    # this is done separately to prevent a race condition when starting multiple parallel assembly jobs
     def prepare_cst(self, constraints=None, motifs_override=None):
+        """
+        Constraints preparation step. Prepare constraints files for motif generation and assembly.
+
+        :param constraints: constraints selection
+        :param motifs_override: optional name of a different set of constraints to use as motifs.
+        """
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Constraints preparation:"
@@ -876,6 +1041,17 @@ class RNAPrediction(object):
                 print 'Created: ', motif_cst_file
 
     def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None):
+        """
+        Motif generation step. Generate models for each motif.
+
+        :param nstruct: number of models to create for each motif
+        :param cycles: number of monte-carlo cycles per model
+        :param dry_run: don't actually run any external command
+        :param seed: optionally override random seed
+        :param use_native_information: use native pdb file to calculate rmsd for each model
+        :param threads: number of threads to use
+        :param constraints: constraints selection
+        """
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Motif creation configuration:"
@@ -981,8 +1157,18 @@ class RNAPrediction(object):
         for i in range(n_motifs):
             merge_silent_files("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
 
-    # TODO: When documenting later, explain that with assemble, nstruct is used for each single thread, while with create_motifs, it is distributed.
     def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1):
+        """
+        Assembly step. Assemble helices and motifs into complete models.
+
+        :param nstruct: number of models to create, note that when using more than 1 thread each thread will be set to create nstruct models
+        :param cycles: number of monte-carlo cycles per model
+        :param constraints: constraints selection
+        :param dry_run: don't actually run any external command
+        :param seed: optionally override random seed
+        :param use_native_information: use native pdb file to calculate rmsd for each model
+        :param threads: number of threads to use
+        """
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Assembly configuration:"
@@ -1070,6 +1256,15 @@ class RNAPrediction(object):
 
     # TODO: set the cutoff value back to 4.0? It was set to 4.1 because the old bash script used integer comparison and even 4.09 was treated as 4.0
     def evaluate(self, constraints=None, cluster_limit=10, cluster_cutoff=4.1, full_evaluation=False):
+        """
+        Evaluation step. Extract model information, cluster models and calculate rmsd values.
+
+        :param constraints: constraints selection
+        :param cluster_limit: maximum number of clusters to produce
+        :param cluster_cutoff: rmsd distance in A at which a new cluster is created
+        :param full_evaluation: discard existing evaluation data, re-extract model information and re-calculate rmsd values.
+        :return:
+        """
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Evaluation configuration:"
@@ -1221,8 +1416,18 @@ class RNAPrediction(object):
         # save evaluation data
         eval_data.save_to_file(file_evaldata)
 
-    # custom scoring by inspecting neighboring residues of dca contact pairs
     def evaluate_custom(self, constraints=None, dca_prediction_filename="dca/dca.txt", full_evaluation=False, threshold=7.5, radius=2, number_dca_predictions=100, threads=4):
+        """
+        Custom scoring algorithmy by inspecting neighboring residues of dca contact pairs
+
+        :param constraints: constraints selection
+        :param dca_prediction_filename: dca filename
+        :param full_evaluation: discard existing evaluation data and extracted models, re-extract and re-calculate distance information
+        :param threshold: threshold in A to count a contact
+        :param radius: number of adjacent residues to inspect
+        :param number_dca_predictions: maximum number of DCA predictions to use
+        :param threads: number of threads to use for extraction
+        """
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         print "Evaluation configuration:"
@@ -1339,6 +1544,7 @@ class RNAPrediction(object):
         eval_data.save_to_file(file_evaldata)
 
     def compare(self):
+        """Print table of native rmsd values for all predictions"""
         self.check_config()
         if self.config["native_pdb_file"] is None:
             raise SimulationException("Cannot compare without native information.")
@@ -1378,9 +1584,14 @@ class RNAPrediction(object):
                 comparisons.append("%.2f" % min_rmsd)
             print_comparison_line(cst_name, comparisons)
 
-    # extract pdb of a model to the tmp directory
     # returns the path to the extracted pdb file
     def extract_pdb(self, constraints, model):
+        """
+        Extract PDB file of a model to the tmp directory.
+        :param constraints: constraints selection
+        :param model: tag of the model
+        :return: path to the extracted PDB file
+        """
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
         dir_assembly = "predictions/%s/assembly" % cst_name
         dir_tmp = "predictions/%s/temp" % cst_name
@@ -1392,18 +1603,44 @@ class RNAPrediction(object):
 
     @staticmethod
     def print_models(constraints, model_list, kind="tag"):
+        """
+        Print a set of models
+
+        :param constraints: constraints selection
+        :param model_list: see EvalData.print_models
+        :param kind: see EvalData.print_models
+        """
         EvalData.load_from_cst(constraints).print_models(model_list=model_list, kind=kind)
 
     def extract_models(self, constraints, model_list, kind="tag"):
+        """
+        Extract PDB files of a set of models
+
+        :param constraints: constraints selection
+        :param model_list: see EvalData.print_models
+        :param kind: see EvalData.print_models
+        """
         for model in EvalData.load_from_cst(constraints).get_models(model_list=model_list, kind=kind):
             pdbfile = self.extract_pdb(constraints, model)
             print "Extracted: %s" % pdbfile
 
-    # create a reasonable output filename from
-    # output format uses placeholders for input name, number of predictions, and function
     # TODO: include mapping_mode?
     @staticmethod
     def _create_constraints_output_filename(input_filename, output_filename, cst_function, number_dca_predictions=None, output_format="%n_%f"):
+        """
+        Create a reasonable constraints output filename based on input filename and a formatting string.
+
+        The formatting string can include placeholdes
+
+        :param input_filename: input cst filename
+        :param output_filename: fixed output filename or basename or None to automatically format using output_format
+        :param cst_function: rosetta function
+        :param number_dca_predictions: maximum number of DCA predictions to use
+        :param output_format: formatting string containing placeholders: %f: rosetta function
+                                                                         %n: basename of source file
+                                                                         %d: number of dca predictions
+        :return: output filename
+        """
         source_basename = splitext(basename(input_filename))[0]
         cst_function_underscore = cst_function.replace(" ", "_")
 
@@ -1422,11 +1659,26 @@ class RNAPrediction(object):
         output_filename = output_filename.replace("%f", cst_function_underscore).replace("%n", source_basename).replace("%d", str(number_dca_predictions))
         return output_filename
 
-    # parses a text string and turns it into a dca filter chain
-    # multiple filters are separated b "," and their fields are separated using ":"
-    # example: threshold:8.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1
-    # TODO: document filter format
     def parse_dca_filter_string(self, line):
+        """
+        Parse a text string and turn it tinto a list of DCA filters
+
+        Multiple filters are separated by command and have the folling format:
+        Format: <filter>:<arg>:<arg>:...
+
+        Threshold filter: Lookup dca contacts in a PDB file, discard or keep contact depending on whether the contact is realized.
+        Format: threshold:<n>:<cst>:<mode>:<moodel>
+          n: threshold (< 0: keep below, > 0: keep above)
+          cst: constraints selection to look up PDB file
+          mode, model: model selection mode (see EvalData.get_models for details)
+        Example: threshold:8.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1
+
+        None filter: Empty filter
+        Format: none
+
+        :param line: string to parse
+        :return: list of DcaFilter objects
+        """
         filter_chain = []
 
         # filters are split by ","
@@ -1452,6 +1704,16 @@ class RNAPrediction(object):
         return filter_chain
 
     def make_constraints(self, dca_prediction_filename="dca/dca.txt", output_filename=None, number_dca_predictions=100, cst_function="FADE -100 26 20 -2 2", filter_text=None, mapping_mode="allAtomWesthof"):
+        """
+        Create a set of constraints from a DCA prediction.
+
+        :param dca_prediction_filename: DCA input file
+        :param output_filename: fixed output filename or None to automatically create
+        :param number_dca_predictions: maximum number of DCA predictions to use
+        :param cst_function: rosetta function and parameters as text string
+        :param filter_text: optional: List of DCA filters (see parse_dca_filter_string for details)
+        :param mapping_mode: atom-to-atom mapping mode to use, supported values: "allAtomWesthof" or "pOnly"
+        """
         self.check_config()
         output_filename = self._create_constraints_output_filename(dca_prediction_filename, output_filename, cst_function, number_dca_predictions, "%d%n_%f")
         print "Constraints creation:"
@@ -1483,6 +1745,12 @@ class RNAPrediction(object):
                 out.write("%s %d %s %d %s\n" % (c[0], c[1], c[2], c[3], " ".join(map(str, c[4]))))
 
     def edit_constraints(self, constraints, output_filename=None, cst_function="FADE -100 26 20 -2 2"):
+        """
+        Edit an existing .cst file, replacing the rosetta function.
+        :param constraints: constraints selection
+        :param output_filename: fixed output filename or None to automatically create
+        :param cst_function: rosetta function and parameters as text string
+        """
         cst_name, input_filename = self.parse_cst_name_and_filename(constraints)
         output_filename = self._create_constraints_output_filename(input_filename, output_filename, cst_function)
         print "Constraints editing:"
@@ -1501,6 +1769,19 @@ class RNAPrediction(object):
                 output_fd.write("%s %s\n" % (m.group(1), cst_function))
 
     def print_status(self):
+        """
+        Print summary of all predictions and their current status.
+
+        Output format contains the columns P, M, A, and E
+        P: preparation step
+        M: motif generation:
+        A: assembly:
+        E: evaluation
+
+        If a step is completed, "X" is shown, "-" otherwise.
+        For motif generation a "*" may be shown to indicate that models from a different
+        set of constraints are used.
+        """
         self.check_config()
         cst_names = ["none"]
         cst_names += [splitext(basename(cst_file))[0] for cst_file in glob.glob("constraints/*.cst")]
