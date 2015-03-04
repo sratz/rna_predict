@@ -1161,7 +1161,7 @@ class RNAPrediction(object):
         """
         Assembly step. Assemble helices and motifs into complete models.
 
-        :param nstruct: number of models to create, note that when using more than 1 thread each thread will be set to create nstruct models
+        :param nstruct: number of models to create
         :param cycles: number of monte-carlo cycles per model
         :param constraints: constraints selection
         :param dry_run: don't actually run any external command
@@ -1201,7 +1201,6 @@ class RNAPrediction(object):
                    "-fasta", self.config["fasta_file"],
                    "-in:file:silent_struct_type", "binary_rna",
                    "-cycles", "%d" % cycles,
-                   "-nstruct", "%d" % nstruct,
                    "-params_file", "preparation/sequence.params",
                    "-close_loops",
                    "-in:file:silent"]
@@ -1238,7 +1237,17 @@ class RNAPrediction(object):
         if self.config["data_file"] is not None:
             command += ["-data_file", self.config["data_file"]]
 
+        # distribute nstruct among threads
+        structs_threads = [0 for _ in range(threads)]
         for j in range(threads):
+            structs_threads[j] = nstruct / threads
+        for j in range(nstruct % threads):
+            structs_threads[j] += 1
+
+        for j in range(threads):
+            if structs_threads[j] == 0:
+                continue
+
             # In case no seed is specified, we do what rosetta does to get a random number, and seed it with that.
             # This way we know the number beforehand and can choose an appropriate output filename.
             # In case a seed was specified, we increment it here with the thread number.
@@ -1248,7 +1257,7 @@ class RNAPrediction(object):
                 seed_used = seed + j
 
             command_full = command + ["-out:file:silent", "%s/assembly_%d.out" % (dir_assembly, seed_used),
-                                      "-constant_seed", "-jran", "%d" % seed_used]
+                                      "-constant_seed", "-jran", "%d" % seed_used, "--nstruct", "%d" % structs_threads[j]]
 
             commands.append(Command(command_full, add_suffix="rosetta", dry_run=dry_run))
 
