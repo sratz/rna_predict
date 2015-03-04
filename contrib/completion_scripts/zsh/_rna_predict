@@ -44,6 +44,8 @@ _rna_predict-prepare-cst() {
     $cst_option
 }
 
+_rna_predict-create-helices() {
+}
 
 _rna_predict-create-motifs() {
   local cst_option
@@ -159,7 +161,7 @@ _rna_predict-tools-plot-constraint-quality() {
   case "$state" in
     (source)
       if (( words[(I)--dca-mode] )); then
-        __files && ret=0
+        _files && ret=0
       else
         _alternative \
           'cst:constraints:_files -W "(constraints)" -g \*.cst' \
