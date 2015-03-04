@@ -1,3 +1,3 @@
-include contrib
-include doc/*
+recursive-include contrib *
+recursive-include doc *
 include README.md
