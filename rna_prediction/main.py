@@ -39,7 +39,7 @@ def main():
     parser.add_argument('-j', '--threads', dest="threads", help="maximum number of parallel subprocesses [default: %(default)s]", default=1, type=int)
     parser.add_argument('-V', '--version', action='version', version="%%(prog)s version %s" % __version__)
     parser.add_argument('-q', "--quiet", dest="quiet", action="store_true", help="don't print config on start [default: %(default)s]")
-    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute and only print external commands [default: %(default)s]")
+    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="don't execute and only print external commands [default: %(default)s]")  # TODO: actually make dry-run work, not just for external subcommands
 
     parser_prepare = subparsers.add_parser("prepare", help="prepare stems and motifs")
     parser_preparecst = subparsers.add_parser("prepare-cst", help="prepare constraints file for motif generation and assembly")

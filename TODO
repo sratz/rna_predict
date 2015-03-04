@@ -1,9 +1,0 @@
-- dry-run: do no modify anything, not only external commands
-- add some sort of status operation that reports
-  * list of steps run
-  * number of motifs created
-  * ...
-- rework the handling for multiple paths
-  * use a wrapper class?
-  * exit code handling when one of them fails?
-- implement constraint handling and creation
