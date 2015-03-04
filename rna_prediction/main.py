@@ -71,7 +71,7 @@ def main():
 
     for p in (parser_makeconstraints, parser_evaluatecustom):
         p.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
-        p.add_argument("--dca-count", dest="dca_count", help="maximum number o dca predictions to use [default: %(default)s]", default=100, type=int)
+        p.add_argument("--dca-count", dest="dca_count", help="maximum number of dca predictions to use [default: %(default)s]", default=100, type=int)
 
     parser_makeconstraints.add_argument("--mapping-mode", dest="mapping_mode", help="mapping mode to use for constraints creation [default: %(default)s", default="allAtomWesthof")
     parser_makeconstraints.add_argument("--filter", dest="filter", help="run dca contacts though (a) filter(s). For syntax information refer to the documentation. [default: %(default)s", default=None)
@@ -105,7 +105,7 @@ def main():
     parser_tools_plot_constraint_quality = subparser_tools.add_parser("plot-constraint-quality", help="plot constraint quality")
     parser_tools_plot_dca_contacts_in_pdb = subparser_tools.add_parser("plot-dca-contacts-in-pdb", help="visualize how well DCA contacts are fullfiled in PDB files")
     parser_tools_plot_clusters = subparser_tools.add_parser("plot-clusters", help="plot score over native rmsd")
-    parser_tools_plot_pdb_comparison = subparser_tools.add_parser("plot-pdb-comparison", help="cmpare PDB files by plotting the distance of the residues")
+    parser_tools_plot_pdb_comparison = subparser_tools.add_parser("plot-pdb-comparison", help="compare PDB files by plotting the distance of the residues")
 
     parser_tools_plot_contact_atoms.add_argument("--mean-cutoff", dest="mean_cutoff", help="limit for average distance [default: '%(default)s']", type=float, default=6.0)
     parser_tools_plot_contact_atoms.add_argument("--std-cutoff", dest="std_cutoff", help="limit for the standard deviation [default: '%(default)s']", type=float, default=3.0)
