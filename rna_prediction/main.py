@@ -61,10 +61,10 @@ def main():
     parser_prepare.add_argument("--sequence", dest="sequence", help="sequence fasta file [default: %(default)s]", default="sequence.fasta")
     parser_prepare.add_argument("--secstruct", dest="secstruct", help="secondary structure file [default: %(default)s]", default="secstruct.txt")
     parser_preparecst.add_argument("--override-motifs-cst", dest="motifs_cst", help="use motifs from a different constraints set [default: %(default)s]", const="none", nargs="?")
-    parser_motifs.add_argument("--cycles-motifs", dest="cycles_motifs", help="number of cycles for motif generation [default: %(default)s]", default=5000, type=int)
-    parser_motifs.add_argument("--nstruct-motifs", dest="nstruct_motifs", help="number of motif structures to create [default: %(default)s]", default=4000, type=int)
-    parser_assemble.add_argument("--cycles-assembly", dest="cycles_assembly", help="number of cycles for assembly [default: %(default)s]", default=20000, type=int)
-    parser_assemble.add_argument("--nstruct-assembly", dest="nstruct_assembly", help="number of assembly structures to create [default: %(default)s]", default=50000, type=int)
+    parser_motifs.add_argument("--cycles", dest="cycles", help="number of cycles for motif generation [default: %(default)s]", default=5000, type=int)
+    parser_motifs.add_argument("--nstruct", dest="nstruct", help="number of motif structures to create [default: %(default)s]", default=4000, type=int)
+    parser_assemble.add_argument("--cycles", dest="cycles", help="number of cycles for assembly [default: %(default)s]", default=20000, type=int)
+    parser_assemble.add_argument("--nstruct", dest="nstruct", help="number of assembly structures to create [default: %(default)s]", default=50000, type=int)
     parser_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in angström [default: %(default)s]", default=4.1, type=float)
     parser_evaluate.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     parser_evaluate.add_argument("--full-eval", dest="full_eval", action="store_true", help="force full evaulation (scores and rmsd) instead of clustering only [default: %(default)s]")
@@ -181,9 +181,9 @@ def main():
         elif args.subcommand == "create-helices":
             p.create_helices(dry_run=args.dry_run, threads=args.threads)
         elif args.subcommand == "create-motifs":
-            p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct_motifs, cycles=args.cycles_motifs, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
+            p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
         elif args.subcommand == "assemble":
-            p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct_assembly, cycles=args.cycles_assembly, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
+            p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
         elif args.subcommand == "evaluate":
             p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff, full_evaluation=args.full_eval)
         elif args.subcommand == "compare":

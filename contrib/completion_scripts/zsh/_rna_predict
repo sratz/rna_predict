@@ -51,8 +51,8 @@ _rna_predict-create-motifs() {
   local cst_option
   __rna_predict_setup_cst_option
   _arguments -s -w \
-    '--cycles-motifs=[number of cycles for motif generation (default: 5000)]: :_guard "[0-9]#" "cycles"' \
-    '--nstruct-motifs=[number of motif structures to create (default: 4000)]: :_guard "[0-9]#" "number of structures"' \
+    '--cycles=[number of cycles for motif generation (default: 5000)]: :_guard "[0-9]#" "cycles"' \
+    '--nstruct=[number of motif structures to create (default: 4000)]: :_guard "[0-9]#" "number of structures"' \
     '--seed=[random seed (default: -)]: :_guard "(-|)[0-9]#" "seed"' \
     '--use-native[use native information for motif generation and assembly]' \
     $cst_option
@@ -62,8 +62,8 @@ _rna_predict-assemble() {
   local cst_option
   __rna_predict_setup_cst_option
   _arguments -s -w \
-    '--cycles-assembly=[number of cycles for assembly (default: 20000)]: :_guard "[0-9]#" "cycles"' \
-    '--nstruct-assembly=[number of assembly structures to create (default: 50000)]: :_guard "[0-9]#" "number of structures"' \
+    '--cycles=[number of cycles for assembly (default: 20000)]: :_guard "[0-9]#" "cycles"' \
+    '--nstruct=[number of assembly structures to create (default: 50000)]: :_guard "[0-9]#" "number of structures"' \
     '--seed=[random seed (default: -)]: :_guard "(-|)[0-9]#" "seed"' \
     '--use-native[use native information for motif generation and assembly]' \
     $cst_option
