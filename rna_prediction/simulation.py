@@ -1623,6 +1623,17 @@ class RNAPrediction(object):
         return pdbfile
 
     @staticmethod
+    def get_models(constraints, model_list, kind="tag"):
+        """
+        Returns a selection of models with specific properties
+
+        :param constraints: constraints selection
+        :param model_list: see EvalData.print_models
+        :param kind: see EvalData.get_models
+        """
+        return EvalData.load_from_cst(constraints).get_models(model_list=model_list, kind=kind)
+
+    @staticmethod
     def print_models(constraints, model_list, kind="tag"):
         """
         Print a set of models
