@@ -106,6 +106,7 @@ def main():
     parser_tools_plot_dca_contacts_in_pdb = subparser_tools.add_parser("plot-dca-contacts-in-pdb", help="visualize how well DCA contacts are fullfiled in PDB files")
     parser_tools_plot_clusters = subparser_tools.add_parser("plot-clusters", help="plot score over native rmsd")
     parser_tools_plot_pdb_comparison = subparser_tools.add_parser("plot-pdb-comparison", help="compare PDB files by plotting the distance of the residues")
+    parser_tools_plot_gdt = subparser_tools.add_parser("plot-gdt", help="create a global distance test plot")
 
     parser_tools_plot_contact_atoms.add_argument("--mean-cutoff", dest="mean_cutoff", help="limit for average distance [default: '%(default)s']", type=float, default=6.0)
     parser_tools_plot_contact_atoms.add_argument("--std-cutoff", dest="std_cutoff", help="limit for the standard deviation [default: '%(default)s']", type=float, default=3.0)
@@ -122,6 +123,9 @@ def main():
 
     parser_tools_plot_pdb_comparison.add_argument("ref_pdb", metavar="ref-pdb", help="reference PDB filename")
     parser_tools_plot_pdb_comparison.add_argument("sample_pdbs", metavar="sample-pdbs", help="list of sample PDB filenames", nargs="+")
+
+    parser_tools_plot_gdt.add_argument("ref_pdb", metavar="ref-pdb", help="reference PDB filename")
+    parser_tools_plot_gdt.add_argument("sample_pdbs", metavar="sample-pdbs", help="list of sample PDB filenames", nargs="+")
 
     # Process arguments
     args = parser.parse_args()
@@ -154,6 +158,8 @@ def main():
                 tools.plot_clusters(cst=args.cst, max_models=args.max_models)
             elif args.subcommand_tool == "plot-pdb-comparison":
                 tools.plot_pdb_comparison(pdb_ref_filename=args.ref_pdb, pdbs_sample_filenames=args.sample_pdbs)
+            elif args.subcommand_tool == "plot-gdt":
+                tools.plot_gdt(pdb_ref_filename=args.ref_pdb, pdbs_sample_filenames=args.sample_pdbs)
             return 0
 
         # for all the other subcommannds we need a simulation

@@ -416,3 +416,15 @@ Compare PDB files by plotting the distances of the residues.
     rna_predict tools plot-pdb-comparison \
         ref-pdb \
         sample-pdb [sample-pdb ...]
+
+
+#### plot-gdt
+
+Create a GDT (gloabl distance test) plot.
+
+This plots a distance cutoff on the y-axis and the percent of residues which
+are below the cutoff on the x-axis.
+
+    rna_predict tools plot-gdt \
+        ref-pdb \
+        sample-pdb [sample-pdb ...]

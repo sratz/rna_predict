@@ -327,3 +327,60 @@ def plot_pdb_comparison(pdb_ref_filename, pdbs_sample_filenames):
     plt.savefig("/tmp/rna_tools_seqdist_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
 
     plt.show()
+
+
+def plot_gdt(pdb_ref_filename, pdbs_sample_filenames):
+    sim = RNAPrediction(SysConfig())
+    pdb_ref = pdbtools.parse_pdb("foo", pdb_ref_filename)
+    pdbs_sample = []
+    for sample in pdbs_sample_filenames:
+        if ":" in sample:
+            fields = sample.split(":")
+            pdbs_sample.append(sim.extract_pdb(fields[0], RNAPrediction.get_models(fields[0], [fields[2]], fields[1])[0]))
+        else:
+            pdbs_sample.append(sample)
+
+    pdbs_sample = [pdbtools.parse_pdb(i, i) for i in pdbs_sample]
+    print sim.config["sequence"]
+    print sim.config["secstruc"]
+
+    plt.figure(figsize=(14, 8))
+    ax = plt.gca()
+
+    plt.title("GDT Plot %s" % (sim.config["name"]))
+    plt.xlabel("Percent of Residues")
+    plt.ylabel(u"Distance Cutoff / Å")
+
+    x_labels = ["%s\n%s" % ("\n".join(list("%.2d" % (i + 1))), x) for i, x in enumerate(sim.config["sequence"])]
+    x_min = 0
+    x_max = 100
+    plt.xlim([x_min, x_max])
+
+    y_min = 0
+    y_max = 0  # y limits will be set later when we know the final size
+
+    for pdb_sample in pdbs_sample:
+        dists_res, dists_atom, rmsd, rotran = pdbtools.align_structure(pdb_ref, pdb_sample, assign_b_factors=True)
+
+        dists_res = sorted(dists_res)
+        count = len(dists_res)
+
+        x_values = []
+        y_values = []
+        for i in xrange(0, count):
+            x_values.append(100 * (i + 1.0) / count)
+            y_values.append(dists_res[i])
+
+        plt.plot(x_values, y_values, "-", label=pdb_sample.id)
+        plt.plot((x_min, x_max), (rmsd, rmsd), "--", color=ax.lines[-1].get_color())
+        y_max = max(y_max, max(dists_res))
+
+    y_max *= 1.025
+
+    plt.ylim([y_min, y_max])
+
+    plt.legend(prop={'size': 12}, loc="upper left")
+
+    plt.savefig("/tmp/rna_tools_gdtplot_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
+
+    plt.show()
