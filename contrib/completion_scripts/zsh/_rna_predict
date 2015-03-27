@@ -15,8 +15,8 @@ __rna_predict_setup_dca_options() {
 
 __rna_predict_setup_model_options() {
   model_options=(
-    '--mode=[model selection mode (tag, top, ntop, cluster) (default: tag)]:selection mode:(tag top ntop cluster)'
-    '*: :_guard "(|S_)[0-9]#(|_[0-9]#)" "number or tag"'
+    '--mode=[model selection mode (tag, top, ntop, cluster, cluster_ntop) (default: tag)]:selection mode:(tag top ntop cluster, cluster_ntop)'
+    '*: :_guard "(S_[0-9]#(|_[0-9]#)|[0-9]#(|/[0-9]#))" "number or tag"'
   )
 }
 

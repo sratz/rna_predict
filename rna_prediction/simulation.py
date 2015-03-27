@@ -252,6 +252,7 @@ class EvalData(object):
                                            "top": number: models ordered by score
                                            "ntop": number: models ordered by rmsd_native
                                            "cluster": number: nth cluster decoy
+                                           "cluster_ntop": n[/m]: nth cluster ordered by native rmsd [of first m]
         :return: list of selected models
         """
         # initialize list
@@ -264,6 +265,17 @@ class EvalData(object):
             if kind == "cluster":
                 model_i = int(model_i)
                 tag = self.clusters[model_i]["primary_model"]
+            elif kind == "cluster_ntop":
+                if "/" in model_i:
+                    i, limit = (int(x) for x in model_i.split("/"))
+                    if i > limit:
+                        raise SimulationException("get_models: Cluster number (%d) can't be larger than the limit (%d)" % (i, limit))
+                else:
+                    i = int(model_i)
+                    limit = None
+                model_selection = [self.models[m["primary_model"]] for m in self.clusters.values()[:limit]]
+                models_sorted = sorted(model_selection, key=lambda i : i["rmsd_native"])
+                tag = models_sorted[i - 1]["tag"]
             elif kind == "tag":
                 tag = model_i
             elif kind == "top":
