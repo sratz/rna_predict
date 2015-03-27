@@ -1,4 +1,4 @@
-#!/usr/bin/env/python
+#!/usr/bin/env python
 
 # This script depends on the 'rnsd_b' script to be loaded.
 
@@ -10,14 +10,15 @@
 from pymol import cmd
 
 
-def align_and_color(moving, fixed, maximum=None):
+def align_and_color(moving, fixed, maximum=None, native_color="blue"):
+    if maximum == "0":
+        maximum = None
     alignment_name = "alignment_" + moving
     cmd.align(moving, fixed, object=alignment_name, cycles=0)
     cmd.disable(alignment_name)
     rmsd_b(moving + " & " + alignment_name, fixed + " & " + alignment_name)
-    cmd.color("white", fixed)
+    cmd.color(native_color, fixed)
     cmd.spectrum("b", "green_red", moving, 0, maximum)
-    cmd.show("cartoon")
 
 
 cmd.extend("align_and_color", align_and_color)
