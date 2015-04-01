@@ -351,7 +351,6 @@ def plot_gdt(pdb_ref_filename, pdbs_sample_filenames):
     plt.xlabel("Percent of Residues")
     plt.ylabel(u"Distance Cutoff / Å")
 
-    x_labels = ["%s\n%s" % ("\n".join(list("%.2d" % (i + 1))), x) for i, x in enumerate(sim.config["sequence"])]
     x_min = 0
     x_max = 100
     plt.xlim([x_min, x_max])
