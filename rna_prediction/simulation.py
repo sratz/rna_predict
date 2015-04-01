@@ -274,7 +274,7 @@ class EvalData(object):
                     i = int(model_i)
                     limit = None
                 model_selection = [self.models[m["primary_model"]] for m in self.clusters.values()[:limit]]
-                models_sorted = sorted(model_selection, key=lambda i : i["rmsd_native"])
+                models_sorted = sorted(model_selection, key=lambda i: i["rmsd_native"])
                 tag = models_sorted[i - 1]["tag"]
             elif kind == "tag":
                 tag = model_i
