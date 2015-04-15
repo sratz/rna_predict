@@ -190,6 +190,12 @@ _rna_predict-tools-plot-pdb-comparison() {
     '::comparison pdb:_files -g "*.pdb"'
 }
 
+_rna_predict-tools-plot-gdt() {
+  _arguments -s -w \
+    ':reference pdb:_files -g "*.pdb"' \
+    '::comparison pdb:_files -g "*.pdb"'
+}
+
 
 # config::key:(fasta_file name native_pdb_file params_file torsions_file):value:
 
@@ -224,6 +230,7 @@ _rna_predict_commands_tools() {
     'plot-dca-contacts-in-pdb:visualize how well DCA contacts are fullfiled in PDB files'
     'plot-clusters:plot score over native rmsd'
     'plot-pdb-comparison:compare PDB files by plotting the distance of the residues'
+    'plot-gdt:create a global distance test plotcreate a global distance test plot'
   )
   _describe -t commands command commands
 }
