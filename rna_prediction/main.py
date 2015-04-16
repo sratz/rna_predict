@@ -130,8 +130,6 @@ def main():
     # Process arguments
     args = parser.parse_args()
 
-    print args
-
     # system configuration
     sysconfig = SysConfig()
     check = sysconfig.check_sysconfig()
