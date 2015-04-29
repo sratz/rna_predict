@@ -31,3 +31,32 @@ def mkdir_p(path):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+
+
+def comma_separated_ranges_to_list(s):
+    """
+    Parses a string containing comma separated ranges to a list.
+
+    Example:
+    Turns "1-3,10,20-22" into [1, 2, 3, 10, 20, 21, 22]
+
+    :param s: comma separated ranges
+    :return: list of ints
+    """
+    l = []
+    ranges = s.split(",")
+    for r in ranges:
+        rs = r.split("-")
+        if len(rs) > 2:
+            raise ValueError("Invalid range: %s" % r)
+        if len(rs) == 1:
+            # single number
+            l += [int(rs[0])]
+        else:
+            # start-end
+            start = int(rs[0])
+            end = int(rs[1])
+            if start >= end:
+                raise ValueError("Invalid range: %s" % r)
+            l += [x for x in xrange(start, end + 1)]
+    return l
