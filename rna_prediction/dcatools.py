@@ -342,15 +342,24 @@ def build_cst_info_from_dca_contacts(dca_data, sequence, mapping_mode, cst_funct
             if not quiet:
                 print "  Dca contact skipped."
             continue
-        if not quiet:
-            print "  Dca contact used (%d)." % (predictions_used + 1)
+
+        # lookup contact
+        try:
+            res1 = atoms[d.res1 - 1]
+            res2 = atoms[d.res2 - 1]
+            contact_key = res1[0] + res2[0]
+        except IndexError:
+            # This happens only when there was no pdb-mapping specified in the dca file header.
+            # TODO: Maybe this whole mapping parsing thing should be worked over so that these
+            # two cases can be unified.
+            print "  Warning: Residues of contact cannot be found in current sequence. Ignoring..."
+            continue
+
         predictions_used += 1
+        if not quiet:
+            print "  Dca contact used (%d)." % predictions_used
 
         # build atom-atom constraints
-        res1 = atoms[d.res1 - 1]
-        res2 = atoms[d.res2 - 1]
-        contact_key = res1[0] + res2[0]
-
         if mapping_mode == "allatomwesthof":
             for atom1 in res1[1]:
                 for atom2 in res2[1]:
