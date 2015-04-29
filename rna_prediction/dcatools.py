@@ -208,42 +208,6 @@ def get_contact_distance_map_mean(distance_map, mean_cutoff=None, std_cutoff=Non
     return mean_distance_map
 
 
-def create_pdb_mapping_from_string(mapping):
-    """
-    Create a number mapping dict to map residue numbers to 1,2,3,...
-
-    Parse a range in the form of 1-7,80,100-120,8-9 and creates a lookup dict:
-    {1: 1, 2: 2, ..., 80: 8, 81: 9, ...}
-
-    :param mapping: mapping string
-    :return: mapping dict
-    """
-    if mapping is None or mapping == "":
-        return None
-    try:
-        pdb_mapping = {}
-        i = 1
-        ranges = mapping.split(",")
-        for r in ranges:
-            rs = r.split("-")
-            if len(rs) == 1:
-                # single number
-                pdb_mapping[int(rs[0])] = i
-                i += 1
-            else:
-                # regular start-end
-                start = int(rs[0])
-                end = int(rs[1])
-                if start >= end:
-                    raise DcaException("Invalid pdb mapping string: Invalid range: %s" % r)
-                for x in range(start, end + 1):
-                    pdb_mapping[x] = i
-                    i += 1
-        return pdb_mapping
-    except ValueError:
-        raise DcaException("Invalid pdb mapping string: %s" % mapping)
-
-
 def read_pdb_mapping_from_file(dca_prediction_filename):
     """
     Read a PDB mapping from DCA file if present and return it as text
@@ -272,13 +236,20 @@ def parse_dca_data(dca_prediction_filename):
     :return: list of DcaContact objects
     """
     print "Parsing dca file %s..." % dca_prediction_filename
+
     # read pdb mapping from file
     pdb_mapping_text = read_pdb_mapping_from_file(dca_prediction_filename)
-    pdb_mapping = create_pdb_mapping_from_string(pdb_mapping_text)
-    print "pdb-mapping: %s" % pdb_mapping_text
-
     if pdb_mapping_text is None:
-        print "Warning: no pdb-mapping found in header of dca file %s, assuming '1-N'" % dca_prediction_filename
+        print "pdb-mapping: 1-N (no pdb-mapping found in header of dca file)"
+    else:
+        print "pdb-mapping: %s" % pdb_mapping_text
+
+    # parse pdb mapping to dict
+    # for example 1-7,80,100-120,8-9 --> {1: 1, 2: 2, ..., 80: 8, 81: 9, ...}
+    try:
+        pdb_mapping = None if pdb_mapping_text is None else {x: i + 1 for i, x in enumerate(utils.comma_separated_ranges_to_list(pdb_mapping_text))}
+    except ValueError as e:
+        raise DcaException("Invalid pdb mapping string: %s" % e.message)
 
     dca = []
     for line in utils.read_file_line_by_line(dca_prediction_filename):
