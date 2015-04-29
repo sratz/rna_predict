@@ -12,6 +12,7 @@ from .simulation import RNAPrediction
 from .simulation import SimulationException
 from .sysconfig import SysConfig
 from . import tools
+from . import utils
 from . import __version__
 
 
@@ -31,6 +32,12 @@ def main():
             if action.nargs == argparse.PARSER:
                 parts = "\n".join(parts.split("\n")[1:])
             return parts
+
+    def comma_separated_ranges_to_list_parser(s):
+        try:
+            return utils.comma_separated_ranges_to_list(s)
+        except ValueError as ve:
+            raise argparse.ArgumentTypeError(ve.message)
 
     # Setup argument parser
     parser = ArgumentParser(formatter_class=SubcommandHelpFormatter)
@@ -63,6 +70,7 @@ def main():
     parser_preparecst.add_argument("--override-motifs-cst", dest="motifs_cst", help="use motifs from a different constraints set [default: %(default)s]", const="none", nargs="?")
     parser_motifs.add_argument("--cycles", dest="cycles", help="number of cycles for motif generation [default: %(default)s]", default=5000, type=int)
     parser_motifs.add_argument("--nstruct", dest="nstruct", help="number of motif structures to create [default: %(default)s]", default=4000, type=int)
+    parser_motifs.add_argument("--motif-subset", dest="motif_subset", help="list of motifs to create models for [default: all motifs]", default=None, type=comma_separated_ranges_to_list_parser)
     parser_assemble.add_argument("--cycles", dest="cycles", help="number of cycles for assembly [default: %(default)s]", default=20000, type=int)
     parser_assemble.add_argument("--nstruct", dest="nstruct", help="number of assembly structures to create [default: %(default)s]", default=50000, type=int)
     parser_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in angström [default: %(default)s]", default=4.1, type=float)
@@ -185,7 +193,7 @@ def main():
         elif args.subcommand == "create-helices":
             p.create_helices(dry_run=args.dry_run, threads=args.threads)
         elif args.subcommand == "create-motifs":
-            p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst)
+            p.create_motifs(dry_run=args.dry_run, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads, constraints=args.cst, motif_subset=args.motif_subset)
         elif args.subcommand == "assemble":
             p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
         elif args.subcommand == "evaluate":

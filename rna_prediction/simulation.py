@@ -1052,7 +1052,7 @@ class RNAPrediction(object):
                 fid_cst.close()
                 print 'Created: ', motif_cst_file
 
-    def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None):
+    def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None, motif_subset=None):
         """
         Motif generation step. Generate models for each motif.
 
@@ -1063,6 +1063,7 @@ class RNAPrediction(object):
         :param use_native_information: use native pdb file to calculate rmsd for each model
         :param threads: number of threads to use
         :param constraints: constraints selection
+        :param motif_subset: sepcify a list of motifs to generate instead of all, counting starts at 1 (i.e. [1, 3, 4])
         """
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
@@ -1073,6 +1074,8 @@ class RNAPrediction(object):
         print "    dry_run: %s" % dry_run
         print "    random_seed: %s" % seed
         print "    threads: %s" % threads
+        if motif_subset is not None:
+            print "    subset: %s" % motif_subset
 
         dir_motifs = "predictions/%s/motifs" % cst_name
         utils.mkdir_p("predictions/%s" % cst_name)
@@ -1080,21 +1083,32 @@ class RNAPrediction(object):
 
         n_motifs = len(self.config["motifs"])
 
+        # list of motifs that we should generate models for
+        # when no subset was given create models for all motifs
+        if motif_subset is None:
+            motif_subset = [i + 1 for i in range(n_motifs)]
+        else:
+            # remove duplicates if any
+            motif_subset = list(set(motif_subset))
+            # make sure that all the numbers actually exist
+            if max(motif_subset) > n_motifs:
+                raise SimulationException("Invalid motif subset. Structure only contains %d motifs." % n_motifs)
+
         # check if motif constraints were created correctly
         if cst_file is not None:
-            for i in range(n_motifs):
-                check_file_existence("%s/motif%d.cst" % (dir_motifs, i + 1), "Motif cst files not found. Please run the 'prepare-cst' step!")
+            for i in motif_subset:
+                check_file_existence("%s/motif%d.cst" % (dir_motifs, i), "Motif cst files not found. Please run the 'prepare-cst' step!")
 
-        # merge all motifs abd check what we have so far
+        # merge all motifs and check what we have so far
         completed = {}
-        for i in range(n_motifs):
-            completed[i] = merge_silent_files("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
+        for i in motif_subset:
+            completed[i] = merge_silent_files("%s/motif%d.out" % (dir_motifs, i), "%s/motif%d_*.out" % (dir_motifs, i))
 
         commands = list()
-        for i in range(n_motifs):
+        for i in motif_subset:
             # split the rest of the work in multiple jobs
             structs_missing = nstruct - completed[i]
-            print "motif %d:  completed: %d  missing: %d" % (i + 1, completed[i], structs_missing)
+            print "motif %d:  completed: %d  missing: %d" % (i, completed[i], structs_missing)
             if structs_missing <= 0:
                 continue
 
@@ -1105,8 +1119,8 @@ class RNAPrediction(object):
                 structs_threads[j] += 1
 
             command = ["rna_denovo",
-                       "-fasta", "preparation/motif%d.fasta" % (i + 1),
-                       "-params_file", "preparation/motif%d.params" % (i + 1),
+                       "-fasta", "preparation/motif%d.fasta" % i,
+                       "-params_file", "preparation/motif%d.params" % i,
                        "-cycles", "%d" % cycles,
                        "-mute", "all",
                        "-close_loops",
@@ -1114,18 +1128,18 @@ class RNAPrediction(object):
                        "-minimize_rna"]
 
             if cst_file is not None:
-                command += ["-cst_file", '%s/motif%d.cst' % (dir_motifs, i + 1)]
+                command += ["-cst_file", '%s/motif%d.cst' % (dir_motifs, i)]
             if self.config["native_pdb_file"] is not None and use_native_information:
-                command += ["-native", "preparation/motif%d_%s" % (i + 1, self.config["native_pdb_file"])]
+                command += ["-native", "preparation/motif%d_%s" % (i, self.config["native_pdb_file"])]
             if self.config["data_file"] is not None:
-                command += ["-data_file", "preparation/motif%d.data" % (i + 1)]
+                command += ["-data_file", "preparation/motif%d.data" % i]
             if self.config["torsions_file"] is not None:
-                command += ["-vall_torsions", "preparation/motif%d.torsions" % (i + 1)]
+                command += ["-vall_torsions", "preparation/motif%d.torsions" % i]
 
             which_stems = []
             stem_chunk_res = []
-            motif_stem_set = self.config["motif_stem_sets"][i]
-            motif_res_map = self.config["motif_res_maps"][i]
+            motif_stem_set = self.config["motif_stem_sets"][i - 1]
+            motif_res_map = self.config["motif_res_maps"][i - 1]
             for k in range(len(motif_stem_set)):
                 motif_stem = motif_stem_set[k]
                 # need to find in stems
@@ -1156,7 +1170,7 @@ class RNAPrediction(object):
             for j in range(threads):
                 if structs_threads[j] == 0:
                     continue
-                command_full = command + ["-out:file:silent", "%s/motif%d_%d.out" % (dir_motifs, i + 1, j + 1),
+                command_full = command + ["-out:file:silent", "%s/motif%d_%d.out" % (dir_motifs, i, j + 1),
                                           "-nstruct", "%d" % (structs_threads[j])]
                 if seed is not None:
                     command_full += ["-constant_seed", "-jran", "%d" % seed]
@@ -1166,8 +1180,8 @@ class RNAPrediction(object):
         self.execute_commands(commands, threads=threads)
 
         # merge motifs
-        for i in range(n_motifs):
-            merge_silent_files("%s/motif%d.out" % (dir_motifs, i + 1), "%s/motif%d_*.out" % (dir_motifs, i + 1))
+        for i in motif_subset:
+            merge_silent_files("%s/motif%d.out" % (dir_motifs, i), "%s/motif%d_*.out" % (dir_motifs, i))
 
     def assemble(self, nstruct=50000, cycles=20000, constraints=None, dry_run=False, seed=None, use_native_information=False, threads=1):
         """
