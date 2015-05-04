@@ -148,6 +148,7 @@ in the residue number 12 in the DCA file to be mapped to prediction residue 3.
 
 The `--mapping-mode` parameter specifies the method to map residue-residue contacts
 to atom-atom contacts. Options are:
+
 - allAtomWesthof
 - pOnly
 
@@ -157,7 +158,10 @@ The `--dca-count` option limits the number of predictions in the DCA input file.
 
 The `--cst-function` sets the Rosetta function to use. See
 <https://www.rosettacommons.org/docs/latest/constraint-file.html#Function-Types>
-for details.
+for details. The default function for constraints creation (`FADE -100 26 20 -2 2`)
+uses a spline smoothed square well potential (represented by the "FADE" function)
+and a default parameter set. After the generation of the cst file, it can of
+course be fine-tuned by further modification in any text editor.
 
 The `--cst-out-file` option specifies an output filename.
 
@@ -246,6 +250,7 @@ created so far.
 #### 5a. Evaluation using Rosetta clustering and scoring
 
 When the assembly has finished, you can evaluate the simulation. This means:
+
 - Cluster the models
 - Calculate RMSD values to the native structure, if available, and to
   the model with the best score.
@@ -331,12 +336,16 @@ To print model information or extract PDB files use the following subcommands:
         model [model ...]
 
 The `--mode` option selects the way to look up models:
+
 - cluster: Cluster number to reference the cluster primary model
+- cluster_ntop: Clusters sorted by the RMSDs of their representatives
 - ntop: Models sorted by RMSD to native structure
 - tag: Internal model name
 - top: Models sorted by Rosetta score
 
-The `model` options may be string (if `mode` is 'tag'), or numbers.
+The `model` options may be string (if `mode` is 'tag'), or numbers. For `mode=cluster_ntop`
+it may also be in the form of `n/m`, meaning the `n`th best cluster out of the first `m`
+clusters.
 
 Examples:
 
@@ -344,6 +353,7 @@ Examples:
     rna_predict extract-models --mode=top 1 2 3 4 5  # extract the two best-scoring models
     rna_predict extract-models --mode=ntop 1  # extract the model with the lowest native RMSD
     rna_predict extract-models --mode=cluster 1 2 3 4 5  # extract the cluster primaries of the first 5 clusters
+    rna_predict extract-models --mode=cluster_ntop 1/5  # extract the lowest native RMSD cluster out of the first 5 clusters
 
 
 ### Evaluation tools
