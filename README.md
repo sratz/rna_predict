@@ -19,7 +19,7 @@ a native crystal strcture .pdb as well as tools to visualize the results.
 ### Dependencies
 
 - Rosetta (Some minor modifications to the Rosetta source are required.
-  For details check `doc/rosetta.txt`)
+  For details check [doc/rosetta.md](doc/rosetta.md))
 - Python packages:
     * `biopython`
     * `matplotlib`
@@ -151,7 +151,7 @@ to atom-atom contacts. Options are:
 - allAtomWesthof
 - pOnly
 
-For details about the mapping, see `doc/atom-mapping.md`.
+For details about the mapping, see [doc/atom-mapping.md](doc/atom-mapping.md).
 
 The `--dca-count` option limits the number of predictions in the DCA input file.
 
@@ -162,7 +162,7 @@ for details.
 The `--cst-out-file` option specifies an output filename.
 
 The `--filter` option allows the DCA contacts to be passed through a chain of
-filters first. For the filter documentation see `doc/filters.md`.
+filters first. For the filter documentation see [doc/filters.md](doc/filters.md).
 
 
 #### 1b. Editing existing file
@@ -378,7 +378,7 @@ This visualizes the distances of constraints by comparing it to a reference
 When `--dca-mode` is given, residue-residue distances are plotted, atom-atom
 contacts otherwise.
 
-For the `filter`-syntax see `doc/filters.md`.
+For the `filter`-syntax see [doc/filters.md](doc/filters.md).
 
 
 #### plot-contact-atoms
