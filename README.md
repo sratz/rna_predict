@@ -57,7 +57,7 @@ Currently, there is only one other option to control buffering of the output
 of called programs. To enable line-buffered output, set the following:
 
     [rna_predict]
-    vsubprocess_buffsize = L
+    subprocess_buffsize = L
 
 Note that this is done by prefixing all commands with `stdbuf -<option>` and
 therefore requires the `stdbuf` program to be available.
@@ -249,6 +249,8 @@ When the assembly has finished, you can evaluate the simulation. This means:
 - Cluster the models
 - Calculate RMSD values to the native structure, if available, and to
   the model with the best score.
+
+Usage:
 
     rna_predict evaluate \
         --cst <cst> \
