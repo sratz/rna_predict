@@ -31,7 +31,7 @@ Arguments:
 
 - `n`: threshold (< 0: keep below, > 0: keep above)
 - `cst`: prediction / constraints selection to look up PDB file
-- `mode`, `model`: model selection mode (see [README.md](../README.md) for details)
+- `mode`, `model`: model selection mode (see [README.md](README.md) for details)
 
 Example:
 
