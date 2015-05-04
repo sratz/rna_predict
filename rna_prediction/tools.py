@@ -109,13 +109,21 @@ def plot_constraint_quality(comparison_pdb, sources, dca_mode=False):
                 print "  Mapping to atom-atom."
                 cst_info = dcatools.build_cst_info_from_dca_contacts(dca, sequence=sim.config["sequence"], mapping_mode="allAtomWesthof", cst_function="FADE -100 26 20 -2 2", number_dca_predictions=100, quiet=True)
         else:
-            title = splitext(basename(arg))[0]
-            print "  Reading file directly."
-
             if dca_mode:
+                title = splitext(basename(arg))[0]
+                print "  Reading dca file directly."
                 dca = dcatools.parse_dca_data(arg)
             else:
-                cst_info = sim.parse_cst_file(sim.parse_cst_name_and_filename(arg)[1])
+                if ":" in arg:
+                    title = arg
+                    print "  Building cst from dca on-the-fly."
+                    arg = arg.split(":")
+                    dca = dcatools.parse_dca_data(arg[0])
+                    cst_info = dcatools.build_cst_info_from_dca_contacts(dca, sequence=sim.config["sequence"], mapping_mode=arg[1] if arg[1] else "allAtomWesthof", cst_function=arg[2] if arg[2] else "FADE -100 26 20 -2 2", number_dca_predictions=int(arg[3]) if arg[3] else 100, quiet=True)
+                else:
+                    title = splitext(basename(arg))[0]
+                    print "  Reading cst file directly."
+                    cst_info = sim.parse_cst_file(sim.parse_cst_name_and_filename(arg)[1])
 
         dists = []
         if dca_mode:
