@@ -12,20 +12,20 @@ Multiple filters may be chained by separating them with `,`.
 
 The following filters are implemented:
 
- ## `none`
+## `none`
 
- The `none` filter works as a dummy filter and does nothing. It takes no
- options.
+The `none` filter works as a dummy filter and does nothing. It takes no
+options.
 
- ## `threshold`
+## `threshold`
 
- The `threshold` filter looks up DCA contacts in a target PDB file,
- calculates their distances, and discards or includes them depending on
- the threshold setting.
+The `threshold` filter looks up DCA contacts in a target PDB file,
+calculates their distances, and discards or includes them depending on
+the threshold setting.
 
- The syntax is the following:
+The syntax is the following:
 
-     threshold:<n>:<cst>:<mode>:<moodel>
+    threshold:<n>:<cst>:<mode>:<moodel>
 
 Arguments:
 
@@ -33,7 +33,7 @@ Arguments:
 - `cst`: prediction / constraints selection to look up PDB file
 - `mode`, `model`: model selection mode (see [README.md](../README.md) for details)
 
-Example 1:
+Example:
 
     threshold:8.0:100dca_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100dca_FADE_-100_26_20_-2_2:cluster:1
 
