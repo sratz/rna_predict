@@ -1,0 +1,30 @@
+From 4defc1947cbaefb2cf2d22381087000967d43b3d Mon Sep 17 00:00:00 2001
+From: Sebastian Ratz <sebastian.ratz@student.kit.edu>
+Date: Wed, 21 Jan 2015 15:15:24 +0100
+Subject: [PATCH 6/6] rna_cluster / StepWiseLegacyClustererSilentBased: add
+ output for parsing
+
+---
+ .../stepwise/modeler/align/StepWiseLegacyClustererSilentBased.cc        | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/main/source/src/protocols/stepwise/modeler/align/StepWiseLegacyClustererSilentBased.cc b/main/source/src/protocols/stepwise/modeler/align/StepWiseLegacyClustererSilentBased.cc
+index 5832f8d..072dd2f 100644
+--- a/main/source/src/protocols/stepwise/modeler/align/StepWiseLegacyClustererSilentBased.cc
++++ b/main/source/src/protocols/stepwise/modeler/align/StepWiseLegacyClustererSilentBased.cc
+@@ -236,10 +236,12 @@ namespace align {
+ 				silent_struct_output_list_.push_back(  silent_struct  );
+ 				num_pose_in_cluster_.push_back( 1 );
+ 				TR.Debug << " ... added. " << std::endl;
++				TR.Info << "RNA_PREDICT new cluster " << pose_output_list_.size() << " score " << score << " model " << tag << std::endl;
+ 				if ( pose_output_list_.size() >= max_decoys_ ) break;
+ 			} else{
+ 				num_pose_in_cluster_[ found_close_cluster ]++;
+ 				TR.Debug << " ... not added. " << std::endl;
++				TR.Info << "RNA_PREDICT old cluster " << found_close_cluster << " score " << score << " model " << tag << std::endl;
+ 			}
+ 		}
+ 
+-- 
+2.3.7
+
