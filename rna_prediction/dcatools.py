@@ -418,7 +418,7 @@ class DcaContact(object):
 
         try:
             if function[0] == "FADE":
-                parse_function(function, [(1, int), (2, int), (3, int), (4, int), (5, int)])  # TODO: make this float?
+                parse_function(function, [(1, int), (2, int), (3, int), (4, float), (5, float)])  # TODO: make all of these floats?
                 return [function[0], function[1], function[2], function[3], function[4] * self.weight, function[5] * self.weight]
             else:
                 raise DcaException("Invalid Rosetta function: '%s' is not implemented! Only 'FADE' function is recognized at this time." % function[0])
