@@ -39,4 +39,4 @@ everything work:
     export ROSETTA3_DB=/path/to/rosetta_database
     export RNA_TOOLS=/path/to/rosetta_tools/rna_tools
     export PYTHONPATH=$PYTHONPATH:$RNA_TOOLS/bin/
-    export PATH=$PATH:/path/to/rosetta_source/bin:$ROSETTA_TOOLS/bin
+    export PATH=$PATH:/path/to/rosetta_source/bin:$RNA_TOOLS/bin
