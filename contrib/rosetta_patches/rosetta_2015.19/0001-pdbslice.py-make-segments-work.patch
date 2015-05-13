@@ -1,0 +1,28 @@
+From 8c157827e65d90b32c0f0d2b9d43a817555d616a Mon Sep 17 00:00:00 2001
+From: Sebastian Ratz <sebastian.ratz@student.kit.edu>
+Date: Mon, 29 Sep 2014 17:00:18 +0200
+Subject: [PATCH 1/6] pdbslice.py: make -segments work
+
+---
+ tools/rna_tools/pdb_util/pdbslice.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/tools/rna_tools/pdb_util/pdbslice.py b/tools/rna_tools/pdb_util/pdbslice.py
+index 6d0a6df..96ac5ea 100755
+--- a/tools/rna_tools/pdb_util/pdbslice.py
++++ b/tools/rna_tools/pdb_util/pdbslice.py
+@@ -12,9 +12,11 @@ segment_residues = parse_options( argv, "segment", [-1] )
+ if len( segment_residues ) > 0:
+     assert( len( subset_residues ) == 0 )
+     assert( 2 * (len(segment_residues)/2) == len(segment_residues ) ) # check even
++    subset_chains = []
+     for i in range( len(segment_residues)/2):
+         for j in range( segment_residues[2*i], segment_residues[2*i+1]+1 ):
+             subset_residues.append( j )
++            subset_chains.append( '' )
+ 
+ [excise_residues, excise_chains] = parse_options( argv, "excise", [[0],['A']] )
+ use_subset = ( len( subset_residues ) > 0 )
+-- 
+2.4.0
+

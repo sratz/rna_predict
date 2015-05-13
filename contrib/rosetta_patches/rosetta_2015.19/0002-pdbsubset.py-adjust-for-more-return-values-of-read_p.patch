@@ -1,0 +1,25 @@
+From 67864d68d383aa89dc737462364be88b59739364 Mon Sep 17 00:00:00 2001
+From: Sebastian Ratz <sebastian.ratz@student.kit.edu>
+Date: Mon, 29 Sep 2014 17:05:22 +0200
+Subject: [PATCH 2/6] pdbsubset.py: adjust for more return values of read_pdb()
+
+---
+ tools/rna_tools/pdb_util/pdbsubset.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/rna_tools/pdb_util/pdbsubset.py b/tools/rna_tools/pdb_util/pdbsubset.py
+index f22a092..c803591 100755
+--- a/tools/rna_tools/pdb_util/pdbsubset.py
++++ b/tools/rna_tools/pdb_util/pdbsubset.py
+@@ -82,7 +82,7 @@ def get_pdb_line( lines_out, pdb_lines, resnum_desired, chain_desired ):
+ 
+ 
+ for pdbfile in pdbfiles:
+-    [ coords, pdb_lines, sequence ] = read_pdb( pdbfile )
++    [ coords, pdb_lines, sequence, _, _ ] = read_pdb( pdbfile )
+ 
+     lines_out = []
+     for i in range( len( resnums ) ):
+-- 
+2.4.0
+

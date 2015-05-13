@@ -1,0 +1,34 @@
+From 9cfefb5738f990f2f1636570e5d04929774641e9 Mon Sep 17 00:00:00 2001
+From: Sebastian Ratz <sebastian.ratz@student.kit.edu>
+Date: Thu, 9 Oct 2014 15:15:13 +0200
+Subject: [PATCH 5/6] make_rna_rosetta_ready: include mapping for GDP
+
+---
+ tools/rna_tools/job_setup/rna_server_conversions.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/tools/rna_tools/job_setup/rna_server_conversions.py b/tools/rna_tools/job_setup/rna_server_conversions.py
+index 4bd827d..e9a29f8 100644
+--- a/tools/rna_tools/job_setup/rna_server_conversions.py
++++ b/tools/rna_tools/job_setup/rna_server_conversions.py
+@@ -272,7 +272,7 @@ def make_rna_rosetta_ready( pdb, removechain=False, ignore_chain=True, chainids
+             chainids[i] = ' '
+ 
+     goodnames = ['  A','  C','  G','  U',' rA',' rC',' rG',' rU',' MG', ' IC',' IG']
+-    hetatm_map = { '5BU':'  U', ' MG':' MG', 'OMC':'  C', '5MC':'  C', 'CCC':'  C', ' DC':'  C', 'CBR':'  C', 'CBV':'  C', 'CB2':'  C', '2MG':'  G', 'H2U':'  U', 'PSU':'  U', '5MU':'  U', 'OMG':'  G', '7MG':'  G', '1MG':'  G', 'GTP':'  G', 'AMP':'  A', ' YG':'  G', '1MA':'  A', 'M2G':'  G', 'YYG':'  G', ' DG':'  G', 'G46':'  G', ' IC':' IC',' IG':' IG' }
++    hetatm_map = { '5BU':'  U', ' MG':' MG', 'OMC':'  C', '5MC':'  C', 'CCC':'  C', ' DC':'  C', 'CBR':'  C', 'CBV':'  C', 'CB2':'  C', '2MG':'  G', 'H2U':'  U', 'PSU':'  U', '5MU':'  U', 'OMG':'  G', '7MG':'  G', '1MG':'  G', 'GDP':'  G', 'GTP':'  G', 'AMP':'  A', ' YG':'  G', '1MA':'  A', 'M2G':'  G', 'YYG':'  G', ' DG':'  G', 'G46':'  G', ' IC':' IC',' IG':' IG' }
+ 
+ 
+     if removeions:  goodnames.remove(' MG')
+@@ -309,6 +309,8 @@ def make_rna_rosetta_ready( pdb, removechain=False, ignore_chain=True, chainids
+                     longname = line_edit[17:20]
+                     if longname == 'GTP':
+                         longname = '  G'
++                    elif longname == 'GDP':
++                        longname =   '  G'
+                     elif longname == 'G  ':
+                         longname =   '  G'
+                     elif longname == ' DG':
+-- 
+2.4.0
+

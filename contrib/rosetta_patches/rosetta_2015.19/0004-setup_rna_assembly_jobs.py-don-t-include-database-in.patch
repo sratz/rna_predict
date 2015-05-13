@@ -1,0 +1,48 @@
+From 62dcdd733bc81f9de96df4c6ada8a41dfdc54047 Mon Sep 17 00:00:00 2001
+From: Sebastian Ratz <sebastian.ratz@student.kit.edu>
+Date: Mon, 29 Sep 2014 17:14:19 +0200
+Subject: [PATCH 4/6] setup_rna_assembly_jobs.py: don't include -database in
+ calls, it breaks with symlinks
+
+---
+ demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py b/demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py
+index d0fb49f..0b7d696 100755
+--- a/demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py
++++ b/demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py
+@@ -343,7 +343,7 @@ for i in range( stem_count ):
+ 
+     outfile = 'stem%d_%s.out' % (i+1, fasta_file.replace('.fasta',''))
+     stem_out_files.append( outfile )
+-    command = '%s/rna_helix%s  -database  %s/../../rosetta_database/ -fasta %s -out:file:silent %s' % (EXE_DIR, EXE_extension, EXE_DIR, tag, outfile)
++    command = '%s/rna_helix%s -fasta %s -out:file:silent %s' % (EXE_DIR, EXE_extension, tag, outfile)
+     fid_README_STEMS.write(command+'\n')
+ 
+ #print
+@@ -490,8 +490,8 @@ for i in range( motif_count ):
+     motif_out_file = motif_params_file.replace( '.params','.out')
+     motif_out_files.append( motif_out_file )
+     NSTRUCT = 100
+-    command = '%s/rna_denovo%s -database  %s/../../rosetta_database %s -fasta %s -params_file %s -nstruct %d -out:file:silent %s -cycles 5000 -mute all -close_loops -close_loops_after_each_move -minimize_rna' % \
+-        ( EXE_DIR, EXE_extension, EXE_DIR, native_tag, motif_fasta_file, motif_params_file, NSTRUCT, motif_out_file )
++    command = '%s/rna_denovo%s %s -fasta %s -params_file %s -nstruct %d -out:file:silent %s -cycles 5000 -mute all -close_loops -close_loops_after_each_move -minimize_rna' % \
++        ( EXE_DIR, EXE_extension, native_tag, motif_fasta_file, motif_params_file, NSTRUCT, motif_out_file )
+ 
+     if data_exists: command += ' -data_file %s ' % motif_data_file
+     if cst_exists and cst_found: command += ' -cst_file %s ' % motif_cst_file
+@@ -588,8 +588,8 @@ native_tag = ''
+ if native_exists: native_tag = '-native '+native_pdb_file
+ 
+ outfile = params_file.replace( '.params','.out' )
+-command = '%s/rna_denovo%s -database  %s/../../rosetta_database %s -fasta %s -in:file:silent_struct_type binary_rna  -cycles 10000 -nstruct 200 -out:file:silent %s -params_file %s -cst_file %s -close_loops  -in:file:silent ' % \
+-( EXE_DIR, EXE_extension, EXE_DIR, native_tag, fasta_file, outfile, params_file, assemble_cst_file )
++command = '%s/rna_denovo%s %s -fasta %s -in:file:silent_struct_type binary_rna  -cycles 10000 -nstruct 200 -out:file:silent %s -params_file %s -cst_file %s -close_loops  -in:file:silent ' % \
++( EXE_DIR, EXE_extension, native_tag, fasta_file, outfile, params_file, assemble_cst_file )
+ 
+ for stem_out_file in stem_out_files:
+     command += ' '+stem_out_file
+-- 
+2.4.0
+

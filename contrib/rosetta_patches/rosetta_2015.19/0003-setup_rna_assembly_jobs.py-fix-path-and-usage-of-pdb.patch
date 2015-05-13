@@ -1,0 +1,35 @@
+From 0064c6e47581f89b76dc4ddfcf63590966805ad2 Mon Sep 17 00:00:00 2001
+From: Sebastian Ratz <sebastian.ratz@student.kit.edu>
+Date: Mon, 29 Sep 2014 17:13:49 +0200
+Subject: [PATCH 3/6] setup_rna_assembly_jobs.py: fix path and usage of
+ pdbslice.py
+
+---
+ demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py b/demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py
+index c7d9d2a..d0fb49f 100755
+--- a/demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py
++++ b/demos/public/RNA_Assembly/scripts/setup_rna_assembly_jobs.py
+@@ -18,7 +18,7 @@ EXE_DIR =  scripts_path +'/../../../../rosetta_source/bin/'
+ EXE_DIR = abspath( EXE_DIR )
+ 
+ # for pdbslice.py
+-tools_scripts_path = abspath( dirname( abspath( argv[0] ) ) + '/../../../../rosetta_tools/rna/' )
++tools_scripts_path = abspath( dirname( abspath( argv[0] ) ) + '/../../../../rosetta_tools/rna_tools/bin/' )
+ 
+ if not exists( EXE_DIR ):
+     print 'Need to set EXE_DIR in '+argv[0]+' to match an existing directory'
+@@ -330,7 +330,7 @@ for i in range( stem_count ):
+ 
+     # pdb_file
+     if native_exists:
+-        command = 'python %s/pdbslice.py  %s -segments %d %d %d %d stem%d_' %( \
++        command = 'python %s/pdbslice.py  %s -segment %d %d %d %d stem%d_' %( \
+             tools_scripts_path,
+             native_pdb_file,
+             stem_res[0][0]+1,
+-- 
+2.4.0
+
