@@ -313,6 +313,21 @@ class EvalData(object):
             print "Model: %s" % model["tag"]
             pprint.pprint(model)
 
+    @staticmethod
+    def get_weighted_model_score(model, score_weights):
+        """
+        Calculate a model score based on different weights for the invidiual Rosetta scores
+
+        :param model: model to reweight
+        :param score_weights: dict of rosetta score names and their weights. "default" to set the default weight for all scores. Example: {'default':0, 'atom_pair_constraint': 1} to only use atom pair constraints.
+        """
+        score = 0
+        for i in model["rosetta_scores"].keys():
+            if i == "description":
+                continue
+            score += (score_weights[i] if i in score_weights else (score_weights["default"] if "default" in score_weights else 1)) * model["rosetta_scores"][i]
+        return score
+
 
 class RNAPrediction(object):
     """
