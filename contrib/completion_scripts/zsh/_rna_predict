@@ -157,7 +157,7 @@ _rna_predict-tools-plot-constraint-quality() {
   _arguments -C -s -w \
     '--dca-mode[visualize residue-residue DCA instead of atom-atom constraints]' \
     ':comparison pdb:_files -g "*.pdb"' \
-    ':: :->source' && ret=0
+    '*: :->source' && ret=0
 
   case "$state" in
     (source)
@@ -176,7 +176,7 @@ _rna_predict-tools-plot-constraint-quality() {
 _rna_predict-tools-plot-dca-contacts-in-pdb() {
   _arguments -s -w \
     ':dca file:_files' \
-    '::pdb file:_files -g "*.pdb"'
+    '*:pdb file:_files -g "*.pdb"'
 }
 
 _rna_predict-tools-plot-clusters() {
@@ -188,13 +188,13 @@ _rna_predict-tools-plot-clusters() {
 _rna_predict-tools-plot-pdb-comparison() {
   _arguments -s -w \
     ':reference pdb:_files -g "*.pdb"' \
-    '::comparison pdb:_files -g "*.pdb"'
+    '*:comparison pdb:_files -g "*.pdb"'
 }
 
 _rna_predict-tools-plot-gdt() {
   _arguments -s -w \
     ':reference pdb:_files -g "*.pdb"' \
-    '::comparison pdb:_files -g "*.pdb"'
+    '*:comparison pdb:_files -g "*.pdb"'
 }
 
 
