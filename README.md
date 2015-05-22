@@ -368,8 +368,20 @@ Plot generation and other tools can be accessed using
 Plot score over native RMSD.
 
     rna_predict tools plot-clusters \
+        --score-weights <score:weight,score:weight,...> \
         --max-models <max> \
         cst
+
+The `--score-weights` options allows to calculate a different total model score
+using the individual Rosetta scores. The score name "default" can be given to
+set a default value for all other, non-specified scores.
+
+For example, to only visualize the score of additional constraints, use:
+
+    --score-weights default:0,atom_pair_constraint:1
+
+For a list of score names, refer to the Rosetta documentation or use the
+`print-models` command.
 
 The `--max-models` option limits the number of models either by specifying a
 number (> 1) or a fraction (<= 1.0).
