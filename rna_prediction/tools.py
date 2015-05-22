@@ -135,6 +135,8 @@ def plot_constraint_quality(comparison_pdb, sources, dca_mode=False):
                 if j > 100:
                     break
                 average_heavy, minimum_heavy, minimum_pair = dcatools.get_contact_information_in_pdb_chain(d, chain)
+                if minimum_pair is None:
+                    continue
                 dists.append(minimum_heavy)
         else:
             for cst in cst_info:
@@ -186,6 +188,9 @@ def plot_dca_contacts_in_pdb(dca_prediction_filename, pdb_files):
         for i in xrange(0, len(chains)):
 
             average_heavy, minimum_heavy, minimum_pair = dcatools.get_contact_information_in_pdb_chain(d, chains[i]["chain"])
+            if minimum_pair is None:
+                print "        %-70s  not found, ignoring..." % chains[i]["name"]
+                continue
             averages[i][j] = average_heavy
             minimums[i][j] = minimum_heavy
             print "        %-70s  avg: %.05f   min: %-3s  %-3s %f" % (chains[i]["name"], average_heavy, minimum_pair[0].name, minimum_pair[1].name, minimum_heavy)

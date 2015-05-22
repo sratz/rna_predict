@@ -285,9 +285,12 @@ def get_contact_information_in_pdb_chain(dca_contact, pdb_chain):
 
     :param dca_contact: DcaContact object
     :param pdb_chain: PDB chain structure object
-    :return: tuple (average_dist, minimum_dist, minimum_pair)
+    :return: tuple (average_dist, minimum_dist, minimum_pair). In case the contact cannot be found in the PDB file (0, 0, None) is returned.
     """
-    res1, res2 = (pdb_chain[dca_contact.res1], pdb_chain[dca_contact.res2])
+    try:
+        res1, res2 = (pdb_chain[dca_contact.res1], pdb_chain[dca_contact.res2])
+    except KeyError:
+        return 0, 0, None
     # calculate average distance
     average_heavy = np.linalg.norm(pdbtools.get_center_of_res(res1) - pdbtools.get_center_of_res(res2))
 
@@ -483,6 +486,12 @@ class DcaFilterThreshold(DcaFilter):
 
         # get contact information
         average_heavy, minimum_heavy, minimum_pair = get_contact_information_in_pdb_chain(contact, self.pdb_chain)
+
+        # skip if not found
+        if minimum_pair is None:
+            contact.use_contact = False
+            print "%s: not found --> skip"
+            return
 
         # which distance should be used?
         if self.mode == "average_heavy":
