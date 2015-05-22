@@ -383,8 +383,8 @@ For example, to only visualize the score of additional constraints, use:
 For a list of score names, refer to the Rosetta documentation or use the
 `print-models` command.
 
-The `--max-models` option limits the number of models either by specifying a
-number (> 1) or a fraction (<= 1.0).
+The `--max-models` option limits the number of models by either specifying a
+number (greater than 1) or a fraction (smaller than or equal to 1.0).
 
 
 #### plot-constraint-quality
