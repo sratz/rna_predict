@@ -4,6 +4,7 @@
 import argparse
 from argparse import ArgumentParser
 from argparse import HelpFormatter
+import functools
 import os
 import sys
 
@@ -36,6 +37,12 @@ def main():
     def comma_separated_ranges_to_list_parser(s):
         try:
             return utils.comma_separated_ranges_to_list(s)
+        except ValueError as ve:
+            raise argparse.ArgumentTypeError(ve.message)
+
+    def comma_separated_entries_to_dict_parser(s, type_key, type_value):
+        try:
+            return utils.comma_separated_entries_to_dict(s, type_key, type_value)
         except ValueError as ve:
             raise argparse.ArgumentTypeError(ve.message)
 
@@ -128,6 +135,7 @@ def main():
 
     parser_tools_plot_clusters.add_argument("cst", help="constraint selection")
     parser_tools_plot_clusters.add_argument("--max-models", dest="max_models", help="limit to number of models if > 1, or relative percentage if <= 1 [default: %(default)s]", type=float, default=0.99)
+    parser_tools_plot_clusters.add_argument("--score-weights", dest="score_weights", help="alternative rosetta score weighting [default: %(default)s]", type=functools.partial(comma_separated_entries_to_dict_parser, type_key=str, type_value=float), default=None)
 
     parser_tools_plot_pdb_comparison.add_argument("ref_pdb", metavar="ref-pdb", help="reference PDB filename")
     parser_tools_plot_pdb_comparison.add_argument("sample_pdbs", metavar="sample-pdbs", help="list of sample PDB filenames", nargs="+")
@@ -161,7 +169,7 @@ def main():
             elif args.subcommand_tool == "plot-dca-contacts-in-pdb":
                 tools.plot_dca_contacts_in_pdb(dca_prediction_filename=args.dca_file, pdb_files=args.pdb_files)
             elif args.subcommand_tool == "plot-clusters":
-                tools.plot_clusters(cst=args.cst, max_models=args.max_models)
+                tools.plot_clusters(cst=args.cst, max_models=args.max_models, score_weights=args.score_weights)
             elif args.subcommand_tool == "plot-pdb-comparison":
                 tools.plot_pdb_comparison(pdb_ref_filename=args.ref_pdb, pdbs_sample_filenames=args.sample_pdbs)
             elif args.subcommand_tool == "plot-gdt":

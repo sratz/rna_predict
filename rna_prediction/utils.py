@@ -60,3 +60,7 @@ def comma_separated_ranges_to_list(s):
                 raise ValueError("Invalid range: %s" % r)
             l += [x for x in xrange(start, end + 1)]
     return l
+
+
+def comma_separated_entries_to_dict(s, type_key, type_value):
+    return {type_key(k): type_value(v) for k, v in map(lambda x: x.split(":"), s.split(","))}

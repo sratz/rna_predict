@@ -211,12 +211,13 @@ def plot_dca_contacts_in_pdb(dca_prediction_filename, pdb_files):
     plt.show()
 
 
-def plot_clusters(cst, max_models=0.99):
+def plot_clusters(cst, max_models=0.99, score_weights=None):
     """
     Plot score over native rmsd.
 
     :param cst: constraints
     :param max_models: limit to number of models if > 1, or relative percentage if <= 1
+    :param score_weights: see EvalData.get_weighted_model_score
     """
     sim = RNAPrediction(SysConfig())
     cst_name, cst_file = sim.parse_cst_name_and_filename(cst)
@@ -269,7 +270,7 @@ def plot_clusters(cst, max_models=0.99):
     for i in range(0, n_clusters + 1):
         color = "w" if i == 0 else colors[(i - 1) % len(colors)]
         shape = "o" if i == 0 else shapes[((i - 1) / len(colors)) % len(shapes)]
-        plots.append(plt.scatter([x[comparison] for x in models_c[i]], [x["score"] for x in models_c[i]], s=35, c=color, marker=shape, picker=True))
+        plots.append(plt.scatter([x[comparison] for x in models_c[i]], [x["score"] if score_weights is None else EvalData.get_weighted_model_score(x, score_weights) for x in models_c[i]], s=35, c=color, marker=shape, picker=True))
 
     fig.canvas.mpl_connect('pick_event', pick_event)
     plt.title("model clusters %s, constraints: %s" % (sim.config["name"], cst_name))
