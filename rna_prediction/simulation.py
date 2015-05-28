@@ -4,7 +4,10 @@ import glob
 import numpy as np
 import os
 from os.path import splitext, basename, abspath
-import pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import pprint
 import re
 import shutil

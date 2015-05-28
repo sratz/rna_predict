@@ -2,7 +2,10 @@
 
 import os
 from pkg_resources import ResourceManager
-import pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import numpy as np
 import re
 
