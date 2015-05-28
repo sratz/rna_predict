@@ -1601,8 +1601,8 @@ class RNAPrediction(object):
         print self.config["name"]
 
         # noinspection PyShadowingNames
-        def print_comparison_line(cst_name, comparisons):
-            print "  %-035s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2])
+        def print_comparison_line(cst_name, comparisons, num):
+            print "  %-035s %05s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2], num)
 
         # loop over all different constraint sets
         # that is either files in the "constraints" directory, or directories under "predictions", and always "none"
@@ -1618,7 +1618,7 @@ class RNAPrediction(object):
             except SimulationException:
                 skip = True
             if skip:
-                print_comparison_line(cst_name, ["-", "-", "-"])
+                print_comparison_line(cst_name, ["-", "-", "-"], "-")
                 continue
             comparisons = []
             for c in (1, 5, 10):
@@ -1632,7 +1632,7 @@ class RNAPrediction(object):
                     if rmsd < min_rmsd:
                         min_rmsd = rmsd
                 comparisons.append("%.2f" % min_rmsd)
-            print_comparison_line(cst_name, comparisons)
+            print_comparison_line(cst_name, comparisons, eval_data.get_model_count())
 
     # returns the path to the extracted pdb file
     def extract_pdb(self, constraints, model):
