@@ -63,6 +63,22 @@ def delete_glob(pattern, print_notice=True):
             pass
 
 
+def get_model_count_in_silent_file(silent_file):
+    """
+    Returns the number of models present in a Rosetta silent file.
+    :param silent_file: filename
+    :return: model count
+    """
+    n = 0
+    with open(silent_file, "r") as t:
+        pattern_model = re.compile("^SCORE:\s+[0-9.-]+.*")
+        for line in t:
+            if pattern_model.match(line):
+                n += 1
+
+    return n
+
+
 def merge_silent_files(target, sources):
     """
     Merges rosetta silent files (.out).
@@ -73,23 +89,15 @@ def merge_silent_files(target, sources):
 
     :param target: target filename
     :param sources: source filenames
+    :return: model count
     """
-    n = 0
-    pattern_header = re.compile("^(?:SEQUENCE:|SCORE:\s+score).*")
-    pattern_normal = re.compile("^(.*)S_\d+$")
-    # if target already exists, see how many structures we have already
-    if os.path.isfile(target):
-        with open(target, "r") as t:
-            line = None
-            for line in t:
-                pass
-            if line is not None and 'line' in locals():
-                m = re.match(".*S_(\d+)$",  line)
-                if m:
-                    n = int(m.group(1))
+    # see how many structures we have already
+    n = get_model_count_in_silent_file(target) if os.path.isfile(target) else 0
 
     # loop through all source files and append all new structures to target
     # while adjusting the numbering
+    pattern_header = re.compile("^(?:SEQUENCE:|SCORE:\s+score).*")
+    pattern_normal = re.compile("^(.*)S_\d+$")
     for source in glob.glob(sources):
         print "merging %s into %s" % (source, target)
         with open(target, "a+") as t:
