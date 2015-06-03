@@ -1091,7 +1091,7 @@ class RNAPrediction(object):
                 fid_cst.close()
                 print 'Created: ', motif_cst_file
 
-    def get_status(self, constraints=None, include_evaluation_data=False):
+    def get_status(self, constraints=None, include_evaluation_data=False, include_motif_model_count=False, include_assembly_model_count=False):
         """
         Returns a dict containing status information for a cst.
         :param constraints: constraints selection
@@ -1129,6 +1129,14 @@ class RNAPrediction(object):
                     res["evaluation_rmsd_native"] = [m["rmsd_native"] for m in eval_data.get_models(["1/1", "1/5", "1/10"], kind="cluster_ntop")]
             except SimulationException:
                 pass
+
+        # motif model count
+        if include_motif_model_count:
+            res["model_count_motifs"] = {i: sum(map(get_model_count_in_silent_file, glob.glob("%s/motif%d*.out" % (dir_motifs, i)))) for i in xrange(1, len(self.config["motifs"]) + 1)}
+
+        # assembly model count
+        if include_assembly_model_count:
+            res["model_count_assembly"] = sum(map(get_model_count_in_silent_file, (glob.glob("%s/assembly_*.out" % dir_assembly))))
 
         return res
 
