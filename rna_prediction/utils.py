@@ -38,7 +38,7 @@ def comma_separated_ranges_to_list(s):
     Parses a string containing comma separated ranges to a list.
 
     Example:
-    Turns "1-3,10,20-22" into [1, 2, 3, 10, 20, 21, 22]
+    Turns ``1-3,10,20-22`` into ``[1, 2, 3, 10, 20, 21, 22]``
 
     :param s: comma separated ranges
     :return: list of ints
@@ -63,4 +63,15 @@ def comma_separated_ranges_to_list(s):
 
 
 def comma_separated_entries_to_dict(s, type_key, type_value):
+    """
+    Parses a string containing comma separated key-value paris (colon-separated) into a dict with fixed key and value types.
+
+    Example:
+    Turns ``foo:3,bar:4`` into ``{"foo": 3, "bar": 4}``
+
+    :param s: input string
+    :param type_key: type of the keys
+    :param type_value: type of the values
+    :return: dict
+    """
     return {type_key(k): type_value(v) for k, v in map(lambda x: x.split(":"), s.split(","))}

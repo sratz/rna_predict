@@ -66,6 +66,7 @@ def delete_glob(pattern, print_notice=True):
 def get_model_count_in_silent_file(silent_file):
     """
     Returns the number of models present in a Rosetta silent file.
+
     :param silent_file: filename
     :return: model count
     """
@@ -133,6 +134,7 @@ def natural_sort_key(s, _nsre=re.compile('([0-9]+)')):
 def fix_atom_names_in_cst(cst_info, sequence):
     """
     Switches N1 and N3 atom names in a residue.
+
     :param cst_info: list of constraints
     :param sequence: residue sequence in lower case
     :return: modified list of constraints
@@ -175,7 +177,7 @@ class Command(object):
         Create a new command wrapper.
 
         :param command: list of external command and parameters
-        :param add_suffix: type of suffix to first entry in command. currently only None or "rosetta" are supported
+        :param add_suffix: type of suffix to first entry in command. currently only ``None`` or ``rosetta`` are supported
         :param dry_run: don't actually execute anything
         :param print_commands: print commandline when running
         :param stdin: optional text to use as standard input
@@ -193,6 +195,7 @@ class Command(object):
         If necessary, add the suffix to the command. Depending on user / system configuration.
 
         :param sysconfig: instance of SysConfig
+        :return: suffixed command as a list
         """
         com = self.command[:]
         if self.add_suffix == "rosetta":
@@ -207,6 +210,9 @@ class EvalData(object):
     Evaluation data storing model and cluster information.
     """
     def __init__(self):
+        """
+        Create empty EvalData object.
+        """
         self.models = {}
         self.clusters = {}
         self.cluster_cutoff = 0.0
@@ -216,7 +222,7 @@ class EvalData(object):
         """
         Load evaluation data from a prediction.
 
-        :param constraints: name of a prediction
+        :param constraints: constraints selection
         """
         cst_name, cst_file = RNAPrediction.parse_cst_name_and_filename(constraints)
         return EvalData.load_from_file("predictions/%s/output/evaldata.dat" % cst_name)
@@ -258,12 +264,15 @@ class EvalData(object):
     def get_models(self, model_list, kind="tag"):
         """Returns a selection of models with specific properties
 
-        :param model_list: list of models to get. might a list of numbers, or a list of model names
-        :param kind: model selection mode: "tag": string: internal name such as S_000123_5
-                                           "top": number: models ordered by score
-                                           "ntop": number: models ordered by rmsd_native
-                                           "cluster": number: nth cluster decoy
-                                           "cluster_ntop": n[/m]: nth cluster ordered by native rmsd [of first m]
+        :param model_list: list of models to get, might be a list of numbers, or a list of model names
+        :param kind: model selection mode:
+
+            - ``tag``: str: internal name such as S_000123_5
+            - ``top``: int: models ordered by score
+            - ``ntop``: int: models ordered by rmsd_native
+            - ``cluster``: int: nth cluster decoy
+            - ``cluster_ntop``: n[/m]: nth cluster ordered by native rmsd [of first m]
+
         :return: list of selected models
         """
         # initialize list
@@ -330,7 +339,7 @@ class EvalData(object):
         Calculate a model score based on different weights for the invidiual Rosetta scores
 
         :param model: model to reweight
-        :param score_weights: dict of rosetta score names and their weights. "default" to set the default weight for all scores. Example: {'default':0, 'atom_pair_constraint': 1} to only use atom pair constraints.
+        :param score_weights: dict of rosetta score names and their weights. ``default`` to set the default weight for all scores. Example: ``{'default':0, 'atom_pair_constraint': 1}`` to only use atom pair constraints.
         """
         score = 0
         for i in model["rosetta_scores"].keys():
@@ -402,7 +411,7 @@ class RNAPrediction(object):
         Execute an external command.
 
         :param command: list of external command and parameters
-        :param add_suffix: type of suffix to first entry in command. currently only None or "rosetta" are supported
+        :param add_suffix: type of suffix to first entry in command. currently only ``None`` or ``rosetta`` are supported
         :param dry_run: don't actually execute anything
         :param print_commands: print commandline when running
         :param stdin: optional text to use as standard input
@@ -415,7 +424,7 @@ class RNAPrediction(object):
         Execute an external command while capturing output.
 
         :param command: list of external command and parameters
-        :param add_suffix: type of suffix to first entry in command. currently only None or "rosetta" are supported
+        :param add_suffix: type of suffix to first entry in command. currently only ``None`` or ``rosetta`` are supported
         :param dry_run: don't actually execute anything
         :param print_commands: print commandline when running
         :param stdin: optional text to use as standard input
@@ -496,7 +505,7 @@ class RNAPrediction(object):
         """
         Transform a list of values into a list of strings while using "n-m" for adjacent values.
 
-        Example: [1, 2, 3, 5, 7, 8] -> ["1-3", "5", "7-8"]
+        Example: Turns ``[1, 2, 3, 5, 7, 8]`` into ``['1-3', '5', '7-8']``.
 
         :param int_vector: list of values
         :return: list of strings
@@ -522,6 +531,7 @@ class RNAPrediction(object):
     def get_csts(self):
         """
         Returns a list of all constraints.
+
         :return: list of all constraints names
         """
         # loop over all constraint sets
@@ -1094,6 +1104,7 @@ class RNAPrediction(object):
     def get_status(self, constraints=None, include_evaluation_data=False, include_motif_model_count=False, include_assembly_model_count=False):
         """
         Returns a dict containing status information for a cst.
+
         :param constraints: constraints selection
         :param include_motif_model_count: set to True to include model count (longer processing time)
         :param include_assembly_model_count: set to True to include model count (longer processing time)
@@ -1386,7 +1397,6 @@ class RNAPrediction(object):
         :param cluster_limit: maximum number of clusters to produce
         :param cluster_cutoff: rmsd distance in A at which a new cluster is created
         :param full_evaluation: discard existing evaluation data, re-extract model information and re-calculate rmsd values.
-        :return:
         """
         self.check_config()
         cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
@@ -1670,6 +1680,7 @@ class RNAPrediction(object):
     def extract_pdb(self, constraints, model):
         """
         Extract PDB file of a model to the tmp directory.
+
         :param constraints: constraints selection
         :param model: tag of the model
         :return: path to the extracted PDB file
@@ -1757,17 +1768,24 @@ class RNAPrediction(object):
         Parse a text string and turn it tinto a list of DCA filters
 
         Multiple filters are separated by command and have the folling format:
-        Format: <filter>:<arg>:<arg>:...
 
-        Threshold filter: Lookup dca contacts in a PDB file, discard or keep contact depending on whether the contact is realized.
-        Format: threshold:<n>:<cst>:<mode>:<moodel>
-          n: threshold (< 0: keep below, > 0: keep above)
-          cst: constraints selection to look up PDB file
-          mode, model: model selection mode (see EvalData.get_models for details)
-        Example: threshold:8.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1
+        ``<filter>:<arg>:<arg>:...``
+
+
+        Threshold filter: Lookup dca contacts in a PDB file, discard or keep contact depending on whether the contact is realized:
+
+        Format: ``threshold:<n>:<cst>:<mode>:<moodel>``
+
+        - n: threshold (< 0: keep below, > 0: keep above)
+        - cst: constraints selection to look up PDB file
+        - mode, model: model selection mode (see EvalData.get_models for details)
+
+        Example: ``threshold:8.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1``
+
 
         None filter: Empty filter
-        Format: none
+
+        Format: ``none``
 
         :param line: string to parse
         :return: list of DcaFilter objects
@@ -1805,7 +1823,7 @@ class RNAPrediction(object):
         :param number_dca_predictions: maximum number of DCA predictions to use
         :param cst_function: rosetta function and parameters as text string
         :param filter_text: optional: List of DCA filters (see parse_dca_filter_string for details)
-        :param mapping_mode: atom-to-atom mapping mode to use, supported values: "allAtomWesthof" or "pOnly"
+        :param mapping_mode: atom-to-atom mapping mode to use, supported values: ``allAtomWesthof`` or ``pOnly``
         """
         self.check_config()
         output_filename = self._create_constraints_output_filename(dca_prediction_filename, output_filename, cst_function, number_dca_predictions, "%d%n_%f")
@@ -1840,6 +1858,7 @@ class RNAPrediction(object):
     def edit_constraints(self, constraints, output_filename=None, cst_function="FADE -100 26 20 -2 2"):
         """
         Edit an existing .cst file, replacing the rosetta function.
+
         :param constraints: constraints selection
         :param output_filename: fixed output filename or None to automatically create
         :param cst_function: rosetta function and parameters as text string
@@ -1866,20 +1885,23 @@ class RNAPrediction(object):
         Print summary of predictions and their current status.
 
         Output format always contains the following columns:
-        P: preparation step
-        M: motif generation
-        A: assembly
-        E: evaluation
 
-        If a step is completed, "X" is shown, "-" otherwise.
-        For motif generation a "*" may be shown to indicate that models from a different
+        - P: preparation step
+        - M: motif generation
+        - A: assembly
+        - E: evaluation
+
+        If a step is completed, ``X`` is shown, ``-`` otherwise.
+
+        For motif generation a ``*`` may be shown to indicate that models from a different
         set of constraints are used.
 
-        If native_compare is set to True another 4 columns are printed:
-        1: native rmsd score of the first cluster
-        5: lowest native rmsd score of the first 5 clusters
-        10: lowest native rmsd score of the first 10 clusters
-        n: number of models
+        If *native_compare* is set to True another 4 columns are printed:
+
+        - 1: native rmsd score of the first cluster
+        - 5: lowest native rmsd score of the first 5 clusters
+        - 10: lowest native rmsd score of the first 10 clusters
+        - n: number of models
 
         :param native_compare: print rmsd comparison to native structure
         :param csts: list of constraints to include in output (default: all)

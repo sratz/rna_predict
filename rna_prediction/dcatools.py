@@ -40,6 +40,7 @@ def _get_atoms_backbone(term_phosphate=False):
 def get_atoms_for_res(res, term_phosphate=False):
     """
     Get list of atoms for residue.
+
     :param res: nucleotide (A,U,G,C)
     :param term_phosphate: add P atoms
     :return: list of atoms
@@ -58,6 +59,7 @@ def get_atoms_for_res(res, term_phosphate=False):
 def get_atoms_for_res_sequence(sequence):
     """
     Get list of atoms for a sequence of nucleotides
+
     :param sequence: sequence as text
     :return: list of atoms
     """
@@ -77,7 +79,7 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
     The contact distance map is cached it in the user directory and updated when newer files are found.
 
     :param structure_directory: directory to look up structure information text files
-    :param westhof_vector: list of factors to apply different weights to the bonding family classes (defaults to [1, 1, ... ])
+    :param westhof_vector: list of factors to apply different weights to the bonding family classes (defaults to ``[1, 1, ... ]``)
     :param force_rebuild: force rebuilding the distance map
     """
     # default: same weight for all families
@@ -194,6 +196,7 @@ def get_contact_distance_map(structure_directory=INFO_DIRECTORY, westhof_vector=
 def get_contact_distance_map_mean(distance_map, mean_cutoff=None, std_cutoff=None):
     """
     Return an average distance map containing only those contacts with average distance and standard deviation satisfiying a cutoff.
+
     :param distance_map: full distance map
     :param mean_cutoff: limit for average
     :param std_cutoff: limit for standard deviation
@@ -235,6 +238,7 @@ def read_pdb_mapping_from_file(dca_prediction_filename):
 def parse_dca_data(dca_prediction_filename):
     """
     Read a DCA file, adjust the sequence numbers to match the alignment of the PDB file, and create a list of DcaContacts
+
     :param dca_prediction_filename: DCA input filename
     :return: list of DcaContact objects
     """
@@ -282,13 +286,14 @@ def get_contact_information_in_pdb_chain(dca_contact, pdb_chain):
     Returns distance information about a DCA contact in a realized PDB chain
 
     Return value is a tuple of:
-      Average distance: Mean distance of all atoms in the contacts.
-      Minimum distance: Minimum distance between two atoms in the contact.
-      Minimum pair: List of [atom1, atom2] forming the minimal contact
+
+    - Average distance: Mean distance of all atoms in the contacts.
+    - Minimum distance: Minimum distance between two atoms in the contact.
+    - Minimum pair: List of ``[atom1, atom2]`` forming the minimal contact
 
     :param dca_contact: DcaContact object
     :param pdb_chain: PDB chain structure object
-    :return: tuple (average_dist, minimum_dist, minimum_pair). In case the contact cannot be found in the PDB file (0, 0, None) is returned.
+    :return: tuple ``(average_dist, minimum_dist, minimum_pair)``. In case the contact cannot be found in the PDB file ``(0, 0, None)`` is returned.
     """
     try:
         res1, res2 = (pdb_chain[dca_contact.res1], pdb_chain[dca_contact.res2])
@@ -391,6 +396,7 @@ class DcaContact(object):
     def __init__(self, res1, res2, use_contact=True, weight=1):
         """
         Create new DCA contact.
+
         :param res1: number of first residue (from 1)
         :param res2: number of second residue (from 1)
         :param use_contact: True or False if contact is to be used

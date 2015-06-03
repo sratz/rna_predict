@@ -8,7 +8,7 @@ from os.path import expanduser
 
 class SysConfig(object):
     """
-    Stores user and configuration
+    Stores user configuration
     """
     SYSCONFIG_LOCATION = expanduser("~/.rna_predict")
     SYSCONFIG_FILE = SYSCONFIG_LOCATION + os.sep + "sysconfig"
@@ -39,7 +39,7 @@ class SysConfig(object):
         """
         Check if all external programs are accessible.
 
-        :return: dict containing lists of failed ("fail") and successful ("success") programm accesses
+        :return: dict containing lists of failed (``fail``) and successful (``success``) programm accesses
         """
         def is_exe(fpath):
             return os.path.isfile(fpath) and os.access(fpath, os.X_OK)

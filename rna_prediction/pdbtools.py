@@ -40,6 +40,7 @@ def get_pdb_by_code(pdb_code, pdb_directory=PDB_DIRECTORY):
 def parse_pdb(pdb_code, pdb_file):
     """
     Parse PDB file using Biopyhon.
+
     :param pdb_code: internal id
     :param pdb_file: PDB filename
     :return: PDB structure object
@@ -52,6 +53,7 @@ def parse_pdb(pdb_code, pdb_file):
 def filter_atoms(atoms, heavy_only=False, p_only=False):
     """
     Filter list of atoms.
+
     :param atoms: list of atoms
     :param heavy_only: only keep heavy atoms
     :param p_only: only keep P atoms
@@ -70,6 +72,7 @@ def filter_atoms(atoms, heavy_only=False, p_only=False):
 def get_center_of_res(res):
     """
     Calculate the center of a residue.
+
     :param res: residue object
     :return: center coordinates
     """
