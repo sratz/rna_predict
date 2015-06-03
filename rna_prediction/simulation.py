@@ -510,6 +510,19 @@ class RNAPrediction(object):
 
         return tag
 
+    # noinspection PyMethodMayBeStatic
+    def get_csts(self):
+        """
+        Returns a list of all constraints.
+        :return: list of all constraints names
+        """
+        # loop over all constraint sets
+        # that is either files in the "constraints" directory, or directories under "predictions", and always "none"
+        cst_names = ["none"]
+        cst_names += [splitext(basename(cst_file))[0] for cst_file in glob.glob("constraints/*.cst")]
+        cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
+        return sorted(set(cst_names), key=natural_sort_key)
+
     def prepare(self, fasta_file="sequence.fasta", params_file="secstruct.txt", native_pdb_file=None, data_file=None, torsions_file=None, name=None):
         """
         Preparation step. Parse out stems and motifs from sequence and secondary structure information and create necessary base files.
@@ -1070,6 +1083,47 @@ class RNAPrediction(object):
                 fid_cst.close()
                 print 'Created: ', motif_cst_file
 
+    def get_status(self, constraints=None, include_evaluation_data=False):
+        """
+        Returns a dict containing status information for a cst.
+        :param constraints: constraints selection
+        :param include_motif_model_count: set to True to include model count (longer processing time)
+        :param include_assembly_model_count: set to True to include model count (longer processing time)
+        :param include_evaluation_data: set to True to include evaluation model count and native RMSD values (best of first 1,5,10 clusters) if available (longer processing time)
+        :return: status dict
+        """
+        self.check_config()
+        cst_name, cst_file = self.parse_cst_name_and_filename(constraints)
+        dir_prediction = "predictions/%s" % cst_name
+        dir_assembly = "predictions/%s/assembly" % cst_name
+        dir_motifs = "predictions/%s/motifs" % cst_name
+        dir_output = "predictions/%s/output" % cst_name
+        file_motifoverride = dir_prediction + "/MOTIF_OVERRIDE"
+        file_evaldata = "%s/evaldata.dat" % dir_output
+
+        res = {"step_preparation_done": os.path.isfile(dir_assembly + "/assembly.cst"),
+               "step_motifs_done": bool(glob.glob(dir_motifs + "/*.out")),
+               "step_motifs_overridden": None,
+               "step_assembly_done": bool(glob.glob(dir_assembly + "/*.out")),
+               "step_evaluation_done": os.path.isfile(file_evaldata)}
+        if os.path.isfile(file_motifoverride):
+            with open(file_motifoverride, "r") as f:
+                res["step_motifs_overridden"] = f.read().strip()
+
+        # evaluation data
+        if include_evaluation_data:
+            res["evaluation_rmsd_native"] = None
+            res["evaluation_model_count"] = None
+            try:
+                eval_data = EvalData.load_from_cst(cst_name)
+                res["evaluation_model_count"] = eval_data.get_model_count()
+                if "rmsd_native" in next(eval_data.models.itervalues()):
+                    res["evaluation_rmsd_native"] = [m["rmsd_native"] for m in eval_data.get_models(["1/1", "1/5", "1/10"], kind="cluster_ntop")]
+            except SimulationException:
+                pass
+
+        return res
+
     def create_motifs(self, nstruct=50000, cycles=20000, dry_run=False, seed=None, use_native_information=False, threads=1, constraints=None, motif_subset=None):
         """
         Motif generation step. Generate models for each motif.
@@ -1596,47 +1650,6 @@ class RNAPrediction(object):
 
         eval_data.save_to_file(file_evaldata)
 
-    def compare(self):
-        """Print table of native rmsd values for all predictions"""
-        self.check_config()
-        if self.config["native_pdb_file"] is None:
-            raise SimulationException("Cannot compare without native information.")
-        print self.config["name"]
-
-        # noinspection PyShadowingNames
-        def print_comparison_line(cst_name, comparisons, num):
-            print "  %-035s %05s %05s %05s %05s" % (cst_name, comparisons[0], comparisons[1], comparisons[2], num)
-
-        # loop over all different constraint sets
-        # that is either files in the "constraints" directory, or directories under "predictions", and always "none"
-        cst_names = ["none"]
-        cst_names += [splitext(basename(cst_file))[0] for cst_file in glob.glob("constraints/*.cst")]
-        cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
-        for cst_name in sorted(set(cst_names), key=natural_sort_key):
-            skip = False
-            try:
-                eval_data = EvalData.load_from_cst(cst_name)
-                if "rmsd_native" not in next(eval_data.models.itervalues()):
-                    skip = True
-            except SimulationException:
-                skip = True
-            if skip:
-                print_comparison_line(cst_name, ["-", "-", "-"], "-")
-                continue
-            comparisons = []
-            for c in (1, 5, 10):
-                if c > len(eval_data.clusters):
-                    comparisons.append("-")
-                    continue
-                min_rmsd = 999
-                for c2 in range(1, c + 1):
-                    model = eval_data.clusters[c2]["primary_model"]
-                    rmsd = eval_data.models[model]["rmsd_native"]
-                    if rmsd < min_rmsd:
-                        min_rmsd = rmsd
-                comparisons.append("%.2f" % min_rmsd)
-            print_comparison_line(cst_name, comparisons, eval_data.get_model_count())
-
     # returns the path to the extracted pdb file
     def extract_pdb(self, constraints, model):
         """
@@ -1832,58 +1845,58 @@ class RNAPrediction(object):
                 m = pattern.match(line)
                 output_fd.write("%s %s\n" % (m.group(1), cst_function))
 
-    def print_status(self):
+    def print_status(self, native_compare=False, csts=None):
         """
-        Print summary of all predictions and their current status.
+        Print summary of predictions and their current status.
 
-        Output format contains the columns P, M, A, and E
+        Output format always contains the following columns:
         P: preparation step
-        M: motif generation:
-        A: assembly:
+        M: motif generation
+        A: assembly
         E: evaluation
 
         If a step is completed, "X" is shown, "-" otherwise.
         For motif generation a "*" may be shown to indicate that models from a different
         set of constraints are used.
+
+        If native_compare is set to True another 4 columns are printed:
+        1: native rmsd score of the first cluster
+        5: lowest native rmsd score of the first 5 clusters
+        10: lowest native rmsd score of the first 10 clusters
+        n: number of models
+
+        :param native_compare: print rmsd comparison to native structure
+        :param csts: list of constraints to include in output (default: all)
         """
         self.check_config()
-        cst_names = ["none"]
-        cst_names += [splitext(basename(cst_file))[0] for cst_file in glob.glob("constraints/*.cst")]
-        cst_names += [basename(cst_dir) for cst_dir in glob.glob("predictions/*")]
+        if native_compare and self.config["native_pdb_file"] is None:
+            raise SimulationException("Cannot compare without native information.")
 
-        print "Status:"
-        print "  cst                                 P M A E"
-        print "  -------------------------------------------"
+        if csts:
+            # cst selection
+            cst_names = [self.parse_cst_name_and_filename(cst)[0] for cst in csts]
+        else:
+            cst_names = self.get_csts()
 
-        for cst_name in sorted(set(cst_names), key=natural_sort_key):
-            done_preparation = "-"
-            done_motifs = "-"
-            done_assembly = "-"
-            done_evaluation = "-"
+        print "Status: %s" % self.config["name"]
+        print "  cst                                 P M A E" + ("       1     5    10     n" if native_compare else "")
+        print "  -------------------------------------------" + ("--------------------------" if native_compare else "")
 
-            dir_prediction = "predictions/%s" % cst_name
-            dir_assembly = "predictions/%s/assembly" % cst_name
-            dir_motifs = "predictions/%s/motifs" % cst_name
-            dir_output = "predictions/%s/output" % cst_name
+        for cst_name in cst_names:
+            status = self.get_status(cst_name, include_evaluation_data=native_compare)
 
-            if os.path.isfile(dir_assembly + "/assembly.cst"):
-                done_preparation = "X"
+            done_preparation = "X" if status["step_preparation_done"] else "-"
+            done_motifs = "*" if status["step_motifs_overridden"] else ("X" if status["step_motifs_done"] else "-")
+            done_assembly = "X" if status["step_assembly_done"] else "-"
+            done_evaluation = "X" if status["step_evaluation_done"] else "-"
 
-            if os.path.isfile(dir_prediction + "/MOTIF_OVERRIDE"):
-                done_motifs = "*"
-            elif os.path.isfile(dir_motifs + "/motif1.out"):
-                done_motifs = "X"
+            line = "  %-035s %s %s %s %s" % (cst_name, done_preparation, done_motifs, done_assembly, done_evaluation)
+            if native_compare:
+                if "evaluation_rmsd_native" in status and status["evaluation_rmsd_native"] is not None:
+                    rmsds = tuple("%.2f" % x for x in status["evaluation_rmsd_native"])
+                else:
+                    rmsds = ("-", "-", "-")
+                line += "   %05s %05s %05s" % rmsds
+                line += " %05s" % (status["evaluation_model_count"] if "evaluation_model_count" in status and status["evaluation_model_count"] is not None else "-")
 
-            if glob.glob(dir_assembly + "/*.out"):
-                done_assembly = "X"
-
-            if os.path.isfile(dir_output + "/cluster_1.pdb"):
-                done_evaluation = "X"
-
-            # noinspection PyShadowingNames
-            def print_status_line(cst_name, status_list):
-                line = "  %-035s" % cst_name
-                line += " " + " ".join(status_list)
-                print line
-
-            print_status_line(cst_name, [done_preparation, done_motifs, done_assembly, done_evaluation])
+            print line

@@ -116,10 +116,10 @@ _rna_predict-edit-constraints() {
     $cst_option
 }
 
-_rna_predict-compare() {
-}
-
 _rna_predict-status() {
+  _arguments -s -w \
+    '--compare[print rmsd comparison to native structure]' \
+    '*: :_files -W "(constraints)" -g \*.cst'
 }
 
 _rna_predict-print-models() {
@@ -233,7 +233,6 @@ _rna_predict_commands() {
     'evaluate:evaluate data (clustering and rmsd calculation)'
     'make-constraints:create a constraints file from a dca prediction'
     'edit-constraints:replace rosetta function in a constraints file'
-    'compare:print comparison of prediction to native structure'
     'config:modify config variable'
     'status:print status information'
     'print-models: print a selection of models'

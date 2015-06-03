@@ -62,10 +62,9 @@ def main():
     parser_assemble = subparsers.add_parser("assemble", help="assemble models")
     parser_evaluate = subparsers.add_parser("evaluate", help="evaluate data (clustering and rmsd calculation)")
     parser_evaluatecustom = subparsers.add_parser("evaluate-custom", help="evaluate using custom scoring")
-    subparsers.add_parser("compare", help="print comparison of prediction to native structure")
     parser_makeconstraints = subparsers.add_parser("make-constraints", help="create a constraints file from a dca prediction")
     parser_editconstraints = subparsers.add_parser("edit-constraints", help="replace rosetta function in a constraints file")
-    subparsers.add_parser("status", help="print status summary")
+    parser_status = subparsers.add_parser("status", help="print status summary")
     parser_config = subparsers.add_parser("config", help="modify config variable")
     parser_printmodels = subparsers.add_parser("print-models", help="print models")
     parser_extractmodels = subparsers.add_parser("extract-models", help="extract models as pdb files")
@@ -83,6 +82,8 @@ def main():
     parser_evaluate.add_argument("--cluster-cutoff", dest="cluster_cutoff", help="cluster cutoff in angström [default: %(default)s]", default=4.1, type=float)
     parser_evaluate.add_argument("--cluster-limit", dest="cluster_limit", help="maximum number of clusters to create [default: %(default)s]", default=10, type=int)
     parser_evaluate.add_argument("--full-eval", dest="full_eval", action="store_true", help="force full evaulation (scores and rmsd) instead of clustering only [default: %(default)s]")
+    parser_status.add_argument("--compare", dest="compare", action="store_true", help="print rmsd comparison to native structure [default: %(default)s]")
+    parser_status.add_argument("csts", metavar="csts", help="predictions to display [default: all]", nargs="*")
 
     for p in (parser_makeconstraints, parser_evaluatecustom):
         p.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
@@ -188,7 +189,7 @@ def main():
             p.print_config()
 
         if args.subcommand == "status":
-            p.print_status()
+            p.print_status(native_compare=args.compare, csts=args.csts)
         elif args.subcommand == "prepare":
             p.prepare(fasta_file=args.sequence, params_file=args.secstruct, native_pdb_file=args.native, name=args.name)
             p.save_config()
@@ -206,8 +207,6 @@ def main():
             p.assemble(dry_run=args.dry_run, constraints=args.cst, nstruct=args.nstruct, cycles=args.cycles, seed=args.seed, use_native_information=args.use_native, threads=args.threads)
         elif args.subcommand == "evaluate":
             p.evaluate(constraints=args.cst, cluster_limit=args.cluster_limit, cluster_cutoff=args.cluster_cutoff, full_evaluation=args.full_eval)
-        elif args.subcommand == "compare":
-            p.compare()
         elif args.subcommand == "print-models":
             p.print_models(constraints=args.cst, model_list=args.model_list, kind=args.model_mode)
         elif args.subcommand == "extract-models":
