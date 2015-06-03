@@ -300,21 +300,15 @@ pair is treated as in-contact.
 ## Utilities
 
 
-### Comparison with native structure
-
-To print a summary of all predictions and the smallest RMSD-to-native
-values of the first 1, 5, and 10 clusters, run
-
-    rna_predict compare
-
-
 ### Status information
 
 To print a summary of all predictions and their current state, run
 
-    rna_predict status
+    rna_predict status \
+        [--compare] \
+        [cst [cst ...]
 
-The output table contains the columns P, M, A, and E to indicate the following:
+The output table contains the following columns:
 
 - P: preparation step
 - M: motif generation:
@@ -324,6 +318,14 @@ The output table contains the columns P, M, A, and E to indicate the following:
 If a step is completed, "X" is shown, "-" otherwise.
 For motif generation a "*" may be shown to indicate that models from a different
 set of constraints are used.
+
+When the `--compare` option is given, comparison to the native structure
+is performed and the output is extended with the following columns:
+
+- 1: Native RMSD score of the first cluster
+- 5: Lowest native RMSD score of the first 5 clusters
+- 10: Lowest native RMSD score of the first 10 clusters
+- n: Number of models
 
 
 ### Model information and extraction
