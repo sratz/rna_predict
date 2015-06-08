@@ -21,7 +21,7 @@ def get_pdb_by_code(pdb_code, pdb_directory=PDB_DIRECTORY):
     Get PDB file by code. Download if necessary.
 
     :param pdb_code: PDB code to download
-    :param pdb_directory: directory lookup and store the PDB file, defaults to the rna_prediction PDB cache directory
+    :param pdb_directory: directory lookup and store the PDB file, defaults to the rna_predict PDB cache directory
     :return: PDB filename
     """
 

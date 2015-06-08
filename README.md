@@ -1,4 +1,4 @@
-# `rna_prediction`
+# `rna_predict`
 
 This python project models a complete workflow for RNA tertiary structure
 prediction using the secondary structure information as well as additional
@@ -9,7 +9,7 @@ The modelling is done using Rosetta and its `rna_denovo` protocol.
 Additional constraints may come from a direct coupling analysis (DCA).
 A utility to convert those results into all-atom constraints is included.
 
-`rna_prediction` also comes with tools to cluster and compare the results with
+`rna_predict` also comes with tools to cluster and compare the results with
 a native crystal strcture .pdb as well as tools to visualize the results.
 
 
@@ -28,7 +28,7 @@ a native crystal strcture .pdb as well as tools to visualize the results.
 
 ### Installation of the python package
 
-To install the `rna_prediction` package, run
+To install the `rna_predict` package, run
 
     python setup.py install
 
@@ -65,7 +65,7 @@ therefore requires the `stdbuf` program to be available.
 
 ## Usage
 
-`rna_prediction` comes with a command line interface. To see all available
+`rna_predict` comes with a command line interface. To see all available
 options run:
 
     rna_predict --help

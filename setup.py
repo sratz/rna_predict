@@ -5,7 +5,7 @@ from setuptools import setup
 
 
 def extract_metadata():
-    with open("rna_prediction/__init__.py") as f:
+    with open("rna_predict/__init__.py") as f:
         for line in f:
             if line.startswith('__version__'):
                 exec(line.strip())
@@ -15,16 +15,16 @@ def extract_metadata():
 metadata = extract_metadata()
 
 setup(
-    name="rna_prediction",
+    name="rna_predict",
     version=metadata["__version__"],
     description="RNA Tertiary Structure Prediction",
     author="Sebastian Ratz",
     author_email="sebastian.ratz@student.kit.edu",
-    packages=["rna_prediction"],
-    package_data={"rna_prediction": ["structure_info/*"]},
+    packages=["rna_predict"],
+    package_data={"rna_predict": ["structure_info/*"]},
     entry_points={
         "console_scripts": [
-            "rna_predict = rna_prediction.main:main"
+            "rna_predict = rna_predict.main:main"
         ]
     },
     install_requires=["biopython >= 1.5", "numpy >= 1.6", "matplotlib > 1.1"],

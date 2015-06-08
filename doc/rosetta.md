@@ -1,6 +1,6 @@
 # Rosetta compilation and installation
 
-`rna_prediction` relies on a few modifications of the Rosetta source code to
+`rna_predict` relies on a few modifications of the Rosetta source code to
 work.
 
 ## 1. Get Rosetta
