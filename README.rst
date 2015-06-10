@@ -56,7 +56,9 @@ For detailed usage information refer to the documentation.
 Documentation
 -------------
 
-The HTML documentation can be found `here <http://TODO>`_.
+The HTML documentation can be found `here <http://mbs-verma.scc.kit.edu/static/rna_predict/>`_.
+
+A PDF version can be downloaded from `here <http://mbs-verma.scc.kit.edu/static/rna_predict.pdf>`_.
 
 If you downloaded a source package or checked out the source from Git,
 you can also build the HTML documentation yourself. For that, ``rna_predict``
