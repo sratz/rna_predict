@@ -1,18 +1,23 @@
-# Residue-residue to atom-atom mapping
+.. _atom-mapping:
+
+Residue-residue to atom-atom mapping
+====================================
 
 The result of the DCA analysis is a list of nucleotide contacts. These need to
 be mapped to atom-atom contacts to be usable as constraints in Rosetta. Two
 options are implemented.
 
-## P-Only mapping: `pOnly`
+P-Only mapping: ``pOnly``
+-------------------------
 
 A simple variant is to take the P atom of each nucleotide backbone and add
 these as atom-atom constraints.
 
-## Complex atom-atom mapping using a contact database: `allAtomWesthof`
+Complex atom-atom mapping using a contact database: ``allAtomWesthof``
+----------------------------------------------------------------------
 
 This method relies on pre-built contact lists included in the prediction
-package. For each type of nucleotide contact (A-A, A-C, A-G, A-U, …) a list of
+package. For each type of nucleotide contact (A-A, A-C, A-G, A-U, ...) a list of
 representatives is stored, containing the PDB code of an entry with known
 native structure and the numbers of the residues. From these lists a database
 is built containing all possible atom-to-atom combinations for the two residues,
