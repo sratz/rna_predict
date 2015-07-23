@@ -281,7 +281,7 @@ def parse_dca_data(dca_prediction_filename):
     return dca
 
 
-def get_contact_information_in_pdb_chain(dca_contact, pdb_chain):
+def get_contact_information_in_pdb_chain(dca_contact, pdb_chain, heavy_only=True):
     """
     Returns distance information about a DCA contact in a realized PDB chain
 
@@ -293,6 +293,7 @@ def get_contact_information_in_pdb_chain(dca_contact, pdb_chain):
 
     :param dca_contact: DcaContact object
     :param pdb_chain: PDB chain structure object
+    :param heavy_only: Only use heavy atoms
     :return: tuple ``(average_dist, minimum_dist, minimum_pair)``. In case the contact cannot be found in the PDB file ``(0, 0, None)`` is returned.
     """
     try:
@@ -304,8 +305,8 @@ def get_contact_information_in_pdb_chain(dca_contact, pdb_chain):
 
     minimum_heavy = 9999
     minimum_pair = []
-    for atom1 in pdbtools.filter_atoms(res1, heavy_only=True):
-        for atom2 in pdbtools.filter_atoms(res2, heavy_only=True):
+    for atom1 in pdbtools.filter_atoms(res1, heavy_only):
+        for atom2 in pdbtools.filter_atoms(res2, heavy_only):
             dist = np.linalg.norm(atom1.coord - atom2.coord)
             if dist < minimum_heavy:
                 minimum_heavy = dist
