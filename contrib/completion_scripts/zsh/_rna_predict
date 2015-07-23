@@ -219,6 +219,13 @@ _rna_predict-tools-plot-gdt() {
     '*:comparison pdb:_files -g "*.pdb"'
 }
 
+_rna_predict-tools-plot-tp-rate() {
+  _arguments -s -w \
+    '--tp-cutoff=[tp cutoff in angström (default: 8.0)]: : _guard "[0-9]#(.|)[0-9]#" "cutoff"' \
+    ':reference pdb:_files -g "*.pdb"' \
+    '*:prediction file:_files'
+}
+
 
 # config::key:(fasta_file name native_pdb_file params_file torsions_file):value:
 
@@ -253,6 +260,7 @@ _rna_predict_commands_tools() {
     'plot-clusters:plot score over native rmsd'
     'plot-pdb-comparison:compare PDB files by plotting the distance of the residues'
     'plot-gdt:create a global distance test plotcreate a global distance test plot'
+    'plot-tp-rate:plot true-positive rate of a contact prediction file'
   )
   _describe -t commands command commands
 }

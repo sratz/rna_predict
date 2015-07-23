@@ -405,3 +405,37 @@ def plot_gdt(pdb_ref_filename, pdbs_sample_filenames):
     plt.savefig("/tmp/rna_tools_gdtplot_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
 
     plt.show()
+
+
+def plot_tp_rate(pdb_ref_filename, dca_filenames, tp_cutoff=8.0):
+    pdb_ref = pdbtools.parse_pdb("foo", pdb_ref_filename)
+    chain = pdb_ref[0].child_list[0]
+
+    for p, dca_filename in enumerate(dca_filenames):
+        count = 0
+        tp = 0
+        dca = dcatools.parse_dca_data(dca_filename)
+        x_values = []
+        y_values = []
+        for d in dca:
+            count += 1;
+            average_heavy, minimum_heavy, minimum_pair = dcatools.get_contact_information_in_pdb_chain(d, chain, heavy_only=False)
+            if minimum_heavy < tp_cutoff:
+                tp += 1
+            print d.res1, d.res2, 1.0 * tp / count, minimum_heavy
+            x_values.append(count)
+            y_values.append(1.0 * tp / count)
+        print count, tp
+
+        plt.plot(x_values, y_values, "-", label=dca_filename)
+
+    plt.title("TP-Rate %s, Cutoff = %s" % (os.path.basename(os.getcwd()), tp_cutoff))
+    plt.xlabel("Rank")
+    plt.ylabel("TP-Rate / Rank")
+    plt.xlim([1, 1000])
+    plt.ylim([0, 1.1])
+    plt.xscale("log")
+    plt.legend()
+
+    plt.savefig("/tmp/rna_predict_tprate_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
+    plt.show()
