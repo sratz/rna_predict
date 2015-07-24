@@ -439,3 +439,50 @@ def plot_tp_rate(pdb_ref_filename, dca_filenames, tp_cutoff=8.0):
 
     plt.savefig("/tmp/rna_predict_tprate_%s.png" % os.path.basename(os.getcwd()), bbox_inches="tight")
     plt.show()
+
+def plot_contact_map(native_filename="native.pdb", first_filename="dca/dca.txt", second_filename="dca/mi.txt", native_cutoff=8.0):
+    # get native pairs
+    print "Calculating native contacts..."
+    chain = pdbtools.parse_pdb("", native_filename)[0].child_list[0]
+    native = []
+    for i,res1 in enumerate(chain):
+        for j,res2 in enumerate(chain):
+            if j <= i:
+                continue
+            minimum = 9999
+            for atom1 in res1:
+                for atom2 in res2:
+                    dist = atom1 - atom2
+                    if dist < minimum:
+                        minimum = dist
+            if minimum < native_cutoff:
+                native += [[(i + 1, j + 1), minimum]]
+
+    dca_first = dcatools.parse_dca_data(first_filename)
+    dca_second = dcatools.parse_dca_data(second_filename)
+
+    first = [[d.res1, d.res2] for d in dca_first]
+    second = [[d.res1, d.res2] for d in dca_second]
+
+    m, n = (np.min(first) - 5, np.max(first) + 5)
+    plt.xlim([m, n])
+    plt.ylim([m, n])
+
+    plt.plot([n, m], [n, m], ls="--", c=".3")
+
+    plt.scatter([x[0][0] for x in native], [x[0][1] for x in native], marker="s", color="grey", alpha=0.5)
+    plt.scatter([x[0][1] for x in native], [x[0][0] for x in native], marker="s", color="grey", alpha=0.5)
+
+    plt.scatter([x[0] for x in first[:25]], [x[1] for x in first[:25]], marker="s", color="green", facecolors='none', alpha=0.8)
+    plt.scatter([x[0] for x in first[25:100]], [x[1] for x in first[25:100]], marker="s", color="red", facecolors='none', alpha=0.8)
+
+    plt.scatter([x[1] for x in second[:25]], [x[0] for x in second[:25]], marker="s", color="green", facecolors='none', alpha=0.8)
+    plt.scatter([x[1] for x in second[25:100]], [x[0] for x in second[25:100]], marker="s", color="red", facecolors='none', alpha=0.8)
+
+    plt.gca().set_aspect('equal')
+    plt.title("Contact map %s" % os.path.basename(os.getcwd()))
+    plt.xlabel("Residuue (%s)" % first_filename)
+    plt.ylabel("Residuue (%s)" % second_filename)
+
+    plt.savefig("/tmp/rna_predict_cm_%s.pdf" % os.path.basename(os.getcwd()), bbox_inches="tight")
+    plt.show()

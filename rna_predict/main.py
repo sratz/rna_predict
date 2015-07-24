@@ -124,6 +124,7 @@ def main():
     parser_tools_plot_pdb_comparison = subparser_tools.add_parser("plot-pdb-comparison", help="compare PDB files by plotting the distance of the residues")
     parser_tools_plot_gdt = subparser_tools.add_parser("plot-gdt", help="create a global distance test plot")
     parser_tools_plot_tp_rate = subparser_tools.add_parser("plot-tp-rate", help="plot true-positive rate of a contact prediction file")
+    parser_tools_plot_contact_map = subparser_tools.add_parser("plot-contact-map", help="plot contact map of two contact prediction files against the native structure")
 
     parser_tools_plot_contact_atoms.add_argument("--mean-cutoff", dest="mean_cutoff", help="limit for average distance [default: '%(default)s']", type=float, default=6.0)
     parser_tools_plot_contact_atoms.add_argument("--std-cutoff", dest="std_cutoff", help="limit for the standard deviation [default: '%(default)s']", type=float, default=3.0)
@@ -148,6 +149,11 @@ def main():
     parser_tools_plot_tp_rate.add_argument("--tp-cutoff", dest="tp_cutoff", help="true-positive cutoff [default: %(default)s]", type=float, default=8)
     parser_tools_plot_tp_rate.add_argument("ref_pdb", metavar="ref-pdb", help="reference PDB filename")
     parser_tools_plot_tp_rate.add_argument("dca_files", metavar="dca-file", help="list of DCA filenames", nargs="+")
+
+    parser_tools_plot_contact_map.add_argument("ref_pdb", metavar="ref-pdb", help="reference PDB filename")
+    parser_tools_plot_contact_map.add_argument("first", metavar="first", help="first contact file (lower right)")
+    parser_tools_plot_contact_map.add_argument("second", metavar="second", help="second contact file (upper left)")
+    parser_tools_plot_contact_map.add_argument("--native-cutoff", dest="native_cutoff", help="cutoff for reference contacts [default: %(default)s]", type=float, default=8)
 
 
     # Process arguments
@@ -183,6 +189,8 @@ def main():
                 tools.plot_gdt(pdb_ref_filename=args.ref_pdb, pdbs_sample_filenames=args.sample_pdbs)
             elif args.subcommand_tool == "plot-tp-rate":
                 tools.plot_tp_rate(pdb_ref_filename=args.ref_pdb, dca_filenames=args.dca_files, tp_cutoff=args.tp_cutoff)
+            elif args.subcommand_tool == "plot-contact-map":
+                tools.plot_contact_map(native_filename=args.ref_pdb, first_filename=args.first, second_filename=args.second, native_cutoff=args.native_cutoff)
             return 0
 
         # for all the other subcommannds we need a simulation
