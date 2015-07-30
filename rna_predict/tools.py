@@ -288,7 +288,15 @@ def plot_pdb_comparison(pdb_ref_filename, pdbs_sample_filenames):
     :param pdbs_sample_filenames: list of sample PDB filenames
     """
     pdb_ref = pdbtools.parse_pdb("foo", pdb_ref_filename)
-    pdbs_sample = [pdbtools.parse_pdb(i, i) for i in pdbs_sample_filenames]
+    sim = RNAPrediction(SysConfig())
+    pdbs_sample = []
+    for sample in pdbs_sample_filenames:
+        if ":" in sample:
+            fields = sample.split(":")
+            pdbs_sample.append(sim.extract_pdb(fields[0], RNAPrediction.get_models(fields[0], [fields[2]], fields[1])[0]))
+        else:
+            pdbs_sample.append(sample)
+    pdbs_sample = [pdbtools.parse_pdb(i, i) for i in pdbs_sample]
 
     sim = RNAPrediction(SysConfig())
     print sim.config["sequence"]
