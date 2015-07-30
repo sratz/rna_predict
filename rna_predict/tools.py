@@ -333,7 +333,7 @@ def plot_pdb_comparison(pdb_ref_filename, pdbs_sample_filenames):
     hatch = ""
     last_x = ""
     start_i = 0
-    for i, x in enumerate(sim.config["secstruc"]):
+    for i, x in enumerate(sim.config["secstruc"]+"."):
         if x != last_x and last_x != "":
             if last_x != ".":
                 if last_x == "(":
