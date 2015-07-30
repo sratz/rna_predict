@@ -340,7 +340,7 @@ def plot_pdb_comparison(pdb_ref_filename, pdbs_sample_filenames):
                     hatch = "//"
                 elif last_x == ")":
                     hatch = "\\\\"
-                plt.fill_between([start_i + 0.5, i + 0.5], y_min, y_max, hatch=hatch, color="black", alpha=0.15)
+                plt.fill_between([start_i + 0.5, i + 0.5], y_min, y_max, hatch=hatch, color="grey", edgecolor="black", alpha=0.25)
             start_i = i
         last_x = x
 
