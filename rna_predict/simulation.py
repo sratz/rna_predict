@@ -1814,7 +1814,7 @@ class RNAPrediction(object):
 
         return filter_chain
 
-    def make_constraints(self, dca_prediction_filename="dca/dca.txt", output_filename=None, number_dca_predictions=100, cst_function="FADE -100 26 20 -2 2", filter_text=None, mapping_mode="allAtomWesthof"):
+    def make_constraints(self, dca_prediction_filename="dca/dca.txt", output_filename=None, number_dca_predictions=100, cst_function="FADE -100 26 20 -2 2", filter_text=None, mapping_mode="minAtom"):
         """
         Create a set of constraints from a DCA prediction.
 
@@ -1823,7 +1823,7 @@ class RNAPrediction(object):
         :param number_dca_predictions: maximum number of DCA predictions to use
         :param cst_function: rosetta function and parameters as text string
         :param filter_text: optional: List of DCA filters (see parse_dca_filter_string for details)
-        :param mapping_mode: atom-to-atom mapping mode to use, supported values: ``allAtomWesthof`` or ``pOnly``
+        :param mapping_mode: atom-to-atom mapping mode to use, supported values: ``minAtom`` or ``pOnly``
         """
         self.check_config()
         output_filename = self._create_constraints_output_filename(dca_prediction_filename, output_filename, cst_function, number_dca_predictions, "%d%n_%f")

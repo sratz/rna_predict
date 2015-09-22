@@ -107,7 +107,7 @@ def plot_constraint_quality(comparison_pdb, sources, dca_mode=False):
 
             if not dca_mode:
                 print "  Mapping to atom-atom."
-                cst_info = dcatools.build_cst_info_from_dca_contacts(dca, sequence=sim.config["sequence"], mapping_mode="allAtomWesthof", cst_function="FADE -100 26 20 -2 2", number_dca_predictions=100, quiet=True)
+                cst_info = dcatools.build_cst_info_from_dca_contacts(dca, sequence=sim.config["sequence"], mapping_mode="minAtom", cst_function="FADE -100 26 20 -2 2", number_dca_predictions=100, quiet=True)
         else:
             if dca_mode:
                 title = splitext(basename(arg))[0]
@@ -119,7 +119,7 @@ def plot_constraint_quality(comparison_pdb, sources, dca_mode=False):
                     print "  Building cst from dca on-the-fly."
                     arg = arg.split(":")
                     dca = dcatools.parse_dca_data(arg[0])
-                    cst_info = dcatools.build_cst_info_from_dca_contacts(dca, sequence=sim.config["sequence"], mapping_mode=arg[1] if arg[1] else "allAtomWesthof", cst_function=arg[2] if arg[2] else "FADE -100 26 20 -2 2", number_dca_predictions=int(arg[3]) if arg[3] else 100, quiet=True)
+                    cst_info = dcatools.build_cst_info_from_dca_contacts(dca, sequence=sim.config["sequence"], mapping_mode=arg[1] if arg[1] else "minAtom", cst_function=arg[2] if arg[2] else "FADE -100 26 20 -2 2", number_dca_predictions=int(arg[3]) if arg[3] else 100, quiet=True)
                 else:
                     title = splitext(basename(arg))[0]
                     print "  Reading cst file directly."

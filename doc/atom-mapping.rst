@@ -13,7 +13,7 @@ P-Only mapping: ``pOnly``
 A simple variant is to take the P atom of each nucleotide backbone and add
 these as atom-atom constraints.
 
-Complex atom-atom mapping using a contact database: ``allAtomWesthof``
+Complex atom-atom mapping using a contact database: ``minAtom``
 ----------------------------------------------------------------------
 
 This method relies on pre-built contact lists included in the prediction

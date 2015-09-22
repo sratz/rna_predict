@@ -91,7 +91,7 @@ in the residue number 12 in the DCA file to be mapped to prediction residue 3.
 The ``--mapping-mode`` parameter specifies the method to map residue-residue contacts
 to atom-atom contacts. Options are:
 
-* allAtomWesthof
+* minAtom
 * pOnly
 
 For details about the mapping, see :ref:`atom-mapping`.

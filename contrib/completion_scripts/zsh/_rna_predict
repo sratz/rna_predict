@@ -102,7 +102,7 @@ _rna_predict-make-constraints() {
   _arguments -s -w \
     $dca_options \
     '--filter=[run dca contacts though (a) filter(s). For syntax information refer to the documentation.]:filter:__rna_predict_filter' \
-    '--mapping-mode=[mapping mode to use for constraints creation (default: allAtomWesthof)]:mapping mode:(allAtomWesthof pOnly)' \
+    '--mapping-mode=[mapping mode to use for constraints creation (default: minAtom)]:mapping mode:(minAtom pOnly)' \
     $editmake_constraints_options
 }
 

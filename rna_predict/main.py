@@ -89,7 +89,7 @@ def main():
         p.add_argument("--dca-file", dest="dca_file", help="dca file to use as input [default: %(default)s]", default="dca/dca.txt")
         p.add_argument("--dca-count", dest="dca_count", help="maximum number of dca predictions to use [default: %(default)s]", default=100, type=int)
 
-    parser_makeconstraints.add_argument("--mapping-mode", dest="mapping_mode", help="mapping mode to use for constraints creation [default: %(default)s", default="allAtomWesthof")
+    parser_makeconstraints.add_argument("--mapping-mode", dest="mapping_mode", help="mapping mode to use for constraints creation [default: %(default)s", default="minAtom")
     parser_makeconstraints.add_argument("--filter", dest="filter", help="run dca contacts though (a) filter(s). For syntax information refer to the documentation. [default: %(default)s", default=None)
     parser_config.add_argument("key", help="config key")
     parser_config.add_argument("value", help="config value")
