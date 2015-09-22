@@ -4,13 +4,13 @@ Rosetta compilation and installation
 ``rna_predict`` relies on a few modifications of the Rosetta source code to
 work.
 
-1. Get Rosetta
+Get Rosetta
 --------------
 
 Download Rosetta from the official website. The latest set of patches targets
 build ``2015wk19`` so it's advised to get a fairly recent weekly build.
 
-2. Apply patches
+Apply patches
 ----------------
 
 The needed patches are included in the ``contrib/rosetta_patches`` directory.
@@ -23,12 +23,12 @@ If they don't apply cleanly, for example when targeting a newer version of
 Rosetta, they need to be applied manually. The changes are only minor so it
 should be possible to do without much effort.
 
-3. Build and install
+Build and install
 --------------------
 
 Build Rosetta normally according the official documentation.
 
-4. ``PATH`` setup
+``PATH`` setup
 -----------------
 
 ``rna_predict`` needs to find the Rosetta binaries as well as some of the helper
