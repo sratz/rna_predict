@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Rosetta compilation and installation &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="index.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Welcome to rna_predict’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="configuration.html" title="Configuration"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to rna_predict’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="rosetta-compilation-and-installation">
+<h1>Rosetta compilation and installation<a class="headerlink" href="#rosetta-compilation-and-installation" title="Permalink to this headline">¶</a></h1>
+<p><tt class="docutils literal"><span class="pre">rna_predict</span></tt> relies on a few modifications of the Rosetta source code to
+work.</p>
+<div class="section" id="get-rosetta">
+<h2>Get Rosetta<a class="headerlink" href="#get-rosetta" title="Permalink to this headline">¶</a></h2>
+<p>Download Rosetta from the official website. The latest set of patches targets
+build <tt class="docutils literal"><span class="pre">2015wk19</span></tt> so it&#8217;s advised to get a fairly recent weekly build.</p>
+</div>
+<div class="section" id="apply-patches">
+<h2>Apply patches<a class="headerlink" href="#apply-patches" title="Permalink to this headline">¶</a></h2>
+<p>The needed patches are included in the <tt class="docutils literal"><span class="pre">contrib/rosetta_patches</span></tt> directory.</p>
+<p>To apply them <tt class="docutils literal"><span class="pre">cd</span></tt> to the unpacked Rosetta source and run:</p>
+<div class="highlight-python"><div class="highlight"><pre>patch -p1 &lt; /path/to/patches/*.patch
+</pre></div>
+</div>
+<p>If they don&#8217;t apply cleanly, for example when targeting a newer version of
+Rosetta, they need to be applied manually. The changes are only minor so it
+should be possible to do without much effort.</p>
+</div>
+<div class="section" id="build-and-install">
+<h2>Build and install<a class="headerlink" href="#build-and-install" title="Permalink to this headline">¶</a></h2>
+<p>Build Rosetta normally according the official documentation.</p>
+</div>
+<div class="section" id="path-setup">
+<h2><tt class="docutils literal"><span class="pre">PATH</span></tt> setup<a class="headerlink" href="#path-setup" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">rna_predict</span></tt> needs to find the Rosetta binaries as well as some of the helper
+scripts from the <tt class="docutils literal"><span class="pre">tools</span></tt> package.</p>
+<p>Also, <tt class="docutils literal"><span class="pre">rna_predict</span></tt> does not specify the <tt class="docutils literal"><span class="pre">-database</span></tt> parameter when invoking
+Rosetta commands, so the database needs to reside in the default location
+or the <tt class="docutils literal"><span class="pre">ROSETTA3_DB</span></tt> environment variable needs to be set correctly.</p>
+<p>The following lines in <tt class="docutils literal"><span class="pre">.bashrc</span></tt> or similar should be sufficient to make
+everything work:</p>
+<div class="highlight-python"><div class="highlight"><pre>export ROSETTA3_DB=/path/to/rosetta_database
+export RNA_TOOLS=/path/to/rosetta_tools/rna_tools
+export PYTHONPATH=$PYTHONPATH:$RNA_TOOLS/bin/
+export PATH=$PATH:/path/to/rosetta_source/bin:$RNA_TOOLS/bin
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Rosetta compilation and installation</a><ul>
+<li><a class="reference internal" href="#get-rosetta">Get Rosetta</a></li>
+<li><a class="reference internal" href="#apply-patches">Apply patches</a></li>
+<li><a class="reference internal" href="#build-and-install">Build and install</a></li>
+<li><a class="reference internal" href="#path-setup"><tt class="docutils literal"><span class="pre">PATH</span></tt> setup</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to rna_predict&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="configuration.html"
+                        title="next chapter">Configuration</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/rosetta.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="configuration.html" title="Configuration"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to rna_predict’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

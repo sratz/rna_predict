@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>DCA Filtering Syntax &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="index.html" />
+    <link rel="next" title="rna_predict package" href="rna_predict.html" />
+    <link rel="prev" title="Residue-residue to atom-atom mapping" href="atom-mapping.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rna_predict.html" title="rna_predict package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="atom-mapping.html" title="Residue-residue to atom-atom mapping"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="dca-filtering-syntax">
+<span id="filters"></span><h1>DCA Filtering Syntax<a class="headerlink" href="#dca-filtering-syntax" title="Permalink to this headline">¶</a></h1>
+<p>Sometimes it may be necessary to filter and modify DCA contacts.</p>
+<p>To specify filters on the command line the following syntax is used:</p>
+<div class="highlight-python"><div class="highlight"><pre>filter:&lt;arg&gt;:&lt;arg&gt;:&lt;arg&gt;:...
+</pre></div>
+</div>
+<p>The number of arguments depends on the filter being used.</p>
+<p>Multiple filters may be chained by separating them with <tt class="docutils literal"><span class="pre">,</span></tt>.</p>
+<p>The following filters are implemented:</p>
+<div class="section" id="none">
+<h2><tt class="docutils literal"><span class="pre">none</span></tt><a class="headerlink" href="#none" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">none</span></tt> filter works as a dummy filter and does nothing. It takes no
+options.</p>
+</div>
+<div class="section" id="threshold">
+<h2><tt class="docutils literal"><span class="pre">threshold</span></tt><a class="headerlink" href="#threshold" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">threshold</span></tt> filter looks up DCA contacts in a target PDB file,
+calculates their distances, and discards or includes them depending on
+the threshold setting.</p>
+<p>The syntax is the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>threshold:&lt;n&gt;:&lt;cst&gt;:&lt;mode&gt;:&lt;moodel&gt;
+</pre></div>
+</div>
+<p>Arguments:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">n</span></tt>: threshold (&lt; 0: keep below, &gt; 0: keep above)</li>
+<li><tt class="docutils literal"><span class="pre">cst</span></tt>: prediction / constraints selection to look up PDB file</li>
+<li><tt class="docutils literal"><span class="pre">mode</span></tt>, <tt class="docutils literal"><span class="pre">model</span></tt>: model selection mode (see <cite>README &lt;README.rst&gt;</cite> for details)</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre>threshold:8.0:100dca_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100dca_FADE_-100_26_20_-2_2:cluster:1
+</pre></div>
+</div>
+<p>This uses the first cluster of the <tt class="docutils literal"><span class="pre">100dca_FADE_-100_26_20_-2_2</span></tt> predicton
+as target PDB file. All DCA contacts whose distance is between 6Å and 8Å in
+the target PDB are kept.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">DCA Filtering Syntax</a><ul>
+<li><a class="reference internal" href="#none"><tt class="docutils literal"><span class="pre">none</span></tt></a></li>
+<li><a class="reference internal" href="#threshold"><tt class="docutils literal"><span class="pre">threshold</span></tt></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="atom-mapping.html"
+                        title="previous chapter">Residue-residue to atom-atom mapping</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="rna_predict.html"
+                        title="next chapter">rna_predict package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/filters.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rna_predict.html" title="rna_predict package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="atom-mapping.html" title="Residue-residue to atom-atom mapping"
+             >previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

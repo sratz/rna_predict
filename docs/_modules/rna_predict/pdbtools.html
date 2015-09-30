@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>rna_predict.pdbtools &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">rna_predict 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for rna_predict.pdbtools</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">urllib2</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">Bio.PDB</span>
+<span class="kn">from</span> <span class="nn">Bio.PDB.PDBExceptions</span> <span class="kn">import</span> <span class="n">PDBConstructionWarning</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.sysconfig</span> <span class="kn">import</span> <span class="n">SysConfig</span>
+
+
+<span class="n">PDB_DIRECTORY</span> <span class="o">=</span> <span class="n">SysConfig</span><span class="o">.</span><span class="n">SYSCONFIG_LOCATION</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s">&quot;pdbs&quot;</span>
+
+
+<div class="viewcode-block" id="get_pdb_by_code"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.pdbtools.get_pdb_by_code">[docs]</a><span class="k">def</span> <span class="nf">get_pdb_by_code</span><span class="p">(</span><span class="n">pdb_code</span><span class="p">,</span> <span class="n">pdb_directory</span><span class="o">=</span><span class="n">PDB_DIRECTORY</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get PDB file by code. Download if necessary.</span>
+
+<span class="sd">    :param pdb_code: PDB code to download</span>
+<span class="sd">    :param pdb_directory: directory lookup and store the PDB file, defaults to the rna_predict PDB cache directory</span>
+<span class="sd">    :return: PDB filename</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># make sure directory names have a trailing slash</span>
+    <span class="n">pdb_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">pdb_directory</span><span class="p">)</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
+
+    <span class="n">utils</span><span class="o">.</span><span class="n">mkdir_p</span><span class="p">(</span><span class="n">pdb_directory</span><span class="p">)</span>
+    <span class="n">pdb_file</span> <span class="o">=</span> <span class="n">pdb_directory</span> <span class="o">+</span> <span class="n">pdb_code</span> <span class="o">+</span> <span class="s">&#39;.pdb&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">pdb_file</span><span class="p">):</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="s">&quot;http://www.rcsb.org/pdb/files/</span><span class="si">%s</span><span class="s">.pdb&quot;</span> <span class="o">%</span> <span class="n">pdb_code</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdb_file</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">pdb_file</span>
+
+</div>
+<div class="viewcode-block" id="parse_pdb"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.pdbtools.parse_pdb">[docs]</a><span class="k">def</span> <span class="nf">parse_pdb</span><span class="p">(</span><span class="n">pdb_code</span><span class="p">,</span> <span class="n">pdb_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse PDB file using Biopyhon.</span>
+
+<span class="sd">    :param pdb_code: internal id</span>
+<span class="sd">    :param pdb_file: PDB filename</span>
+<span class="sd">    :return: PDB structure object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">PDBConstructionWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Bio</span><span class="o">.</span><span class="n">PDB</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="n">pdb_code</span><span class="p">,</span> <span class="n">pdb_file</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="filter_atoms"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.pdbtools.filter_atoms">[docs]</a><span class="k">def</span> <span class="nf">filter_atoms</span><span class="p">(</span><span class="n">atoms</span><span class="p">,</span> <span class="n">heavy_only</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">p_only</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filter list of atoms.</span>
+
+<span class="sd">    :param atoms: list of atoms</span>
+<span class="sd">    :param heavy_only: only keep heavy atoms</span>
+<span class="sd">    :param p_only: only keep P atoms</span>
+<span class="sd">    :return: filtered list of atoms</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">p_only</span> <span class="ow">and</span> <span class="n">atom</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s">&quot;P&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">heavy_only</span> <span class="ow">and</span> <span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;H&quot;</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+</div>
+<div class="viewcode-block" id="get_center_of_res"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.pdbtools.get_center_of_res">[docs]</a><span class="k">def</span> <span class="nf">get_center_of_res</span><span class="p">(</span><span class="n">res</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the center of a residue.</span>
+
+<span class="sd">    :param res: residue object</span>
+<span class="sd">    :return: center coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c"># loop over all atoms</span>
+    <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">filter_atoms</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">heavy_only</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">coord</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="align_structure"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.pdbtools.align_structure">[docs]</a><span class="k">def</span> <span class="nf">align_structure</span><span class="p">(</span><span class="n">ref_pdb</span><span class="p">,</span> <span class="n">moving_pdb</span><span class="p">,</span> <span class="n">assign_b_factors</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Align one PDB structure to another.</span>
+
+<span class="sd">    :param ref_pdb: reference PDB structure object</span>
+<span class="sd">    :param moving_pdb: moving PDB structure object</span>
+<span class="sd">    :param assign_b_factors: place distance values in the b-factor field</span>
+<span class="sd">    :return: tuple (res_dists, atom_dists, rmsd, transformation_matrix)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">chain_ref</span> <span class="o">=</span> <span class="n">ref_pdb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">chain_sample</span> <span class="o">=</span> <span class="n">moving_pdb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">ref_atoms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ref_res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sample_atoms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sample_res</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">res1</span> <span class="ow">in</span> <span class="n">chain_ref</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">res1</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">chain_sample</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;skipping </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">res1</span>
+            <span class="k">continue</span>
+
+        <span class="n">res2</span> <span class="o">=</span> <span class="n">chain_sample</span><span class="p">[</span><span class="n">res1</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+
+        <span class="n">ref_res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res1</span><span class="p">)</span>
+        <span class="n">sample_res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res2</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">atom1</span> <span class="ow">in</span> <span class="n">res1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">atom1</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">res2</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;  skipping </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">atom1</span>
+                <span class="k">continue</span>
+
+            <span class="n">atom2</span> <span class="o">=</span> <span class="n">res2</span><span class="p">[</span><span class="n">atom1</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+
+            <span class="n">ref_atoms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom1</span><span class="p">)</span>
+            <span class="n">sample_atoms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom2</span><span class="p">)</span>
+
+    <span class="n">super_imposer</span> <span class="o">=</span> <span class="n">Bio</span><span class="o">.</span><span class="n">PDB</span><span class="o">.</span><span class="n">Superimposer</span><span class="p">()</span>
+    <span class="n">super_imposer</span><span class="o">.</span><span class="n">set_atoms</span><span class="p">(</span><span class="n">ref_atoms</span><span class="p">,</span> <span class="n">sample_atoms</span><span class="p">)</span>
+    <span class="n">super_imposer</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">moving_pdb</span><span class="p">)</span>
+
+    <span class="c"># in case we want to assign b-factors to the moving structure, set them all to 0 before.</span>
+    <span class="k">if</span> <span class="n">assign_b_factors</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">chain_sample</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+                <span class="n">atom</span><span class="o">.</span><span class="n">set_bfactor</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">dists_atom</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">atom1</span><span class="p">,</span> <span class="n">atom2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">izip</span><span class="p">(</span><span class="n">ref_atoms</span><span class="p">,</span> <span class="n">sample_atoms</span><span class="p">):</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">atom1</span><span class="o">.</span><span class="n">coord</span> <span class="o">-</span> <span class="n">atom2</span><span class="o">.</span><span class="n">coord</span><span class="p">)</span>
+        <span class="n">dists_atom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">assign_b_factors</span><span class="p">:</span>
+            <span class="n">atom2</span><span class="o">.</span><span class="n">set_bfactor</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+
+    <span class="k">print</span> <span class="n">super_imposer</span><span class="o">.</span><span class="n">rotran</span>
+    <span class="k">print</span> <span class="n">super_imposer</span><span class="o">.</span><span class="n">rms</span>
+
+    <span class="n">dists_res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">izip</span><span class="p">(</span><span class="n">ref_res</span><span class="p">,</span> <span class="n">sample_res</span><span class="p">):</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">get_center_of_res</span><span class="p">(</span><span class="n">res1</span><span class="p">)</span> <span class="o">-</span> <span class="n">get_center_of_res</span><span class="p">(</span><span class="n">res2</span><span class="p">))</span>
+        <span class="n">dists_res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dists_res</span><span class="p">,</span> <span class="n">dists_atom</span><span class="p">,</span> <span class="n">super_imposer</span><span class="o">.</span><span class="n">rms</span><span class="p">,</span> <span class="n">super_imposer</span><span class="o">.</span><span class="n">rotran</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">rna_predict 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

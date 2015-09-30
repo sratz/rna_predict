@@ -1,0 +1,1622 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>rna_predict package &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="index.html" />
+    <link rel="prev" title="DCA Filtering Syntax" href="filters.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="filters.html" title="DCA Filtering Syntax"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="rna-predict-package">
+<h1>rna_predict package<a class="headerlink" href="#rna-predict-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-rna_predict.dcatools">
+<span id="rna-predict-dcatools-module"></span><h2>rna_predict.dcatools module<a class="headerlink" href="#module-rna_predict.dcatools" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="rna_predict.dcatools.DcaContact">
+<em class="property">class </em><tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">DcaContact</tt><big>(</big><em>res1</em>, <em>res2</em>, <em>use_contact=True</em>, <em>weight=1</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaContact"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaContact" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Class representing a DCA contact.</p>
+<dl class="method">
+<dt id="rna_predict.dcatools.DcaContact.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>res1</em>, <em>res2</em>, <em>use_contact=True</em>, <em>weight=1</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaContact.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaContact.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new DCA contact.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>res1</strong> &#8211; number of first residue (from 1)</li>
+<li><strong>res2</strong> &#8211; number of second residue (from 1)</li>
+<li><strong>use_contact</strong> &#8211; True or False if contact is to be used</li>
+<li><strong>weight</strong> &#8211; assign a different weight to the contact (default 1)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.dcatools.DcaContact.get_rosetta_function">
+<tt class="descname">get_rosetta_function</tt><big>(</big><em>function='FADE -100 26 20 -2 2'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaContact.get_rosetta_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaContact.get_rosetta_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Rosetta function of the contact as a list while applying weight.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>function</strong> &#8211; rosetta function as text</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">rosetta function as a list with applied weight</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="rna_predict.dcatools.DcaException">
+<em class="property">exception </em><tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">DcaException</tt><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+<p>Custom exception class used for foreseeable, DCA related errors.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="rna_predict.dcatools.DcaFilter">
+<em class="property">class </em><tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">DcaFilter</tt><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Filter base class.</p>
+<dl class="method">
+<dt id="rna_predict.dcatools.DcaFilter.apply">
+<tt class="descname">apply</tt><big>(</big><em>contact</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaFilter.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaFilter.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply filter to a DCA contact.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>contact</strong> &#8211; DCA contact</li>
+<li><strong>quiet</strong> &#8211; reduce verbosity</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rna_predict.dcatools.DcaFilterThreshold">
+<em class="property">class </em><tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">DcaFilterThreshold</tt><big>(</big><em>pdb_chain</em>, <em>threshold</em>, <em>keep_below=True</em>, <em>mode='minimum_heavy'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaFilterThreshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaFilterThreshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#rna_predict.dcatools.DcaFilter" title="rna_predict.dcatools.DcaFilter"><tt class="xref py py-class docutils literal"><span class="pre">rna_predict.dcatools.DcaFilter</span></tt></a></p>
+<p>Filter to skips DCA contact if below or above a threshold.</p>
+<dl class="method">
+<dt id="rna_predict.dcatools.DcaFilterThreshold.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>pdb_chain</em>, <em>threshold</em>, <em>keep_below=True</em>, <em>mode='minimum_heavy'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaFilterThreshold.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaFilterThreshold.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new threshold filter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pdb_chain</strong> &#8211; PDB chain</li>
+<li><strong>threshold</strong> &#8211; threshold below or above to keep a contact</li>
+<li><strong>keep_below</strong> &#8211; True to keep below threshold, False to keep above</li>
+<li><strong>mode</strong> &#8211; What distance to compare to (average_heavy, minimum_heavy)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.dcatools.DcaFilterThreshold.apply">
+<tt class="descname">apply</tt><big>(</big><em>contact</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#DcaFilterThreshold.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.DcaFilterThreshold.apply" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.build_cst_info_from_dca_contacts">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">build_cst_info_from_dca_contacts</tt><big>(</big><em>dca_data</em>, <em>sequence</em>, <em>mapping_mode</em>, <em>cst_function</em>, <em>number_dca_predictions</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#build_cst_info_from_dca_contacts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.build_cst_info_from_dca_contacts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps DCA residue contacts to atom-atom constraints.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dca_data</strong> &#8211; list od DcaContacts</li>
+<li><strong>sequence</strong> &#8211; sequence as text</li>
+<li><strong>mapping_mode</strong> &#8211; atom-to-atom mapping mode to use, supported values: &#8220;minAtom&#8221; or &#8220;pOnly&#8221;</li>
+<li><strong>cst_function</strong> &#8211; rosetta function and parameters as text string</li>
+<li><strong>number_dca_predictions</strong> &#8211; maximum number of DCA predictions to use</li>
+<li><strong>quiet</strong> &#8211; reduce output verbosity</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of constraint information</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.filter_dca_data">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">filter_dca_data</tt><big>(</big><em>dca_data</em>, <em>dca_filter_chain</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#filter_dca_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.filter_dca_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run list of DCA contacts through a chain of filters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dca_data</strong> &#8211; list of DcaContact objects</li>
+<li><strong>dca_filter_chain</strong> &#8211; list of DcaFilter objects</li>
+<li><strong>quiet</strong> &#8211; reduce output verbosity</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.get_atoms_for_res">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">get_atoms_for_res</tt><big>(</big><em>res</em>, <em>term_phosphate=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#get_atoms_for_res"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.get_atoms_for_res" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of atoms for residue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>res</strong> &#8211; nucleotide (A,U,G,C)</li>
+<li><strong>term_phosphate</strong> &#8211; add P atoms</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of atoms</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.get_atoms_for_res_sequence">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">get_atoms_for_res_sequence</tt><big>(</big><em>sequence</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#get_atoms_for_res_sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.get_atoms_for_res_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of atoms for a sequence of nucleotides</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sequence</strong> &#8211; sequence as text</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of atoms</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.get_contact_distance_map">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">get_contact_distance_map</tt><big>(</big><em>structure_directory='/home/sebastian/.rna_predict/structure_info'</em>, <em>westhof_vector=None</em>, <em>force_rebuild=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#get_contact_distance_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.get_contact_distance_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns contact distance map</p>
+<p>The contact distance map is cached it in the user directory and updated when newer files are found.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>structure_directory</strong> &#8211; directory to look up structure information text files</li>
+<li><strong>westhof_vector</strong> &#8211; list of factors to apply different weights to the bonding family classes (defaults to <tt class="docutils literal"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">...</span> <span class="pre">]</span></tt>)</li>
+<li><strong>force_rebuild</strong> &#8211; force rebuilding the distance map</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.get_contact_distance_map_mean">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">get_contact_distance_map_mean</tt><big>(</big><em>distance_map</em>, <em>mean_cutoff=None</em>, <em>std_cutoff=None</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#get_contact_distance_map_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.get_contact_distance_map_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an average distance map containing only those contacts with average distance and standard deviation satisfiying a cutoff.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>distance_map</strong> &#8211; full distance map</li>
+<li><strong>mean_cutoff</strong> &#8211; limit for average</li>
+<li><strong>std_cutoff</strong> &#8211; limit for standard deviation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">average distance map</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.get_contact_information_in_pdb_chain">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">get_contact_information_in_pdb_chain</tt><big>(</big><em>dca_contact</em>, <em>pdb_chain</em>, <em>heavy_only=True</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#get_contact_information_in_pdb_chain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.get_contact_information_in_pdb_chain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns distance information about a DCA contact in a realized PDB chain</p>
+<p>Return value is a tuple of:</p>
+<ul class="simple">
+<li>Average distance: Mean distance of all atoms in the contacts.</li>
+<li>Minimum distance: Minimum distance between two atoms in the contact.</li>
+<li>Minimum pair: List of <tt class="docutils literal"><span class="pre">[atom1,</span> <span class="pre">atom2]</span></tt> forming the minimal contact</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dca_contact</strong> &#8211; DcaContact object</li>
+<li><strong>pdb_chain</strong> &#8211; PDB chain structure object</li>
+<li><strong>heavy_only</strong> &#8211; Only use heavy atoms</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple <tt class="docutils literal"><span class="pre">(average_dist,</span> <span class="pre">minimum_dist,</span> <span class="pre">minimum_pair)</span></tt>. In case the contact cannot be found in the PDB file <tt class="docutils literal"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">None)</span></tt> is returned.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.parse_dca_data">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">parse_dca_data</tt><big>(</big><em>dca_prediction_filename</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#parse_dca_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.parse_dca_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a DCA file, adjust the sequence numbers to match the alignment of the PDB file, and create a list of DcaContacts</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dca_prediction_filename</strong> &#8211; DCA input filename</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of DcaContact objects</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.dcatools.read_pdb_mapping_from_file">
+<tt class="descclassname">rna_predict.dcatools.</tt><tt class="descname">read_pdb_mapping_from_file</tt><big>(</big><em>dca_prediction_filename</em><big>)</big><a class="reference internal" href="_modules/rna_predict/dcatools.html#read_pdb_mapping_from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.dcatools.read_pdb_mapping_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a PDB mapping from DCA file if present and return it as text</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dca_prediction_filename</strong> &#8211; DCA input filename</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">PDB mapping text</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rna_predict.main">
+<span id="rna-predict-main-module"></span><h2>rna_predict.main module<a class="headerlink" href="#module-rna_predict.main" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="rna_predict.main.main">
+<tt class="descclassname">rna_predict.main.</tt><tt class="descname">main</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/main.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.main.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>main commandline parser.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rna_predict.pdbtools">
+<span id="rna-predict-pdbtools-module"></span><h2>rna_predict.pdbtools module<a class="headerlink" href="#module-rna_predict.pdbtools" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="rna_predict.pdbtools.align_structure">
+<tt class="descclassname">rna_predict.pdbtools.</tt><tt class="descname">align_structure</tt><big>(</big><em>ref_pdb</em>, <em>moving_pdb</em>, <em>assign_b_factors=True</em><big>)</big><a class="reference internal" href="_modules/rna_predict/pdbtools.html#align_structure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.pdbtools.align_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Align one PDB structure to another.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ref_pdb</strong> &#8211; reference PDB structure object</li>
+<li><strong>moving_pdb</strong> &#8211; moving PDB structure object</li>
+<li><strong>assign_b_factors</strong> &#8211; place distance values in the b-factor field</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple (res_dists, atom_dists, rmsd, transformation_matrix)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.pdbtools.filter_atoms">
+<tt class="descclassname">rna_predict.pdbtools.</tt><tt class="descname">filter_atoms</tt><big>(</big><em>atoms</em>, <em>heavy_only=False</em>, <em>p_only=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/pdbtools.html#filter_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.pdbtools.filter_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter list of atoms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>atoms</strong> &#8211; list of atoms</li>
+<li><strong>heavy_only</strong> &#8211; only keep heavy atoms</li>
+<li><strong>p_only</strong> &#8211; only keep P atoms</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">filtered list of atoms</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.pdbtools.get_center_of_res">
+<tt class="descclassname">rna_predict.pdbtools.</tt><tt class="descname">get_center_of_res</tt><big>(</big><em>res</em><big>)</big><a class="reference internal" href="_modules/rna_predict/pdbtools.html#get_center_of_res"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.pdbtools.get_center_of_res" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the center of a residue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>res</strong> &#8211; residue object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">center coordinates</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.pdbtools.get_pdb_by_code">
+<tt class="descclassname">rna_predict.pdbtools.</tt><tt class="descname">get_pdb_by_code</tt><big>(</big><em>pdb_code</em>, <em>pdb_directory='/home/sebastian/.rna_predict/pdbs'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/pdbtools.html#get_pdb_by_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.pdbtools.get_pdb_by_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get PDB file by code. Download if necessary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pdb_code</strong> &#8211; PDB code to download</li>
+<li><strong>pdb_directory</strong> &#8211; directory lookup and store the PDB file, defaults to the rna_predict PDB cache directory</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">PDB filename</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.pdbtools.parse_pdb">
+<tt class="descclassname">rna_predict.pdbtools.</tt><tt class="descname">parse_pdb</tt><big>(</big><em>pdb_code</em>, <em>pdb_file</em><big>)</big><a class="reference internal" href="_modules/rna_predict/pdbtools.html#parse_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.pdbtools.parse_pdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse PDB file using Biopyhon.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pdb_code</strong> &#8211; internal id</li>
+<li><strong>pdb_file</strong> &#8211; PDB filename</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">PDB structure object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rna_predict.simulation">
+<span id="rna-predict-simulation-module"></span><h2>rna_predict.simulation module<a class="headerlink" href="#module-rna_predict.simulation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="rna_predict.simulation.Command">
+<em class="property">class </em><tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">Command</tt><big>(</big><em>command</em>, <em>add_suffix=None</em>, <em>dry_run=False</em>, <em>print_commands=True</em>, <em>stdin=None</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Helper class to store external program calls plus additional flags.</p>
+<dl class="method">
+<dt id="rna_predict.simulation.Command.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>command</em>, <em>add_suffix=None</em>, <em>dry_run=False</em>, <em>print_commands=True</em>, <em>stdin=None</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#Command.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.Command.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new command wrapper.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>command</strong> &#8211; list of external command and parameters</li>
+<li><strong>add_suffix</strong> &#8211; type of suffix to first entry in command. currently only <tt class="docutils literal"><span class="pre">None</span></tt> or <tt class="docutils literal"><span class="pre">rosetta</span></tt> are supported</li>
+<li><strong>dry_run</strong> &#8211; don&#8217;t actually execute anything</li>
+<li><strong>print_commands</strong> &#8211; print commandline when running</li>
+<li><strong>stdin</strong> &#8211; optional text to use as standard input</li>
+<li><strong>quiet</strong> &#8211; hide output of external program</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.Command.get_full_command">
+<tt class="descname">get_full_command</tt><big>(</big><em>sysconfig</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#Command.get_full_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.Command.get_full_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>If necessary, add the suffix to the command. Depending on user / system configuration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sysconfig</strong> &#8211; instance of SysConfig</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">suffixed command as a list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rna_predict.simulation.EvalData">
+<em class="property">class </em><tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">EvalData</tt><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Evaluation data storing model and cluster information.</p>
+<dl class="method">
+<dt id="rna_predict.simulation.EvalData.__init__">
+<tt class="descname">__init__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create empty EvalData object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.EvalData.get_model_count">
+<tt class="descname">get_model_count</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData.get_model_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData.get_model_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of models in the vaulation data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">number of models</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.EvalData.get_models">
+<tt class="descname">get_models</tt><big>(</big><em>model_list</em>, <em>kind='tag'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData.get_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData.get_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a selection of models with specific properties</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model_list</strong> &#8211; list of models to get, might be a list of numbers, or a list of model names</li>
+<li><strong>kind</strong> &#8211; <p>model selection mode:</p>
+<ul>
+<li><tt class="docutils literal"><span class="pre">tag</span></tt>: str: internal name such as S_000123_5</li>
+<li><tt class="docutils literal"><span class="pre">top</span></tt>: int: models ordered by score</li>
+<li><tt class="docutils literal"><span class="pre">ntop</span></tt>: int: models ordered by rmsd_native</li>
+<li><tt class="docutils literal"><span class="pre">cluster</span></tt>: int: nth cluster decoy</li>
+<li><tt class="docutils literal"><span class="pre">cluster_ntop</span></tt>: n[/m]: nth cluster ordered by native rmsd [of first m]</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of selected models</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rna_predict.simulation.EvalData.get_weighted_model_score">
+<em class="property">static </em><tt class="descname">get_weighted_model_score</tt><big>(</big><em>model</em>, <em>score_weights</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData.get_weighted_model_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData.get_weighted_model_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate a model score based on different weights for the invidiual Rosetta scores</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> &#8211; model to reweight</li>
+<li><strong>score_weights</strong> &#8211; dict of rosetta score names and their weights. <tt class="docutils literal"><span class="pre">default</span></tt> to set the default weight for all scores. Example: <tt class="docutils literal"><span class="pre">{'default':0,</span> <span class="pre">'atom_pair_constraint':</span> <span class="pre">1}</span></tt> to only use atom pair constraints.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rna_predict.simulation.EvalData.load_from_cst">
+<em class="property">static </em><tt class="descname">load_from_cst</tt><big>(</big><em>constraints</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData.load_from_cst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData.load_from_cst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load evaluation data from a prediction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>constraints</strong> &#8211; constraints selection</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rna_predict.simulation.EvalData.load_from_file">
+<em class="property">static </em><tt class="descname">load_from_file</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData.load_from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData.load_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load evaluation data from a file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; path to a file containing the evaluation data</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.EvalData.print_models">
+<tt class="descname">print_models</tt><big>(</big><em>model_list</em>, <em>kind='tag'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData.print_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData.print_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a list of models</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model_list</strong> &#8211; see get_models</li>
+<li><strong>kind</strong> &#8211; see get_models</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.EvalData.save_to_file">
+<tt class="descname">save_to_file</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#EvalData.save_to_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.EvalData.save_to_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump evaldata to a file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> &#8211; path to a file to store the data</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rna_predict.simulation.RNAPrediction">
+<em class="property">class </em><tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">RNAPrediction</tt><big>(</big><em>sysconfig</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base class used for prediction simulation</p>
+<dl class="attribute">
+<dt id="rna_predict.simulation.RNAPrediction.CONFIG_FILE">
+<tt class="descname">CONFIG_FILE</tt><em class="property"> = '.config'</em><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.CONFIG_FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>sysconfig</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a prediction simulation for the current directory and try to load an existing configuration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.assemble">
+<tt class="descname">assemble</tt><big>(</big><em>nstruct=50000</em>, <em>cycles=20000</em>, <em>constraints=None</em>, <em>dry_run=False</em>, <em>seed=None</em>, <em>use_native_information=False</em>, <em>threads=1</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.assemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.assemble" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assembly step. Assemble helices and motifs into complete models.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nstruct</strong> &#8211; number of models to create</li>
+<li><strong>cycles</strong> &#8211; number of monte-carlo cycles per model</li>
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>dry_run</strong> &#8211; don&#8217;t actually run any external command</li>
+<li><strong>seed</strong> &#8211; optionally override random seed</li>
+<li><strong>use_native_information</strong> &#8211; use native pdb file to calculate rmsd for each model</li>
+<li><strong>threads</strong> &#8211; number of threads to use</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.check_config">
+<tt class="descname">check_config</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.check_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.check_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if current directory contains a valid configuraion.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.create_helices">
+<tt class="descname">create_helices</tt><big>(</big><em>dry_run=False</em>, <em>threads=1</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.create_helices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.create_helices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helix creation step. Create one ideal helix model for each helix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dry_run</strong> &#8211; don&#8217;t actually run any external command</li>
+<li><strong>threads</strong> &#8211; number of threads to use</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.create_motifs">
+<tt class="descname">create_motifs</tt><big>(</big><em>nstruct=50000</em>, <em>cycles=20000</em>, <em>dry_run=False</em>, <em>seed=None</em>, <em>use_native_information=False</em>, <em>threads=1</em>, <em>constraints=None</em>, <em>motif_subset=None</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.create_motifs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.create_motifs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Motif generation step. Generate models for each motif.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nstruct</strong> &#8211; number of models to create for each motif</li>
+<li><strong>cycles</strong> &#8211; number of monte-carlo cycles per model</li>
+<li><strong>dry_run</strong> &#8211; don&#8217;t actually run any external command</li>
+<li><strong>seed</strong> &#8211; optionally override random seed</li>
+<li><strong>use_native_information</strong> &#8211; use native pdb file to calculate rmsd for each model</li>
+<li><strong>threads</strong> &#8211; number of threads to use</li>
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>motif_subset</strong> &#8211; sepcify a list of motifs to generate instead of all, counting starts at 1 (i.e. [1, 3, 4])</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.edit_constraints">
+<tt class="descname">edit_constraints</tt><big>(</big><em>constraints</em>, <em>output_filename=None</em>, <em>cst_function='FADE -100 26 20 -2 2'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.edit_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.edit_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edit an existing .cst file, replacing the rosetta function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>output_filename</strong> &#8211; fixed output filename or None to automatically create</li>
+<li><strong>cst_function</strong> &#8211; rosetta function and parameters as text string</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.evaluate">
+<tt class="descname">evaluate</tt><big>(</big><em>constraints=None</em>, <em>cluster_limit=10</em>, <em>cluster_cutoff=4.1</em>, <em>full_evaluation=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluation step. Extract model information, cluster models and calculate rmsd values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>cluster_limit</strong> &#8211; maximum number of clusters to produce</li>
+<li><strong>cluster_cutoff</strong> &#8211; rmsd distance in A at which a new cluster is created</li>
+<li><strong>full_evaluation</strong> &#8211; discard existing evaluation data, re-extract model information and re-calculate rmsd values.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.evaluate_custom">
+<tt class="descname">evaluate_custom</tt><big>(</big><em>constraints=None</em>, <em>dca_prediction_filename='dca/dca.txt'</em>, <em>full_evaluation=False</em>, <em>threshold=7.5</em>, <em>radius=2</em>, <em>number_dca_predictions=100</em>, <em>threads=4</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.evaluate_custom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.evaluate_custom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom scoring algorithmy by inspecting neighboring residues of dca contact pairs</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>dca_prediction_filename</strong> &#8211; dca filename</li>
+<li><strong>full_evaluation</strong> &#8211; discard existing evaluation data and extracted models, re-extract and re-calculate distance information</li>
+<li><strong>threshold</strong> &#8211; threshold in A to count a contact</li>
+<li><strong>radius</strong> &#8211; number of adjacent residues to inspect</li>
+<li><strong>number_dca_predictions</strong> &#8211; maximum number of DCA predictions to use</li>
+<li><strong>threads</strong> &#8211; number of threads to use for extraction</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.execute_command">
+<tt class="descname">execute_command</tt><big>(</big><em>command</em>, <em>add_suffix=None</em>, <em>dry_run=False</em>, <em>print_commands=True</em>, <em>stdin=None</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.execute_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.execute_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute an external command.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>command</strong> &#8211; list of external command and parameters</li>
+<li><strong>add_suffix</strong> &#8211; type of suffix to first entry in command. currently only <tt class="docutils literal"><span class="pre">None</span></tt> or <tt class="docutils literal"><span class="pre">rosetta</span></tt> are supported</li>
+<li><strong>dry_run</strong> &#8211; don&#8217;t actually execute anything</li>
+<li><strong>print_commands</strong> &#8211; print commandline when running</li>
+<li><strong>stdin</strong> &#8211; optional text to use as standard input</li>
+<li><strong>quiet</strong> &#8211; hide output of external program</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.execute_command_and_capture">
+<tt class="descname">execute_command_and_capture</tt><big>(</big><em>command</em>, <em>add_suffix=None</em>, <em>dry_run=False</em>, <em>print_commands=True</em>, <em>stdin=None</em>, <em>quiet=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.execute_command_and_capture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.execute_command_and_capture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute an external command while capturing output.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>command</strong> &#8211; list of external command and parameters</li>
+<li><strong>add_suffix</strong> &#8211; type of suffix to first entry in command. currently only <tt class="docutils literal"><span class="pre">None</span></tt> or <tt class="docutils literal"><span class="pre">rosetta</span></tt> are supported</li>
+<li><strong>dry_run</strong> &#8211; don&#8217;t actually execute anything</li>
+<li><strong>print_commands</strong> &#8211; print commandline when running</li>
+<li><strong>stdin</strong> &#8211; optional text to use as standard input</li>
+<li><strong>quiet</strong> &#8211; hide output of external program</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">generator over lines of standard output</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.execute_commands">
+<tt class="descname">execute_commands</tt><big>(</big><em>commands</em>, <em>threads=1</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.execute_commands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.execute_commands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a list of commands parallelly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>commands</strong> &#8211; list of Commands</li>
+<li><strong>threads</strong> &#8211; number of parallel invocations</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.extract_models">
+<tt class="descname">extract_models</tt><big>(</big><em>constraints</em>, <em>model_list</em>, <em>kind='tag'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.extract_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.extract_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract PDB files of a set of models</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>model_list</strong> &#8211; see EvalData.print_models</li>
+<li><strong>kind</strong> &#8211; see EvalData.print_models</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.extract_pdb">
+<tt class="descname">extract_pdb</tt><big>(</big><em>constraints</em>, <em>model</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.extract_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.extract_pdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract PDB file of a model to the tmp directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>model</strong> &#8211; tag of the model</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">path to the extracted PDB file</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.get_csts">
+<tt class="descname">get_csts</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.get_csts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.get_csts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all constraints.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of all constraints names</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rna_predict.simulation.RNAPrediction.get_models">
+<em class="property">static </em><tt class="descname">get_models</tt><big>(</big><em>constraints</em>, <em>model_list</em>, <em>kind='tag'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.get_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.get_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a selection of models with specific properties</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>model_list</strong> &#8211; see EvalData.print_models</li>
+<li><strong>kind</strong> &#8211; see EvalData.get_models</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.get_status">
+<tt class="descname">get_status</tt><big>(</big><em>constraints=None</em>, <em>include_evaluation_data=False</em>, <em>include_motif_model_count=False</em>, <em>include_assembly_model_count=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.get_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.get_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dict containing status information for a cst.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>include_motif_model_count</strong> &#8211; set to True to include model count (longer processing time)</li>
+<li><strong>include_assembly_model_count</strong> &#8211; set to True to include model count (longer processing time)</li>
+<li><strong>include_evaluation_data</strong> &#8211; set to True to include evaluation model count and native RMSD values (best of first 1,5,10 clusters) if available (longer processing time)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">status dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.load_config">
+<tt class="descname">load_config</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.load_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.load_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load simulation configuration of current directory</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.make_constraints">
+<tt class="descname">make_constraints</tt><big>(</big><em>dca_prediction_filename='dca/dca.txt'</em>, <em>output_filename=None</em>, <em>number_dca_predictions=100</em>, <em>cst_function='FADE -100 26 20 -2 2'</em>, <em>filter_text=None</em>, <em>mapping_mode='minAtom'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.make_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.make_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a set of constraints from a DCA prediction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dca_prediction_filename</strong> &#8211; DCA input file</li>
+<li><strong>output_filename</strong> &#8211; fixed output filename or None to automatically create</li>
+<li><strong>number_dca_predictions</strong> &#8211; maximum number of DCA predictions to use</li>
+<li><strong>cst_function</strong> &#8211; rosetta function and parameters as text string</li>
+<li><strong>filter_text</strong> &#8211; optional: List of DCA filters (see parse_dca_filter_string for details)</li>
+<li><strong>mapping_mode</strong> &#8211; atom-to-atom mapping mode to use, supported values: <tt class="docutils literal"><span class="pre">minAtom</span></tt> or <tt class="docutils literal"><span class="pre">pOnly</span></tt></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.modify_config">
+<tt class="descname">modify_config</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.modify_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.modify_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify configuration entry.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> &#8211; setting to modify</li>
+<li><strong>value</strong> &#8211; new value (&#8220;-&#8221; to store None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rna_predict.simulation.RNAPrediction.parse_cst_file">
+<em class="property">static </em><tt class="descname">parse_cst_file</tt><big>(</big><em>constraints_file</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.parse_cst_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.parse_cst_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse .cst file as a list of constraints</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>constraints_file</strong> &#8211; path to a .cst file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of constraints</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rna_predict.simulation.RNAPrediction.parse_cst_name_and_filename">
+<em class="property">static </em><tt class="descname">parse_cst_name_and_filename</tt><big>(</big><em>constraints</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.parse_cst_name_and_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.parse_cst_name_and_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find and clean up constraints by name or filename</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>constraints</strong> &#8211; constraints name or filename</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple of constraints name and filename</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.parse_dca_filter_string">
+<tt class="descname">parse_dca_filter_string</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.parse_dca_filter_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.parse_dca_filter_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a text string and turn it tinto a list of DCA filters</p>
+<p>Multiple filters are separated by command and have the folling format:</p>
+<p><tt class="docutils literal"><span class="pre">&lt;filter&gt;:&lt;arg&gt;:&lt;arg&gt;:...</span></tt></p>
+<p>Threshold filter: Lookup dca contacts in a PDB file, discard or keep contact depending on whether the contact is realized:</p>
+<p>Format: <tt class="docutils literal"><span class="pre">threshold:&lt;n&gt;:&lt;cst&gt;:&lt;mode&gt;:&lt;moodel&gt;</span></tt></p>
+<ul class="simple">
+<li>n: threshold (&lt; 0: keep below, &gt; 0: keep above)</li>
+<li>cst: constraints selection to look up PDB file</li>
+<li>mode, model: model selection mode (see EvalData.get_models for details)</li>
+</ul>
+<p>Example: <tt class="docutils literal"><span class="pre">threshold:8.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1,threshold:-6.0:100rnaDCA_FADE_-100_26_20_-2_2:cluster:1</span></tt></p>
+<p>None filter: Empty filter</p>
+<p>Format: <tt class="docutils literal"><span class="pre">none</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>line</strong> &#8211; string to parse</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of DcaFilter objects</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.prepare">
+<tt class="descname">prepare</tt><big>(</big><em>fasta_file='sequence.fasta'</em>, <em>params_file='secstruct.txt'</em>, <em>native_pdb_file=None</em>, <em>data_file=None</em>, <em>torsions_file=None</em>, <em>name=None</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preparation step. Parse out stems and motifs from sequence and secondary structure information and create necessary base files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fasta_file</strong> &#8211; fasta file containing the sequence</li>
+<li><strong>params_file</strong> &#8211; text file containing the secondary structure</li>
+<li><strong>native_pdb_file</strong> &#8211; native pdb file if available</li>
+<li><strong>data_file</strong> &#8211; additional data file if available</li>
+<li><strong>torsions_file</strong> &#8211; additional torsions file if available</li>
+<li><strong>name</strong> &#8211; optional name for this set of predictions</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.prepare_cst">
+<tt class="descname">prepare_cst</tt><big>(</big><em>constraints=None</em>, <em>motifs_override=None</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.prepare_cst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.prepare_cst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constraints preparation step. Prepare constraints files for motif generation and assembly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>motifs_override</strong> &#8211; optional name of a different set of constraints to use as motifs.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.print_config">
+<tt class="descname">print_config</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.print_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.print_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print simulation configuration.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="rna_predict.simulation.RNAPrediction.print_models">
+<em class="property">static </em><tt class="descname">print_models</tt><big>(</big><em>constraints</em>, <em>model_list</em>, <em>kind='tag'</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.print_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.print_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a set of models</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>constraints</strong> &#8211; constraints selection</li>
+<li><strong>model_list</strong> &#8211; see EvalData.print_models</li>
+<li><strong>kind</strong> &#8211; see EvalData.print_models</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.print_status">
+<tt class="descname">print_status</tt><big>(</big><em>native_compare=False</em>, <em>csts=None</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.print_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.print_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print summary of predictions and their current status.</p>
+<p>Output format always contains the following columns:</p>
+<ul class="simple">
+<li>P: preparation step</li>
+<li>M: motif generation</li>
+<li>A: assembly</li>
+<li>E: evaluation</li>
+</ul>
+<p>If a step is completed, <tt class="docutils literal"><span class="pre">X</span></tt> is shown, <tt class="docutils literal"><span class="pre">-</span></tt> otherwise.</p>
+<p>For motif generation a <tt class="docutils literal"><span class="pre">*</span></tt> may be shown to indicate that models from a different
+set of constraints are used.</p>
+<p>If <em>native_compare</em> is set to True another 4 columns are printed:</p>
+<ul class="simple">
+<li>1: native rmsd score of the first cluster</li>
+<li>5: lowest native rmsd score of the first 5 clusters</li>
+<li>10: lowest native rmsd score of the first 10 clusters</li>
+<li>n: number of models</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>native_compare</strong> &#8211; print rmsd comparison to native structure</li>
+<li><strong>csts</strong> &#8211; list of constraints to include in output (default: all)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.simulation.RNAPrediction.save_config">
+<tt class="descname">save_config</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#RNAPrediction.save_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.RNAPrediction.save_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save simulation configuration of current directorx</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="rna_predict.simulation.SimulationException">
+<em class="property">exception </em><tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">SimulationException</tt><a class="reference internal" href="_modules/rna_predict/simulation.html#SimulationException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.SimulationException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+<p>Custom exception class for foreseeable prediction errors.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.simulation.check_dir_existence">
+<tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">check_dir_existence</tt><big>(</big><em>path</em>, <em>alternative_error_text=None</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#check_dir_existence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.check_dir_existence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure a directory exists and raise an exception otherwise.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> &#8211; directory to check</li>
+<li><strong>alternative_error_text</strong> &#8211; alternative error text passed to exception</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.simulation.check_file_existence">
+<tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">check_file_existence</tt><big>(</big><em>path</em>, <em>alternative_error_text=None</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#check_file_existence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.check_file_existence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure a file exists and raise an exception otherwise.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> &#8211; filename to check</li>
+<li><strong>alternative_error_text</strong> &#8211; alternative error text passed to exception</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.simulation.delete_glob">
+<tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">delete_glob</tt><big>(</big><em>pattern</em>, <em>print_notice=True</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#delete_glob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.delete_glob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to delete files while expanding shell globs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pattern</strong> &#8211; pattern to delete</li>
+<li><strong>print_notice</strong> &#8211; if True print verbose notice</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.simulation.fix_atom_names_in_cst">
+<tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">fix_atom_names_in_cst</tt><big>(</big><em>cst_info</em>, <em>sequence</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#fix_atom_names_in_cst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.fix_atom_names_in_cst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switches N1 and N3 atom names in a residue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cst_info</strong> &#8211; list of constraints</li>
+<li><strong>sequence</strong> &#8211; residue sequence in lower case</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">modified list of constraints</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.simulation.get_model_count_in_silent_file">
+<tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">get_model_count_in_silent_file</tt><big>(</big><em>silent_file</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#get_model_count_in_silent_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.get_model_count_in_silent_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of models present in a Rosetta silent file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>silent_file</strong> &#8211; filename</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">model count</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.simulation.merge_silent_files">
+<tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">merge_silent_files</tt><big>(</big><em>target</em>, <em>sources</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#merge_silent_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.merge_silent_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merges rosetta silent files (.out).</p>
+<p>All source files are appended to target.
+Model numbers are incremented uniquely.
+Source files are deleted after a successful merge.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>target</strong> &#8211; target filename</li>
+<li><strong>sources</strong> &#8211; source filenames</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">model count</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.simulation.natural_sort_key">
+<tt class="descclassname">rna_predict.simulation.</tt><tt class="descname">natural_sort_key</tt><big>(</big><em>s</em>, <em>_nsre=&lt;_sre.SRE_Pattern object at 0x7fc8a47b0df0&gt;</em><big>)</big><a class="reference internal" href="_modules/rna_predict/simulation.html#natural_sort_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.simulation.natural_sort_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to be used as sort key in sorted() to naturally sort numeric parts.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rna_predict.sysconfig">
+<span id="rna-predict-sysconfig-module"></span><h2>rna_predict.sysconfig module<a class="headerlink" href="#module-rna_predict.sysconfig" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="rna_predict.sysconfig.SysConfig">
+<em class="property">class </em><tt class="descclassname">rna_predict.sysconfig.</tt><tt class="descname">SysConfig</tt><a class="reference internal" href="_modules/rna_predict/sysconfig.html#SysConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.sysconfig.SysConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Stores user configuration</p>
+<dl class="attribute">
+<dt id="rna_predict.sysconfig.SysConfig.SYSCONFIG_FILE">
+<tt class="descname">SYSCONFIG_FILE</tt><em class="property"> = '/home/sebastian/.rna_predict/sysconfig'</em><a class="headerlink" href="#rna_predict.sysconfig.SysConfig.SYSCONFIG_FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="rna_predict.sysconfig.SysConfig.SYSCONFIG_LOCATION">
+<tt class="descname">SYSCONFIG_LOCATION</tt><em class="property"> = '/home/sebastian/.rna_predict'</em><a class="headerlink" href="#rna_predict.sysconfig.SysConfig.SYSCONFIG_LOCATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.sysconfig.SysConfig.__init__">
+<tt class="descname">__init__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/sysconfig.html#SysConfig.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.sysconfig.SysConfig.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load system configuration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.sysconfig.SysConfig.check_sysconfig">
+<tt class="descname">check_sysconfig</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/sysconfig.html#SysConfig.check_sysconfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.sysconfig.SysConfig.check_sysconfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if all external programs are accessible.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dict containing lists of failed (<tt class="docutils literal"><span class="pre">fail</span></tt>) and successful (<tt class="docutils literal"><span class="pre">success</span></tt>) programm accesses</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.sysconfig.SysConfig.load_sysconfig">
+<tt class="descname">load_sysconfig</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/sysconfig.html#SysConfig.load_sysconfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.sysconfig.SysConfig.load_sysconfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load system configuration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rna_predict.sysconfig.SysConfig.print_sysconfig">
+<tt class="descname">print_sysconfig</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/sysconfig.html#SysConfig.print_sysconfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.sysconfig.SysConfig.print_sysconfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pretty-print configuration.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-rna_predict.tools">
+<span id="rna-predict-tools-module"></span><h2>rna_predict.tools module<a class="headerlink" href="#module-rna_predict.tools" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="rna_predict.tools.plot_clusters">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_clusters</tt><big>(</big><em>cst</em>, <em>max_models=0.99</em>, <em>score_weights=None</em><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_clusters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot score over native rmsd.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cst</strong> &#8211; constraints</li>
+<li><strong>max_models</strong> &#8211; limit to number of models if &gt; 1, or relative percentage if &lt;= 1</li>
+<li><strong>score_weights</strong> &#8211; see EvalData.get_weighted_model_score</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.tools.plot_constraint_quality">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_constraint_quality</tt><big>(</big><em>comparison_pdb</em>, <em>sources</em>, <em>dca_mode=False</em><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_constraint_quality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_constraint_quality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot constraint quality.</p>
+<p>This visualizes the distances of constraints by comparing it to a reference (native) PDB structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>comparison_pdb</strong> &#8211; filename to a pdb file to compare to</li>
+<li><strong>sources</strong> &#8211; list of dca files or constraints (depending on dca_mode). may also use &#8216;filter:&#8217; to filter on-the-fly</li>
+<li><strong>dca_mode</strong> &#8211; visualize residue-residue DCA instead of atom-atom constraints</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.tools.plot_contact_atoms">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_contact_atoms</tt><big>(</big><em>mean_cutoff</em>, <em>std_cutoff</em><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_contact_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_contact_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots atoms involved in forming nucleotide contacts that satisfy the cutoff condition in the contact database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mean_cutoff</strong> &#8211; limit for average distance</li>
+<li><strong>std_cutoff</strong> &#8211; limit for the standard deviation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.tools.plot_contact_distances">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_contact_distances</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_contact_distances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_contact_distances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots histogram for each nucleotide pair contact containing the distances of the atoms involved.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.tools.plot_contact_map">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_contact_map</tt><big>(</big><em>native_filename='native.pdb'</em>, <em>first_filename='dca/dca.txt'</em>, <em>second_filename='dca/mi.txt'</em>, <em>native_cutoff=8.0</em><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_contact_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_contact_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.tools.plot_dca_contacts_in_pdb">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_dca_contacts_in_pdb</tt><big>(</big><em>dca_prediction_filename</em>, <em>pdb_files</em><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_dca_contacts_in_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_dca_contacts_in_pdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualize how well DCA contacts are fullfiled in PDB files.</p>
+<p>This plots the distances of dca contacts in one or more PDB files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dca_prediction_filename</strong> &#8211; input DCA filename</li>
+<li><strong>pdb_files</strong> &#8211; list of PDB filenames</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.tools.plot_gdt">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_gdt</tt><big>(</big><em>pdb_ref_filename</em>, <em>pdbs_sample_filenames</em><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_gdt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_gdt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.tools.plot_pdb_comparison">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_pdb_comparison</tt><big>(</big><em>pdb_ref_filename</em>, <em>pdbs_sample_filenames</em><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_pdb_comparison"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_pdb_comparison" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare PDB files by plotting the distance of the residues.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pdb_ref_filename</strong> &#8211; reference PDB filename</li>
+<li><strong>pdbs_sample_filenames</strong> &#8211; list of sample PDB filenames</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.tools.plot_tp_rate">
+<tt class="descclassname">rna_predict.tools.</tt><tt class="descname">plot_tp_rate</tt><big>(</big><em>pdb_ref_filename</em>, <em>dca_filenames</em>, <em>tp_cutoff=8.0</em><big>)</big><a class="reference internal" href="_modules/rna_predict/tools.html#plot_tp_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.tools.plot_tp_rate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-rna_predict.utils">
+<span id="rna-predict-utils-module"></span><h2>rna_predict.utils module<a class="headerlink" href="#module-rna_predict.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="rna_predict.utils.comma_separated_entries_to_dict">
+<tt class="descclassname">rna_predict.utils.</tt><tt class="descname">comma_separated_entries_to_dict</tt><big>(</big><em>s</em>, <em>type_key</em>, <em>type_value</em><big>)</big><a class="reference internal" href="_modules/rna_predict/utils.html#comma_separated_entries_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.utils.comma_separated_entries_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a string containing comma separated key-value paris (colon-separated) into a dict with fixed key and value types.</p>
+<p>Example:
+Turns <tt class="docutils literal"><span class="pre">foo:3,bar:4</span></tt> into <tt class="docutils literal"><span class="pre">{&quot;foo&quot;:</span> <span class="pre">3,</span> <span class="pre">&quot;bar&quot;:</span> <span class="pre">4}</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s</strong> &#8211; input string</li>
+<li><strong>type_key</strong> &#8211; type of the keys</li>
+<li><strong>type_value</strong> &#8211; type of the values</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.utils.comma_separated_ranges_to_list">
+<tt class="descclassname">rna_predict.utils.</tt><tt class="descname">comma_separated_ranges_to_list</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="_modules/rna_predict/utils.html#comma_separated_ranges_to_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.utils.comma_separated_ranges_to_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a string containing comma separated ranges to a list.</p>
+<p>Example:
+Turns <tt class="docutils literal"><span class="pre">1-3,10,20-22</span></tt> into <tt class="docutils literal"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">10,</span> <span class="pre">20,</span> <span class="pre">21,</span> <span class="pre">22]</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> &#8211; comma separated ranges</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of ints</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.utils.mkdir_p">
+<tt class="descclassname">rna_predict.utils.</tt><tt class="descname">mkdir_p</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/rna_predict/utils.html#mkdir_p"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.utils.mkdir_p" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates directories recursively and does not error when they already exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> &#8211; directory to create</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rna_predict.utils.read_file_line_by_line">
+<tt class="descclassname">rna_predict.utils.</tt><tt class="descname">read_file_line_by_line</tt><big>(</big><em>filename</em>, <em>skip_empty=True</em><big>)</big><a class="reference internal" href="_modules/rna_predict/utils.html#read_file_line_by_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rna_predict.utils.read_file_line_by_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields lines in a file while stripping whitespace.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; filename to read</li>
+<li><strong>skip_empty</strong> &#8211; True if empty lines should be skipped</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">next line in file</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-rna_predict">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-rna_predict" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">rna_predict package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-rna_predict.dcatools">rna_predict.dcatools module</a></li>
+<li><a class="reference internal" href="#module-rna_predict.main">rna_predict.main module</a></li>
+<li><a class="reference internal" href="#module-rna_predict.pdbtools">rna_predict.pdbtools module</a></li>
+<li><a class="reference internal" href="#module-rna_predict.simulation">rna_predict.simulation module</a></li>
+<li><a class="reference internal" href="#module-rna_predict.sysconfig">rna_predict.sysconfig module</a></li>
+<li><a class="reference internal" href="#module-rna_predict.tools">rna_predict.tools module</a></li>
+<li><a class="reference internal" href="#module-rna_predict.utils">rna_predict.utils module</a></li>
+<li><a class="reference internal" href="#module-rna_predict">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="filters.html"
+                        title="previous chapter">DCA Filtering Syntax</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/rna_predict.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="filters.html" title="DCA Filtering Syntax"
+             >previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

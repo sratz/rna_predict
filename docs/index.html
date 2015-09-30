@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to rna_predict’s documentation! &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="#" />
+    <link rel="next" title="Rosetta compilation and installation" href="rosetta.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rosetta.html" title="Rosetta compilation and installation"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-rna-predict-s-documentation">
+<h1>Welcome to rna_predict&#8217;s documentation!<a class="headerlink" href="#welcome-to-rna-predict-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>The <tt class="docutils literal"><span class="pre">rna_predict</span></tt> Python package models a complete workflow for RNA tertiary
+structure prediction using the secondary structure information as well as
+optional, additional constraints.</p>
+<p>The modelling is done using <a class="reference external" href="https://www.rosettacommons.org/">Rosetta</a>
+and its <tt class="docutils literal"><span class="pre">rna_denovo</span></tt> protocol.</p>
+<p>Additional constraints, for example from co-evolutional anaylsis, can be
+included to improve the prediction quality.</p>
+<p>A utility to convert residue-residue contacts into atom-atom constraints
+is included.</p>
+<p><tt class="docutils literal"><span class="pre">rna_predict</span></tt> also comes with tools to cluster and visualize the prediction
+results and to compare them to a native crystal strcture, if available.</p>
+</div>
+<div class="section" id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rosetta.html">Rosetta compilation and installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rosetta.html#get-rosetta">Get Rosetta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rosetta.html#apply-patches">Apply patches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rosetta.html#build-and-install">Build and install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rosetta.html#path-setup"><tt class="docutils literal"><span class="pre">PATH</span></tt> setup</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#rosetta-path-and-suffix">Rosetta path and suffix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#other-options">Other options</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#peparation-workflow">Peparation workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#directory-preparation">1. Directory Preparation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#create-ideal-helix-models">2. Create ideal helix models</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#main-workflow">Main workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#constraints-creation">1. Constraints creation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#a-generation-from-dca-files">1a. Generation from DCA files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#b-editing-existing-file">1b. Editing existing file</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#prepare-constraints">2. Prepare constraints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#motif-creation">3. Motif creation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#assembly">4. Assembly</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#evaluation">5. Evaluation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#a-evaluation-using-rosetta-clustering-and-scoring">5a. Evaluation using Rosetta clustering and scoring</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#b-custom-scoring">5b. Custom scoring</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#utilities">Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#status-information">Status information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#model-information-and-extraction">Model information and extraction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#evaluation-tools">Evaluation tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#plot-clusters">plot-clusters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#plot-constraint-quality">plot-constraint-quality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#plot-contact-atoms">plot-contact-atoms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#plot-contact-distances">plot-contact-distances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#plot-dca-contacts-in-pdb">plot-dca-contacts-in-pdb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#plot-pdb-comparison">plot-pdb-comparison</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage.html#plot-gdt">plot-gdt</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="atom-mapping.html">Residue-residue to atom-atom mapping</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="atom-mapping.html#p-only-mapping-ponly">P-Only mapping: <tt class="docutils literal"><span class="pre">pOnly</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="atom-mapping.html#complex-atom-atom-mapping-using-a-contact-database-minatom">Complex atom-atom mapping using a contact database: <tt class="docutils literal"><span class="pre">minAtom</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="filters.html">DCA Filtering Syntax</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="filters.html#none"><tt class="docutils literal"><span class="pre">none</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="filters.html#threshold"><tt class="docutils literal"><span class="pre">threshold</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rna_predict.html">rna_predict package and API documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#module-rna_predict.dcatools">rna_predict.dcatools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#module-rna_predict.main">rna_predict.main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#module-rna_predict.pdbtools">rna_predict.pdbtools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#module-rna_predict.simulation">rna_predict.simulation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#module-rna_predict.sysconfig">rna_predict.sysconfig module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#module-rna_predict.tools">rna_predict.tools module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#module-rna_predict.utils">rna_predict.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rna_predict.html#module-rna_predict">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="#">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to rna_predict&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="rosetta.html"
+                        title="next chapter">Rosetta compilation and installation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rosetta.html" title="Rosetta compilation and installation"
+             >next</a> |</li>
+        <li><a href="#">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

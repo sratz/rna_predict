@@ -1,0 +1,151 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Residue-residue to atom-atom mapping &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="index.html" />
+    <link rel="next" title="DCA Filtering Syntax" href="filters.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="filters.html" title="DCA Filtering Syntax"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="residue-residue-to-atom-atom-mapping">
+<span id="atom-mapping"></span><h1>Residue-residue to atom-atom mapping<a class="headerlink" href="#residue-residue-to-atom-atom-mapping" title="Permalink to this headline">¶</a></h1>
+<p>The result of the DCA analysis is a list of nucleotide contacts. These need to
+be mapped to atom-atom contacts to be usable as constraints in Rosetta. Two
+options are implemented.</p>
+<div class="section" id="p-only-mapping-ponly">
+<h2>P-Only mapping: <tt class="docutils literal"><span class="pre">pOnly</span></tt><a class="headerlink" href="#p-only-mapping-ponly" title="Permalink to this headline">¶</a></h2>
+<p>A simple variant is to take the P atom of each nucleotide backbone and add
+these as atom-atom constraints.</p>
+</div>
+<div class="section" id="complex-atom-atom-mapping-using-a-contact-database-minatom">
+<h2>Complex atom-atom mapping using a contact database: <tt class="docutils literal"><span class="pre">minAtom</span></tt><a class="headerlink" href="#complex-atom-atom-mapping-using-a-contact-database-minatom" title="Permalink to this headline">¶</a></h2>
+<p>This method relies on pre-built contact lists included in the prediction
+package. For each type of nucleotide contact (A-A, A-C, A-G, A-U, ...) a list of
+representatives is stored, containing the PDB code of an entry with known
+native structure and the numbers of the residues. From these lists a database
+is built containing all possible atom-to-atom combinations for the two residues,
+as well as their distances extracted from the crystal structures. Next, to
+reduce this database to the relevant atoms involved in forming a contact, a
+second database is created, containing only those atom-to-atom contacts that
+satisfy a mean and standard deviation condition. The defaults for those are set
+to lower than 6Å and 3Å respectively. DCA contacts such as &#8220;A-U&#8221; are then
+looked up in the mean database, and all atom-to-atom combinations found are
+added as constraints.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Residue-residue to atom-atom mapping</a><ul>
+<li><a class="reference internal" href="#p-only-mapping-ponly">P-Only mapping: <tt class="docutils literal"><span class="pre">pOnly</span></tt></a></li>
+<li><a class="reference internal" href="#complex-atom-atom-mapping-using-a-contact-database-minatom">Complex atom-atom mapping using a contact database: <tt class="docutils literal"><span class="pre">minAtom</span></tt></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage.html"
+                        title="previous chapter">Usage</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="filters.html"
+                        title="next chapter">DCA Filtering Syntax</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/atom-mapping.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="filters.html" title="DCA Filtering Syntax"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             >previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>rna_predict.dcatools &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">rna_predict 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for rna_predict.dcatools</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pkg_resources</span> <span class="kn">import</span> <span class="n">ResourceManager</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">cPickle</span> <span class="kn">as</span> <span class="nn">pickle</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pdbtools</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.sysconfig</span> <span class="kn">import</span> <span class="n">SysConfig</span>
+
+
+<span class="n">INFO_DIRECTORY</span> <span class="o">=</span> <span class="n">SysConfig</span><span class="o">.</span><span class="n">SYSCONFIG_LOCATION</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s">&quot;structure_info&quot;</span>
+<span class="n">CACHE_DIRECTORY</span> <span class="o">=</span> <span class="n">SysConfig</span><span class="o">.</span><span class="n">SYSCONFIG_LOCATION</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s">&quot;cache&quot;</span>
+<span class="n">CACHE_DISTANCEMAP</span> <span class="o">=</span> <span class="n">CACHE_DIRECTORY</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s">&quot;distancemap.dat&quot;</span>
+
+
+<div class="viewcode-block" id="DcaException"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaException">[docs]</a><span class="k">class</span> <span class="nc">DcaException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom exception class used for foreseeable, DCA related errors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_get_atoms_backbone</span><span class="p">(</span><span class="n">term_phosphate</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get list of backbone atoms.</span>
+
+<span class="sd">    :param term_phosphate: add P atoms</span>
+<span class="sd">    :return: list of atoms</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="s">&quot;OP1&quot;</span><span class="p">,</span> <span class="s">&quot;OP2&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">term_phosphate</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">atoms</span> <span class="o">+</span> <span class="p">[</span><span class="s">&quot;O5&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;C5&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;C4&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;O4&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;C3&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;O3&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;C2&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;O2&#39;&quot;</span><span class="p">,</span> <span class="s">&quot;C1&#39;&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="get_atoms_for_res"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.get_atoms_for_res">[docs]</a><span class="k">def</span> <span class="nf">get_atoms_for_res</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">term_phosphate</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get list of atoms for residue.</span>
+
+<span class="sd">    :param res: nucleotide (A,U,G,C)</span>
+<span class="sd">    :param term_phosphate: add P atoms</span>
+<span class="sd">    :return: list of atoms</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="n">_get_atoms_backbone</span><span class="p">(</span><span class="n">term_phosphate</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="s">&quot;A&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">atoms</span> <span class="o">+</span> <span class="p">[</span><span class="s">&quot;N9&quot;</span><span class="p">,</span> <span class="s">&quot;C8&quot;</span><span class="p">,</span> <span class="s">&quot;N7&quot;</span><span class="p">,</span> <span class="s">&quot;C5&quot;</span><span class="p">,</span> <span class="s">&quot;C6&quot;</span><span class="p">,</span> <span class="s">&quot;N6&quot;</span><span class="p">,</span> <span class="s">&quot;N1&quot;</span><span class="p">,</span> <span class="s">&quot;C2&quot;</span><span class="p">,</span> <span class="s">&quot;N3&quot;</span><span class="p">,</span> <span class="s">&quot;C4&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">res</span> <span class="o">==</span> <span class="s">&quot;U&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">atoms</span> <span class="o">+</span> <span class="p">[</span><span class="s">&quot;N1&quot;</span><span class="p">,</span> <span class="s">&quot;C2&quot;</span><span class="p">,</span> <span class="s">&quot;O2&quot;</span><span class="p">,</span> <span class="s">&quot;N3&quot;</span><span class="p">,</span> <span class="s">&quot;C4&quot;</span><span class="p">,</span> <span class="s">&quot;O4&quot;</span><span class="p">,</span> <span class="s">&quot;C5&quot;</span><span class="p">,</span> <span class="s">&quot;C6&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">res</span> <span class="o">==</span> <span class="s">&quot;G&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">atoms</span> <span class="o">+</span> <span class="p">[</span><span class="s">&quot;N9&quot;</span><span class="p">,</span> <span class="s">&quot;C8&quot;</span><span class="p">,</span> <span class="s">&quot;N7&quot;</span><span class="p">,</span> <span class="s">&quot;C5&quot;</span><span class="p">,</span> <span class="s">&quot;C6&quot;</span><span class="p">,</span> <span class="s">&quot;O6&quot;</span><span class="p">,</span> <span class="s">&quot;N1&quot;</span><span class="p">,</span> <span class="s">&quot;C2&quot;</span><span class="p">,</span> <span class="s">&quot;N2&quot;</span><span class="p">,</span> <span class="s">&quot;N3&quot;</span><span class="p">,</span> <span class="s">&quot;C4&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">res</span> <span class="o">==</span> <span class="s">&quot;C&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">atoms</span> <span class="o">+</span> <span class="p">[</span><span class="s">&quot;N1&quot;</span><span class="p">,</span> <span class="s">&quot;C2&quot;</span><span class="p">,</span> <span class="s">&quot;O2&quot;</span><span class="p">,</span> <span class="s">&quot;N3&quot;</span><span class="p">,</span> <span class="s">&quot;C4&quot;</span><span class="p">,</span> <span class="s">&quot;N4&quot;</span><span class="p">,</span> <span class="s">&quot;C5&quot;</span><span class="p">,</span> <span class="s">&quot;C6&quot;</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="get_atoms_for_res_sequence"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.get_atoms_for_res_sequence">[docs]</a><span class="k">def</span> <span class="nf">get_atoms_for_res_sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get list of atoms for a sequence of nucleotides</span>
+
+<span class="sd">    :param sequence: sequence as text</span>
+<span class="sd">    :return: list of atoms</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">sequence</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">res</span><span class="p">,</span> <span class="n">get_atoms_for_res</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">term_phosphate</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="n">first</span><span class="p">))))</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="n">atoms</span>
+
+</div>
+<div class="viewcode-block" id="get_contact_distance_map"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.get_contact_distance_map">[docs]</a><span class="k">def</span> <span class="nf">get_contact_distance_map</span><span class="p">(</span><span class="n">structure_directory</span><span class="o">=</span><span class="n">INFO_DIRECTORY</span><span class="p">,</span> <span class="n">westhof_vector</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">force_rebuild</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns contact distance map</span>
+
+<span class="sd">    The contact distance map is cached it in the user directory and updated when newer files are found.</span>
+
+<span class="sd">    :param structure_directory: directory to look up structure information text files</span>
+<span class="sd">    :param westhof_vector: list of factors to apply different weights to the bonding family classes (defaults to ``[1, 1, ... ]``)</span>
+<span class="sd">    :param force_rebuild: force rebuilding the distance map</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># default: same weight for all families</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">westhof_vector</span><span class="p">:</span>
+        <span class="n">westhof_vector</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">nucleotides</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;A&quot;</span><span class="p">,</span> <span class="s">&quot;U&quot;</span><span class="p">,</span> <span class="s">&quot;G&quot;</span><span class="p">,</span> <span class="s">&quot;C&quot;</span><span class="p">]</span>
+
+    <span class="c"># build a dict of filenames</span>
+    <span class="c"># if a local file is present in the user directory it will take precedence over the system wide shipped version</span>
+    <span class="n">structure_filenames</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">resource_manager</span> <span class="o">=</span> <span class="n">ResourceManager</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">nt1</span> <span class="ow">in</span> <span class="n">nucleotides</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">nt2</span> <span class="ow">in</span> <span class="n">nucleotides</span><span class="p">:</span>
+            <span class="n">ntpair</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nt1</span><span class="p">,</span> <span class="n">nt2</span><span class="p">)</span>
+            <span class="n">local_file</span> <span class="o">=</span> <span class="n">structure_directory</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">ntpair</span> <span class="o">+</span> <span class="s">&quot;.txt&quot;</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">local_file</span><span class="p">):</span>
+                <span class="n">structure_filenames</span><span class="p">[</span><span class="n">ntpair</span><span class="p">]</span> <span class="o">=</span> <span class="n">local_file</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">structure_filenames</span><span class="p">[</span><span class="n">ntpair</span><span class="p">]</span> <span class="o">=</span> <span class="n">resource_manager</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="n">__name__</span><span class="p">,</span> <span class="s">&quot;structure_info/</span><span class="si">%s</span><span class="s">.txt&quot;</span> <span class="o">%</span> <span class="n">ntpair</span><span class="p">)</span>
+
+    <span class="c"># try to use a cached version of the distance map if found and recent and force_rebuild is False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">force_rebuild</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cache_ok</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">CACHE_DISTANCEMAP</span><span class="p">):</span>
+                <span class="n">cache_timestamp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">CACHE_DISTANCEMAP</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">structure_filenames</span><span class="o">.</span><span class="n">itervalues</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cache_timestamp</span><span class="p">:</span>
+                        <span class="n">cache_ok</span> <span class="o">=</span> <span class="bp">False</span>
+                        <span class="k">print</span> <span class="s">&quot;Contact map cache out of date. Rebuilding...&quot;</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">cache_ok</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CACHE_DISTANCEMAP</span><span class="p">,</span> <span class="s">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">PickleError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">EOFError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s">&quot;Contact map cache broken. Rebuilding...&quot;</span>
+
+    <span class="k">print</span> <span class="s">&quot;Building contact distance map:&quot;</span>
+
+    <span class="n">pdb_structure_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">distance_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">nt1</span> <span class="ow">in</span> <span class="n">nucleotides</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">nt2</span> <span class="ow">in</span> <span class="n">nucleotides</span><span class="p">:</span>
+
+            <span class="n">distance_map_res_pair</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="n">pdb_codes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">residues</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c"># read the structures for the 12 edge-to-edge bonding families</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">utils</span><span class="o">.</span><span class="n">read_file_line_by_line</span><span class="p">(</span><span class="n">structure_filenames</span><span class="p">[</span><span class="n">nt1</span> <span class="o">+</span> <span class="s">&#39;-&#39;</span> <span class="o">+</span> <span class="n">nt2</span><span class="p">]):</span>
+                <span class="n">fields</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&quot;-&quot;</span><span class="p">:</span>
+                    <span class="n">pdb_codes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+                    <span class="n">residues</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pdb_codes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+                    <span class="n">residues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+
+            <span class="c"># loop over all pdbcodes and their index in the list (0-11)</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">pdb_code</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pdb_codes</span><span class="p">):</span>
+                <span class="c"># skip if we don&#39;t have any entry for this family</span>
+                <span class="k">if</span> <span class="n">pdb_code</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="c"># download pdb if necessary</span>
+                <span class="k">if</span> <span class="n">pdb_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pdb_structure_dict</span><span class="p">:</span>
+                    <span class="n">pdb_structure_dict</span><span class="p">[</span><span class="n">pdb_code</span><span class="p">]</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="n">pdb_code</span><span class="p">,</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">get_pdb_by_code</span><span class="p">(</span><span class="n">pdb_code</span><span class="p">))</span>
+
+                <span class="c"># extract model from pdb</span>
+                <span class="n">model</span> <span class="o">=</span> <span class="n">pdb_structure_dict</span><span class="p">[</span><span class="n">pdb_code</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c"># try to find the residue contact specified. this is done by looping over all chains in the model,</span>
+                <span class="c"># and checking if the residue is in there and is the correct nucleotide</span>
+                <span class="k">def</span> <span class="nf">find_res</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">resname</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">chain</span><span class="p">[</span><span class="n">res</span><span class="p">]</span><span class="o">.</span><span class="n">get_resname</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">resname</span><span class="p">:</span>
+                                <span class="k">return</span> <span class="n">chain</span><span class="p">[</span><span class="n">res</span><span class="p">]</span>
+                        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+
+                <span class="n">res1</span> <span class="o">=</span> <span class="n">find_res</span><span class="p">(</span><span class="n">residues</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">nt1</span><span class="p">)</span>
+                <span class="n">res2</span> <span class="o">=</span> <span class="n">find_res</span><span class="p">(</span><span class="n">residues</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">nt2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">res1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">res2</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Could not find residue contact in pdb file: </span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nt1</span><span class="p">,</span> <span class="n">nt2</span><span class="p">,</span> <span class="n">pdb_code</span><span class="p">,</span> <span class="n">residues</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">residues</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+
+                <span class="k">print</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nt1</span><span class="p">,</span> <span class="n">nt2</span><span class="p">,</span> <span class="n">pdb_code</span><span class="p">,</span> <span class="n">residues</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">residues</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+
+                <span class="c"># add all atom-atom contacts to the distance map for the current residue pair</span>
+                <span class="k">for</span> <span class="n">atom1</span> <span class="ow">in</span> <span class="n">res1</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">atom2</span> <span class="ow">in</span> <span class="n">res2</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">atom1</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;H&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">atom2</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;H&#39;</span><span class="p">)):</span>
+                            <span class="n">contact_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">atom1</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">atom2</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                            <span class="n">distance</span> <span class="o">=</span> <span class="n">westhof_vector</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">atom1</span> <span class="o">-</span> <span class="n">atom2</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">contact_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">distance_map_res_pair</span><span class="p">:</span>
+                                <span class="n">distance_map_res_pair</span><span class="p">[</span><span class="n">contact_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">distance</span><span class="p">]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">distance_map_res_pair</span><span class="p">[</span><span class="n">contact_key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span>
+
+            <span class="n">distance_map</span><span class="p">[</span><span class="n">nt1</span> <span class="o">+</span> <span class="n">nt2</span><span class="p">]</span> <span class="o">=</span> <span class="n">distance_map_res_pair</span>
+
+    <span class="c"># save distance map in cache</span>
+    <span class="n">utils</span><span class="o">.</span><span class="n">mkdir_p</span><span class="p">(</span><span class="n">CACHE_DIRECTORY</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CACHE_DISTANCEMAP</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">distance_map</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">distance_map</span>
+
+</div>
+<div class="viewcode-block" id="get_contact_distance_map_mean"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.get_contact_distance_map_mean">[docs]</a><span class="k">def</span> <span class="nf">get_contact_distance_map_mean</span><span class="p">(</span><span class="n">distance_map</span><span class="p">,</span> <span class="n">mean_cutoff</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">std_cutoff</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return an average distance map containing only those contacts with average distance and standard deviation satisfiying a cutoff.</span>
+
+<span class="sd">    :param distance_map: full distance map</span>
+<span class="sd">    :param mean_cutoff: limit for average</span>
+<span class="sd">    :param std_cutoff: limit for standard deviation</span>
+<span class="sd">    :return: average distance map</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mean_distance_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">res_pair</span><span class="p">,</span> <span class="n">distance_map_res_pair</span> <span class="ow">in</span> <span class="n">distance_map</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">mean_distance_map_res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">atom_pair</span><span class="p">,</span> <span class="n">distances_atom_pair</span> <span class="ow">in</span> <span class="n">distance_map_res_pair</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">distances_atom_pair</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">distances_atom_pair</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">mean_cutoff</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">mean</span> <span class="o">&lt;</span> <span class="n">mean_cutoff</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">std_cutoff</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">std</span> <span class="o">&lt;</span> <span class="n">std_cutoff</span><span class="p">):</span>
+                <span class="n">mean_distance_map_res</span><span class="p">[</span><span class="n">atom_pair</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">]</span>
+        <span class="n">mean_distance_map</span><span class="p">[</span><span class="n">res_pair</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_distance_map_res</span>
+    <span class="k">return</span> <span class="n">mean_distance_map</span>
+
+</div>
+<div class="viewcode-block" id="read_pdb_mapping_from_file"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.read_pdb_mapping_from_file">[docs]</a><span class="k">def</span> <span class="nf">read_pdb_mapping_from_file</span><span class="p">(</span><span class="n">dca_prediction_filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read a PDB mapping from DCA file if present and return it as text</span>
+
+<span class="sd">    :param dca_prediction_filename: DCA input filename</span>
+<span class="sd">    :return: PDB mapping text</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pattern_parameter</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;^#\s(\S+)\s+(.*)$&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">utils</span><span class="o">.</span><span class="n">read_file_line_by_line</span><span class="p">(</span><span class="n">dca_prediction_filename</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;#&quot;</span><span class="p">:</span>
+            <span class="c"># comment / parameter line</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">pattern_parameter</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="s">&quot;pdb-mapping&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="c"># we only allow comments on top, so no need to check the rest of the lines:</span>
+        <span class="k">break</span>
+    <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="parse_dca_data"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.parse_dca_data">[docs]</a><span class="k">def</span> <span class="nf">parse_dca_data</span><span class="p">(</span><span class="n">dca_prediction_filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read a DCA file, adjust the sequence numbers to match the alignment of the PDB file, and create a list of DcaContacts</span>
+
+<span class="sd">    :param dca_prediction_filename: DCA input filename</span>
+<span class="sd">    :return: list of DcaContact objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">print</span> <span class="s">&quot;Parsing dca file </span><span class="si">%s</span><span class="s">...&quot;</span> <span class="o">%</span> <span class="n">dca_prediction_filename</span>
+
+    <span class="c"># read pdb mapping from file</span>
+    <span class="n">pdb_mapping_text</span> <span class="o">=</span> <span class="n">read_pdb_mapping_from_file</span><span class="p">(</span><span class="n">dca_prediction_filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pdb_mapping_text</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;pdb-mapping: 1-N (no pdb-mapping found in header of dca file)&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;pdb-mapping: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">pdb_mapping_text</span>
+
+    <span class="c"># parse pdb mapping to dict</span>
+    <span class="c"># for example 1-7,80,100-120,8-9 --&gt; {1: 1, 2: 2, ..., 80: 8, 81: 9, ...}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pdb_mapping</span> <span class="o">=</span> <span class="bp">None</span> <span class="k">if</span> <span class="n">pdb_mapping_text</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">comma_separated_ranges_to_list</span><span class="p">(</span><span class="n">pdb_mapping_text</span><span class="p">))}</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DcaException</span><span class="p">(</span><span class="s">&quot;Invalid pdb mapping string: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="n">dca</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">utils</span><span class="o">.</span><span class="n">read_file_line_by_line</span><span class="p">(</span><span class="n">dca_prediction_filename</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;#&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c"># data line</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pdb_mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">res1</span> <span class="o">=</span> <span class="n">pdb_mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+                <span class="n">res2</span> <span class="o">=</span> <span class="n">pdb_mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="c"># our dca file might contain more than what we are interested in for the current prediction.</span>
+                <span class="c"># simply ignore all dca pairs that don&#39;t fit the mapping range, but print a warning.</span>
+                <span class="k">print</span> <span class="s">&quot;Warning: At least one residue of contact </span><span class="si">%s</span><span class="s"> not found in PDB-Mapping. Ignoring...&quot;</span> <span class="o">%</span> <span class="n">parts</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">res2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">dca</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DcaContact</span><span class="p">(</span><span class="n">res1</span><span class="p">,</span> <span class="n">res2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">dca</span>
+
+</div>
+<div class="viewcode-block" id="get_contact_information_in_pdb_chain"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.get_contact_information_in_pdb_chain">[docs]</a><span class="k">def</span> <span class="nf">get_contact_information_in_pdb_chain</span><span class="p">(</span><span class="n">dca_contact</span><span class="p">,</span> <span class="n">pdb_chain</span><span class="p">,</span> <span class="n">heavy_only</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns distance information about a DCA contact in a realized PDB chain</span>
+
+<span class="sd">    Return value is a tuple of:</span>
+
+<span class="sd">    - Average distance: Mean distance of all atoms in the contacts.</span>
+<span class="sd">    - Minimum distance: Minimum distance between two atoms in the contact.</span>
+<span class="sd">    - Minimum pair: List of ``[atom1, atom2]`` forming the minimal contact</span>
+
+<span class="sd">    :param dca_contact: DcaContact object</span>
+<span class="sd">    :param pdb_chain: PDB chain structure object</span>
+<span class="sd">    :param heavy_only: Only use heavy atoms</span>
+<span class="sd">    :return: tuple ``(average_dist, minimum_dist, minimum_pair)``. In case the contact cannot be found in the PDB file ``(0, 0, None)`` is returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span> <span class="o">=</span> <span class="p">(</span><span class="n">pdb_chain</span><span class="p">[</span><span class="n">dca_contact</span><span class="o">.</span><span class="n">res1</span><span class="p">],</span> <span class="n">pdb_chain</span><span class="p">[</span><span class="n">dca_contact</span><span class="o">.</span><span class="n">res2</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="c"># calculate average distance</span>
+    <span class="n">average_heavy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pdbtools</span><span class="o">.</span><span class="n">get_center_of_res</span><span class="p">(</span><span class="n">res1</span><span class="p">)</span> <span class="o">-</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">get_center_of_res</span><span class="p">(</span><span class="n">res2</span><span class="p">))</span>
+
+    <span class="n">minimum_heavy</span> <span class="o">=</span> <span class="mi">9999</span>
+    <span class="n">minimum_pair</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">atom1</span> <span class="ow">in</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">filter_atoms</span><span class="p">(</span><span class="n">res1</span><span class="p">,</span> <span class="n">heavy_only</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">atom2</span> <span class="ow">in</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">filter_atoms</span><span class="p">(</span><span class="n">res2</span><span class="p">,</span> <span class="n">heavy_only</span><span class="p">):</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">atom1</span><span class="o">.</span><span class="n">coord</span> <span class="o">-</span> <span class="n">atom2</span><span class="o">.</span><span class="n">coord</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="n">minimum_heavy</span><span class="p">:</span>
+                <span class="n">minimum_heavy</span> <span class="o">=</span> <span class="n">dist</span>
+                <span class="n">minimum_pair</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom1</span><span class="p">,</span> <span class="n">atom2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">average_heavy</span><span class="p">,</span> <span class="n">minimum_heavy</span><span class="p">,</span> <span class="n">minimum_pair</span>
+
+</div>
+<div class="viewcode-block" id="build_cst_info_from_dca_contacts"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.build_cst_info_from_dca_contacts">[docs]</a><span class="k">def</span> <span class="nf">build_cst_info_from_dca_contacts</span><span class="p">(</span><span class="n">dca_data</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">mapping_mode</span><span class="p">,</span> <span class="n">cst_function</span><span class="p">,</span> <span class="n">number_dca_predictions</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Maps DCA residue contacts to atom-atom constraints.</span>
+
+<span class="sd">    :param dca_data: list od DcaContacts</span>
+<span class="sd">    :param sequence: sequence as text</span>
+<span class="sd">    :param mapping_mode: atom-to-atom mapping mode to use, supported values: &quot;minAtom&quot; or &quot;pOnly&quot;</span>
+<span class="sd">    :param cst_function: rosetta function and parameters as text string</span>
+<span class="sd">    :param number_dca_predictions: maximum number of DCA predictions to use</span>
+<span class="sd">    :param quiet: reduce output verbosity</span>
+<span class="sd">    :return: list of constraint information</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mapping_mode</span> <span class="o">=</span> <span class="n">mapping_mode</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mapping_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&quot;minAtom&quot;</span><span class="p">,</span> <span class="s">&quot;ponly&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">DcaException</span><span class="p">(</span><span class="s">&quot;build_cst_info: Invalid mapping mode given: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">mapping_mode</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mapping_mode</span> <span class="o">==</span> <span class="s">&quot;minAtom&quot;</span><span class="p">:</span>
+        <span class="c"># load contact map for atom-atom contacts</span>
+        <span class="n">distance_map</span> <span class="o">=</span> <span class="n">get_contact_distance_map</span><span class="p">()</span>
+        <span class="n">distance_map_mean</span> <span class="o">=</span> <span class="n">get_contact_distance_map_mean</span><span class="p">(</span><span class="n">distance_map</span><span class="p">,</span> <span class="n">mean_cutoff</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">std_cutoff</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+
+    <span class="n">atoms</span> <span class="o">=</span> <span class="n">get_atoms_for_res_sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+
+    <span class="n">cst_info</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">predictions_used</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dca_data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">predictions_used</span> <span class="o">&gt;=</span> <span class="n">number_dca_predictions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;Limit of </span><span class="si">%d</span><span class="s"> used predictions reached. Stopping...&quot;</span> <span class="o">%</span> <span class="n">number_dca_predictions</span>
+            <span class="k">break</span>
+
+        <span class="c"># print some information about the dca contact</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;Contact </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+        <span class="c"># skip contact completely?</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="o">.</span><span class="n">use_contact</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;  Dca contact skipped.&quot;</span>
+            <span class="k">continue</span>
+
+        <span class="c"># lookup contact</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">res1</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">res1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">res2</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">res2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">contact_key</span> <span class="o">=</span> <span class="n">res1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">res2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="c"># This happens only when there was no pdb-mapping specified in the dca file header.</span>
+            <span class="c"># TODO: Maybe this whole mapping parsing thing should be worked over so that these</span>
+            <span class="c"># two cases can be unified.</span>
+            <span class="k">print</span> <span class="s">&quot;  Warning: Residues of contact cannot be found in current sequence. Ignoring...&quot;</span>
+            <span class="k">continue</span>
+
+        <span class="n">predictions_used</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;  Dca contact used (</span><span class="si">%d</span><span class="s">).&quot;</span> <span class="o">%</span> <span class="n">predictions_used</span>
+
+        <span class="c"># build atom-atom constraints</span>
+        <span class="k">if</span> <span class="n">mapping_mode</span> <span class="o">==</span> <span class="s">&quot;minAtom&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">atom1</span> <span class="ow">in</span> <span class="n">res1</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">atom2</span> <span class="ow">in</span> <span class="n">res2</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">atom_contact_key</span> <span class="o">=</span> <span class="n">atom1</span> <span class="o">+</span> <span class="s">&#39;-&#39;</span> <span class="o">+</span> <span class="n">atom2</span>
+                    <span class="k">if</span> <span class="n">atom_contact_key</span> <span class="ow">in</span> <span class="n">distance_map_mean</span><span class="p">[</span><span class="n">contact_key</span><span class="p">]:</span>
+                        <span class="n">distance</span> <span class="o">=</span> <span class="n">distance_map_mean</span><span class="p">[</span><span class="n">contact_key</span><span class="p">][</span><span class="n">atom_contact_key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">10.0</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+                            <span class="k">print</span> <span class="s">&quot;[</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">res1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res2</span><span class="p">,</span> <span class="n">contact_key</span><span class="p">,</span> <span class="n">atom_contact_key</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
+                        <span class="n">cst_info</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">atom1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res1</span><span class="p">,</span> <span class="n">atom2</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res2</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">get_rosetta_function</span><span class="p">(</span><span class="n">cst_function</span><span class="p">)])</span>
+        <span class="k">elif</span> <span class="n">mapping_mode</span> <span class="o">==</span> <span class="s">&quot;ponly&quot;</span><span class="p">:</span>
+            <span class="c"># TODO: rosetta does not add P atoms for the first residue, so just skip those?</span>
+            <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">res1</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">d</span><span class="o">.</span><span class="n">res2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">atom_contact_key</span> <span class="o">=</span> <span class="s">&quot;P-P&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;[</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">res1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res2</span><span class="p">,</span> <span class="n">contact_key</span><span class="p">,</span> <span class="n">atom_contact_key</span><span class="p">)</span>
+            <span class="n">cst_info</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res1</span><span class="p">,</span> <span class="s">&quot;P&quot;</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res2</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">get_rosetta_function</span><span class="p">(</span><span class="n">cst_function</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="n">cst_info</span>
+
+</div>
+<div class="viewcode-block" id="DcaContact"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaContact">[docs]</a><span class="k">class</span> <span class="nc">DcaContact</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a DCA contact.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DcaContact.__init__"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaContact.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span><span class="p">,</span> <span class="n">use_contact</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new DCA contact.</span>
+
+<span class="sd">        :param res1: number of first residue (from 1)</span>
+<span class="sd">        :param res2: number of second residue (from 1)</span>
+<span class="sd">        :param use_contact: True or False if contact is to be used</span>
+<span class="sd">        :param weight: assign a different weight to the contact (default 1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res1</span> <span class="o">=</span> <span class="n">res1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res2</span> <span class="o">=</span> <span class="n">res2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_contact</span> <span class="o">=</span> <span class="n">use_contact</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;[</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">], use_contact=</span><span class="si">%s</span><span class="s">, weight=</span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">res2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_contact</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DcaContact.get_rosetta_function"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaContact.get_rosetta_function">[docs]</a>    <span class="k">def</span> <span class="nf">get_rosetta_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="s">&quot;FADE -100 26 20 -2 2&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return Rosetta function of the contact as a list while applying weight.</span>
+
+<span class="sd">        :param function: rosetta function as text</span>
+<span class="sd">        :return: rosetta function as a list with applied weight</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">function</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="c"># parse numeric arguments</span>
+        <span class="c"># noinspection PyShadowingNames</span>
+        <span class="k">def</span> <span class="nf">parse_function</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">argtype</span> <span class="ow">in</span> <span class="n">types</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">function</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">argtype</span><span class="p">(</span><span class="n">function</span><span class="p">[</span><span class="n">arg</span><span class="p">])</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">DcaException</span><span class="p">(</span><span class="s">&quot;Invalid Rosetta function: Could not parse argument &#39;</span><span class="si">%s</span><span class="s">&#39; as &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">function</span><span class="p">[</span><span class="n">arg</span><span class="p">],</span> <span class="n">argtype</span><span class="o">.</span><span class="n">__name__</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">function</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&quot;FADE&quot;</span><span class="p">:</span>
+                <span class="n">parse_function</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nb">float</span><span class="p">)])</span>  <span class="c"># TODO: make all of these floats?</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">function</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">function</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">function</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">function</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">function</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">function</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DcaException</span><span class="p">(</span><span class="s">&quot;Invalid Rosetta function: &#39;</span><span class="si">%s</span><span class="s">&#39; is not implemented! Only &#39;FADE&#39; function is recognized at this time.&quot;</span> <span class="o">%</span> <span class="n">function</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DcaException</span><span class="p">(</span><span class="s">&quot;Invalid Rosetta function: Not enough arguments&quot;</span><span class="p">)</span>
+
+
+<span class="c"># DCA FILTERING</span>
+</div></div>
+<div class="viewcode-block" id="filter_dca_data"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.filter_dca_data">[docs]</a><span class="k">def</span> <span class="nf">filter_dca_data</span><span class="p">(</span><span class="n">dca_data</span><span class="p">,</span> <span class="n">dca_filter_chain</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run list of DCA contacts through a chain of filters.</span>
+
+<span class="sd">    :param dca_data: list of DcaContact objects</span>
+<span class="sd">    :param dca_filter_chain: list of DcaFilter objects</span>
+<span class="sd">    :param quiet: reduce output verbosity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dca_filter_chain</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dca_data</span>
+    <span class="k">for</span> <span class="n">dca_filter</span> <span class="ow">in</span> <span class="n">dca_filter_chain</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dca_filter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">contact</span> <span class="ow">in</span> <span class="n">dca_data</span><span class="p">:</span>
+                <span class="n">dca_filter</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">contact</span><span class="p">,</span> <span class="n">quiet</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="DcaFilter"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaFilter">[docs]</a><span class="k">class</span> <span class="nc">DcaFilter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filter base class.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DcaFilter.apply"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaFilter.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contact</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply filter to a DCA contact.</span>
+
+<span class="sd">        :param contact: DCA contact</span>
+<span class="sd">        :param quiet: reduce verbosity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+</div></div>
+<div class="viewcode-block" id="DcaFilterThreshold"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaFilterThreshold">[docs]</a><span class="k">class</span> <span class="nc">DcaFilterThreshold</span><span class="p">(</span><span class="n">DcaFilter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filter to skips DCA contact if below or above a threshold.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DcaFilterThreshold.__init__"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaFilterThreshold.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdb_chain</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">keep_below</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&quot;minimum_heavy&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new threshold filter.</span>
+
+<span class="sd">        :param pdb_chain: PDB chain</span>
+<span class="sd">        :param threshold: threshold below or above to keep a contact</span>
+<span class="sd">        :param keep_below: True to keep below threshold, False to keep above</span>
+<span class="sd">        :param mode: What distance to compare to (average_heavy, minimum_heavy)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdb_chain</span> <span class="o">=</span> <span class="n">pdb_chain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_below</span> <span class="o">=</span> <span class="n">keep_below</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+</div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;Threshold filter: keep </span><span class="si">%s</span><span class="s"> </span><span class="si">%f</span><span class="s"> (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&quot;below&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_below</span> <span class="k">else</span> <span class="s">&quot;above&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DcaFilterThreshold.apply"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.dcatools.DcaFilterThreshold.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contact</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="c"># do not touch contacts that are already disabled</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">contact</span><span class="o">.</span><span class="n">use_contact</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># get contact information</span>
+        <span class="n">average_heavy</span><span class="p">,</span> <span class="n">minimum_heavy</span><span class="p">,</span> <span class="n">minimum_pair</span> <span class="o">=</span> <span class="n">get_contact_information_in_pdb_chain</span><span class="p">(</span><span class="n">contact</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdb_chain</span><span class="p">)</span>
+
+        <span class="c"># skip if not found</span>
+        <span class="k">if</span> <span class="n">minimum_pair</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">contact</span><span class="o">.</span><span class="n">use_contact</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">print</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">: not found --&gt; skip&quot;</span>
+            <span class="k">return</span>
+
+        <span class="c"># which distance should be used?</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s">&quot;average_heavy&quot;</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">average_heavy</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">minimum_heavy</span>
+
+        <span class="n">skip</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="c"># set contact to disabled if filter failed</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keep_below</span> <span class="ow">and</span> <span class="n">distance</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_below</span> <span class="ow">and</span> <span class="n">distance</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">):</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">contact</span><span class="o">.</span><span class="n">use_contact</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">: </span><span class="si">%f</span><span class="s"> --&gt; </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="s">&quot;skip&quot;</span> <span class="k">if</span> <span class="n">skip</span> <span class="k">else</span> <span class="s">&quot;keep&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">rna_predict 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>rna_predict.tools &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">rna_predict 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for rna_predict.tools</h1><div class="highlight"><pre>
+<span class="c"># coding: utf-8</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">basename</span><span class="p">,</span> <span class="n">splitext</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dcatools</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pdbtools</span>
+<span class="kn">from</span> <span class="nn">.simulation</span> <span class="kn">import</span> <span class="n">RNAPrediction</span>
+<span class="kn">from</span> <span class="nn">.simulation</span> <span class="kn">import</span> <span class="n">EvalData</span>
+<span class="kn">from</span> <span class="nn">.sysconfig</span> <span class="kn">import</span> <span class="n">SysConfig</span>
+
+
+<div class="viewcode-block" id="plot_contact_distances"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_contact_distances">[docs]</a><span class="k">def</span> <span class="nf">plot_contact_distances</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Plots histogram for each nucleotide pair contact containing the distances of the atoms involved.&quot;&quot;&quot;</span>
+        <span class="n">distance_map</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">get_contact_distance_map</span><span class="p">()</span>
+
+        <span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s">&quot;normed frequency / distance&quot;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">res_pair</span><span class="p">,</span> <span class="n">distance_map_res_pair</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">distance_map</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()):</span>
+            <span class="k">print</span> <span class="n">res_pair</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">atom_pair</span><span class="p">,</span> <span class="n">distances_atom_pair</span> <span class="ow">in</span> <span class="n">distance_map_res_pair</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="n">dists</span> <span class="o">+=</span> <span class="n">distances_atom_pair</span>
+
+            <span class="n">axarr</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">dists</span><span class="p">,</span> <span class="n">normed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+            <span class="n">axarr</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">res_pair</span><span class="p">)</span>
+            <span class="n">axarr</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">])</span>
+
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="plot_contact_atoms"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_contact_atoms">[docs]</a><span class="k">def</span> <span class="nf">plot_contact_atoms</span><span class="p">(</span><span class="n">mean_cutoff</span><span class="p">,</span> <span class="n">std_cutoff</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plots atoms involved in forming nucleotide contacts that satisfy the cutoff condition in the contact database.</span>
+
+<span class="sd">    :param mean_cutoff: limit for average distance</span>
+<span class="sd">    :param std_cutoff: limit for the standard deviation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">distance_map</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">get_contact_distance_map</span><span class="p">()</span>
+    <span class="n">mean_distance_map</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">get_contact_distance_map_mean</span><span class="p">(</span><span class="n">distance_map</span><span class="p">,</span> <span class="n">mean_cutoff</span><span class="p">,</span> <span class="n">std_cutoff</span><span class="p">)</span>
+
+    <span class="n">f</span><span class="p">,</span> <span class="n">axarr</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="n">f</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s">&quot;mean distance (cutoff: </span><span class="si">%s</span><span class="s">), standard deviation (cutoff: </span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mean_cutoff</span><span class="p">,</span> <span class="n">std_cutoff</span><span class="p">))</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">res_pair</span><span class="p">,</span> <span class="n">mean_distance_map_res_pair</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mean_distance_map</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="k">print</span> <span class="n">res_pair</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mean_distance_map_res_pair</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">entry</span><span class="p">:</span> <span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">x_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_names</span><span class="p">))</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+        <span class="n">y_err</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+
+        <span class="n">axarr</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y_err</span><span class="p">)</span>
+        <span class="n">axarr</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">axarr</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">x_names</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s">&quot;x-small&quot;</span><span class="p">)</span>
+        <span class="n">axarr</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="o">.</span><span class="mi">95</span><span class="p">,</span> <span class="n">res_pair</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">axarr</span><span class="p">[</span><span class="n">i</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s">&quot;top&quot;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="plot_constraint_quality"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_constraint_quality">[docs]</a><span class="k">def</span> <span class="nf">plot_constraint_quality</span><span class="p">(</span><span class="n">comparison_pdb</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">dca_mode</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot constraint quality.</span>
+
+<span class="sd">    This visualizes the distances of constraints by comparing it to a reference (native) PDB structure.</span>
+
+<span class="sd">    :param comparison_pdb: filename to a pdb file to compare to</span>
+<span class="sd">    :param sources: list of dca files or constraints (depending on dca_mode). may also use &#39;filter:&#39; to filter on-the-fly</span>
+<span class="sd">    :param dca_mode: visualize residue-residue DCA instead of atom-atom constraints</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">RNAPrediction</span><span class="p">(</span><span class="n">SysConfig</span><span class="p">())</span>
+    <span class="n">pdb</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">,</span> <span class="n">comparison_pdb</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">pdb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">print</span> <span class="s">&quot;Comparison PDB: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">comparison_pdb</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">dca_mode</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Mode: residue-residue&quot;</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Mode: atom-atom&quot;</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Processing: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">arg</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;filter:&quot;</span><span class="p">):</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">arg</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">dca_file</span><span class="p">,</span> <span class="n">filtertext</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s">&quot;  Applying filters: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filtertext</span>
+            <span class="n">dca</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">parse_dca_data</span><span class="p">(</span><span class="n">dca_file</span><span class="p">)</span>
+            <span class="n">dca_filter_chain</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">parse_dca_filter_string</span><span class="p">(</span><span class="n">filtertext</span><span class="p">)</span>
+            <span class="n">dcatools</span><span class="o">.</span><span class="n">filter_dca_data</span><span class="p">(</span><span class="n">dca_data</span><span class="o">=</span><span class="n">dca</span><span class="p">,</span> <span class="n">dca_filter_chain</span><span class="o">=</span><span class="n">dca_filter_chain</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">dca_mode</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;  Mapping to atom-atom.&quot;</span>
+                <span class="n">cst_info</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">build_cst_info_from_dca_contacts</span><span class="p">(</span><span class="n">dca</span><span class="p">,</span> <span class="n">sequence</span><span class="o">=</span><span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;sequence&quot;</span><span class="p">],</span> <span class="n">mapping_mode</span><span class="o">=</span><span class="s">&quot;minAtom&quot;</span><span class="p">,</span> <span class="n">cst_function</span><span class="o">=</span><span class="s">&quot;FADE -100 26 20 -2 2&quot;</span><span class="p">,</span> <span class="n">number_dca_predictions</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dca_mode</span><span class="p">:</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">splitext</span><span class="p">(</span><span class="n">basename</span><span class="p">(</span><span class="n">arg</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">print</span> <span class="s">&quot;  Reading dca file directly.&quot;</span>
+                <span class="n">dca</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">parse_dca_data</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="n">arg</span>
+                    <span class="k">print</span> <span class="s">&quot;  Building cst from dca on-the-fly.&quot;</span>
+                    <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)</span>
+                    <span class="n">dca</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">parse_dca_data</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">cst_info</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">build_cst_info_from_dca_contacts</span><span class="p">(</span><span class="n">dca</span><span class="p">,</span> <span class="n">sequence</span><span class="o">=</span><span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;sequence&quot;</span><span class="p">],</span> <span class="n">mapping_mode</span><span class="o">=</span><span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="s">&quot;minAtom&quot;</span><span class="p">,</span> <span class="n">cst_function</span><span class="o">=</span><span class="n">arg</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">else</span> <span class="s">&quot;FADE -100 26 20 -2 2&quot;</span><span class="p">,</span> <span class="n">number_dca_predictions</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="mi">100</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="n">splitext</span><span class="p">(</span><span class="n">basename</span><span class="p">(</span><span class="n">arg</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">print</span> <span class="s">&quot;  Reading cst file directly.&quot;</span>
+                    <span class="n">cst_info</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">parse_cst_file</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">parse_cst_name_and_filename</span><span class="p">(</span><span class="n">arg</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">dists</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">dca_mode</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dca</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="o">.</span><span class="n">use_contact</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">average_heavy</span><span class="p">,</span> <span class="n">minimum_heavy</span><span class="p">,</span> <span class="n">minimum_pair</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">get_contact_information_in_pdb_chain</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">chain</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">minimum_pair</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">dists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">minimum_heavy</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cst</span> <span class="ow">in</span> <span class="n">cst_info</span><span class="p">:</span>
+                <span class="n">atom1</span><span class="p">,</span> <span class="n">res1</span><span class="p">,</span> <span class="n">atom2</span><span class="p">,</span> <span class="n">res2</span><span class="p">,</span> <span class="n">fuction</span> <span class="o">=</span> <span class="n">cst</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">dists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="n">res1</span><span class="p">][</span><span class="n">atom1</span><span class="p">]</span> <span class="o">-</span> <span class="n">chain</span><span class="p">[</span><span class="n">res2</span><span class="p">][</span><span class="n">atom2</span><span class="p">])</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="n">atom1</span><span class="p">,</span> <span class="n">res1</span><span class="p">,</span> <span class="n">atom2</span><span class="p">,</span> <span class="n">res2</span><span class="p">,</span> <span class="s">&quot;   NOT FOUND&quot;</span>
+
+        <span class="k">print</span> <span class="s">&quot;  Average distance:&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">dists</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> Constraints Quality </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&quot;Residue-Residue&quot;</span> <span class="k">if</span> <span class="n">dca_mode</span> <span class="k">else</span> <span class="s">&quot;Atom-Atom&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">u&quot;Native distance / Å&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;Number of contraints&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;/tmp/rna_tools_quality_</span><span class="si">%s</span><span class="s">.png&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="plot_dca_contacts_in_pdb"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_dca_contacts_in_pdb">[docs]</a><span class="k">def</span> <span class="nf">plot_dca_contacts_in_pdb</span><span class="p">(</span><span class="n">dca_prediction_filename</span><span class="p">,</span> <span class="n">pdb_files</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Visualize how well DCA contacts are fullfiled in PDB files.</span>
+
+<span class="sd">    This plots the distances of dca contacts in one or more PDB files.</span>
+
+<span class="sd">    :param dca_prediction_filename: input DCA filename</span>
+<span class="sd">    :param pdb_files: list of PDB filenames</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dca</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">parse_dca_data</span><span class="p">(</span><span class="n">dca_prediction_filename</span><span class="o">=</span><span class="n">dca_prediction_filename</span><span class="p">)</span>
+
+    <span class="c"># loop over all pdb files</span>
+    <span class="n">chains</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pdb_files</span><span class="p">:</span>
+        <span class="n">pdb</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">chains</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s">&quot;chain&quot;</span><span class="p">:</span> <span class="n">pdb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="n">p</span><span class="p">})</span>
+
+    <span class="n">maximum</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dca</span><span class="p">),</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">averages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">chains</span><span class="p">),</span> <span class="n">maximum</span><span class="p">))</span>
+    <span class="n">minimums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">chains</span><span class="p">),</span> <span class="n">maximum</span><span class="p">))</span>
+
+    <span class="c"># loop over all dca entries</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dca</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="n">maximum</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="k">print</span> <span class="n">d</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chains</span><span class="p">)):</span>
+
+            <span class="n">average_heavy</span><span class="p">,</span> <span class="n">minimum_heavy</span><span class="p">,</span> <span class="n">minimum_pair</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">get_contact_information_in_pdb_chain</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">chains</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&quot;chain&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">minimum_pair</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;        </span><span class="si">%-70s</span><span class="s">  not found, ignoring...&quot;</span> <span class="o">%</span> <span class="n">chains</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&quot;name&quot;</span><span class="p">]</span>
+                <span class="k">continue</span>
+            <span class="n">averages</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">average_heavy</span>
+            <span class="n">minimums</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">minimum_heavy</span>
+            <span class="k">print</span> <span class="s">&quot;        </span><span class="si">%-70s</span><span class="s">  avg: </span><span class="si">%.05f</span><span class="s">   min: </span><span class="si">%-3s</span><span class="s">  </span><span class="si">%-3s</span><span class="s"> </span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">chains</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&quot;name&quot;</span><span class="p">],</span> <span class="n">average_heavy</span><span class="p">,</span> <span class="n">minimum_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">minimum_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">minimum_heavy</span><span class="p">)</span>
+
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">cycle</span><span class="p">([</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;g&#39;</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">,</span> <span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;k&#39;</span><span class="p">])</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">maximum</span><span class="p">))</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chains</span><span class="p">)):</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">averages</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">width</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">chains</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s">&quot;name&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="s">&quot;vertical&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">maximum</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">dca_prediction_filename</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;DCA Prediction Number&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">u&quot;Distance / Å&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;/tmp/rna_tools_checkcontacts_</span><span class="si">%s</span><span class="s">.png&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="plot_clusters"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_clusters">[docs]</a><span class="k">def</span> <span class="nf">plot_clusters</span><span class="p">(</span><span class="n">cst</span><span class="p">,</span> <span class="n">max_models</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> <span class="n">score_weights</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot score over native rmsd.</span>
+
+<span class="sd">    :param cst: constraints</span>
+<span class="sd">    :param max_models: limit to number of models if &gt; 1, or relative percentage if &lt;= 1</span>
+<span class="sd">    :param score_weights: see EvalData.get_weighted_model_score</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">RNAPrediction</span><span class="p">(</span><span class="n">SysConfig</span><span class="p">())</span>
+    <span class="n">cst_name</span><span class="p">,</span> <span class="n">cst_file</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">parse_cst_name_and_filename</span><span class="p">(</span><span class="n">cst</span><span class="p">)</span>
+    <span class="n">eval_data</span> <span class="o">=</span> <span class="n">EvalData</span><span class="o">.</span><span class="n">load_from_cst</span><span class="p">(</span><span class="n">cst_name</span><span class="p">)</span>
+
+    <span class="n">number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_models</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">number</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">eval_data</span><span class="o">.</span><span class="n">get_model_count</span><span class="p">()</span> <span class="o">*</span> <span class="n">max_models</span><span class="p">)</span>
+
+    <span class="n">models</span> <span class="o">=</span> <span class="n">eval_data</span><span class="o">.</span><span class="n">get_models</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="s">&quot;top&quot;</span><span class="p">)</span>
+
+    <span class="n">models_c</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">plots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">descs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+
+    <span class="c"># no cluster</span>
+    <span class="n">models_c</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">models</span> <span class="k">if</span> <span class="s">&quot;cluster&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">m</span><span class="p">])</span>
+    <span class="n">descs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;no cluster (</span><span class="si">%d</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">models_c</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+
+    <span class="c"># clusters</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">models_current_cluster</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">models</span> <span class="k">if</span> <span class="s">&quot;cluster&quot;</span> <span class="ow">in</span> <span class="n">m</span> <span class="ow">and</span> <span class="n">m</span><span class="p">[</span><span class="s">&quot;cluster&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">models_current_cluster</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">n_clusters</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">break</span>
+        <span class="n">models_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">models_current_cluster</span><span class="p">)</span>
+        <span class="n">descs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;cluster </span><span class="si">%d</span><span class="s"> (</span><span class="si">%d</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">models_current_cluster</span><span class="p">)))</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="s">&quot;rmsd_native&quot;</span> <span class="ow">in</span> <span class="n">models_c</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">comparison</span> <span class="o">=</span> <span class="s">&quot;rmsd_native&quot;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;native rmsd / A&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">comparison</span> <span class="o">=</span> <span class="s">&quot;rmsd_cluster_1&quot;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;rmsd to best structure / A&quot;</span><span class="p">)</span>
+
+    <span class="c"># create plots</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;#FF0000&#39;</span><span class="p">,</span> <span class="s">&#39;#00FF00&#39;</span><span class="p">,</span> <span class="s">&#39;#0000FF&#39;</span><span class="p">,</span> <span class="s">&#39;#FFFF00&#39;</span><span class="p">,</span> <span class="s">&#39;#00FFFF&#39;</span><span class="p">,</span> <span class="s">&#39;#FF00FF&#39;</span><span class="p">,</span> <span class="s">&#39;#ff6600&#39;</span><span class="p">,</span> <span class="s">&#39;#006000&#39;</span><span class="p">,</span> <span class="s">&#39;#600060&#39;</span><span class="p">,</span> <span class="s">&#39;#F7C2CA&#39;</span><span class="p">]</span>
+    <span class="n">shapes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="s">&#39;D&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">,</span> <span class="s">&#39;p&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">pick_event</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+        <span class="n">cluster</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">artist</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">ind</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;cluster </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cluster</span><span class="p">,</span> <span class="n">models_c</span><span class="p">[</span><span class="n">cluster</span><span class="p">][</span><span class="n">ind</span><span class="p">][</span><span class="s">&quot;tag&quot;</span><span class="p">])</span>
+            <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">models_c</span><span class="p">[</span><span class="n">cluster</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_clusters</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="s">&quot;w&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">colors</span><span class="p">[(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="s">&quot;o&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">shapes</span><span class="p">[((</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">))</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes</span><span class="p">)]</span>
+        <span class="n">plots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="n">comparison</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">models_c</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s">&quot;score&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">score_weights</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">EvalData</span><span class="o">.</span><span class="n">get_weighted_model_score</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">score_weights</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">models_c</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">s</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">picker</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s">&#39;pick_event&#39;</span><span class="p">,</span> <span class="n">pick_event</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;model clusters </span><span class="si">%s</span><span class="s">, constraints: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">],</span> <span class="n">cst_name</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;rosetta score&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">plots</span><span class="p">,</span> <span class="n">descs</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">})</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;/tmp/rna_tools_rmsdscore_</span><span class="si">%s</span><span class="s">.png&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="plot_pdb_comparison"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_pdb_comparison">[docs]</a><span class="k">def</span> <span class="nf">plot_pdb_comparison</span><span class="p">(</span><span class="n">pdb_ref_filename</span><span class="p">,</span> <span class="n">pdbs_sample_filenames</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare PDB files by plotting the distance of the residues.</span>
+
+<span class="sd">    :param pdb_ref_filename: reference PDB filename</span>
+<span class="sd">    :param pdbs_sample_filenames: list of sample PDB filenames</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pdb_ref</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">,</span> <span class="n">pdb_ref_filename</span><span class="p">)</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">RNAPrediction</span><span class="p">(</span><span class="n">SysConfig</span><span class="p">())</span>
+    <span class="n">pdbs_sample</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">pdbs_sample_filenames</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">sample</span><span class="p">:</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)</span>
+            <span class="n">pdbs_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">extract_pdb</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">RNAPrediction</span><span class="o">.</span><span class="n">get_models</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">fields</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">fields</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pdbs_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+    <span class="n">pdbs_sample</span> <span class="o">=</span> <span class="p">[</span><span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">pdbs_sample</span><span class="p">]</span>
+
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">RNAPrediction</span><span class="p">(</span><span class="n">SysConfig</span><span class="p">())</span>
+    <span class="k">print</span> <span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;sequence&quot;</span><span class="p">]</span>
+    <span class="k">print</span> <span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;secstruc&quot;</span><span class="p">]</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;Residue Distances </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;Residue&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">u&quot;Distance to Native Structure / Å&quot;</span><span class="p">)</span>
+
+    <span class="n">x_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;sequence&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">x_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%.2d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))),</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;sequence&quot;</span><span class="p">])]</span>
+    <span class="n">x_min</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">x_max</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_values</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">x_labels</span><span class="p">)</span>
+
+    <span class="n">y_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">y_max</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c"># y limits will be set later when we know the final size</span>
+
+    <span class="k">for</span> <span class="n">pdb_sample</span> <span class="ow">in</span> <span class="n">pdbs_sample</span><span class="p">:</span>
+
+        <span class="n">dists_res</span><span class="p">,</span> <span class="n">dists_atom</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">rotran</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">align_structure</span><span class="p">(</span><span class="n">pdb_ref</span><span class="p">,</span> <span class="n">pdb_sample</span><span class="p">,</span> <span class="n">assign_b_factors</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">dists_res</span><span class="p">,</span> <span class="s">&quot;-o&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">pdb_sample</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">((</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">),</span> <span class="p">(</span><span class="n">rmsd</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">),</span> <span class="s">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get_color</span><span class="p">())</span>
+        <span class="n">y_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_max</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">dists_res</span><span class="p">))</span>
+
+    <span class="n">y_max</span> <span class="o">*=</span> <span class="mf">1.025</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">])</span>
+
+    <span class="n">hatch</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="n">last_x</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+    <span class="n">start_i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;secstruc&quot;</span><span class="p">]</span><span class="o">+</span><span class="s">&quot;.&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">last_x</span> <span class="ow">and</span> <span class="n">last_x</span> <span class="o">!=</span> <span class="s">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">last_x</span> <span class="o">!=</span> <span class="s">&quot;.&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">last_x</span> <span class="o">==</span> <span class="s">&quot;(&quot;</span><span class="p">:</span>
+                    <span class="n">hatch</span> <span class="o">=</span> <span class="s">&quot;//&quot;</span>
+                <span class="k">elif</span> <span class="n">last_x</span> <span class="o">==</span> <span class="s">&quot;)&quot;</span><span class="p">:</span>
+                    <span class="n">hatch</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\\\\</span><span class="s">&quot;</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">([</span><span class="n">start_i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">hatch</span><span class="o">=</span><span class="n">hatch</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;grey&quot;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s">&quot;black&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+            <span class="n">start_i</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">last_x</span> <span class="o">=</span> <span class="n">x</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">})</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;/tmp/rna_tools_seqdist_</span><span class="si">%s</span><span class="s">.png&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&quot;tight&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="plot_gdt"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_gdt">[docs]</a><span class="k">def</span> <span class="nf">plot_gdt</span><span class="p">(</span><span class="n">pdb_ref_filename</span><span class="p">,</span> <span class="n">pdbs_sample_filenames</span><span class="p">):</span>
+    <span class="n">sim</span> <span class="o">=</span> <span class="n">RNAPrediction</span><span class="p">(</span><span class="n">SysConfig</span><span class="p">())</span>
+    <span class="n">pdb_ref</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">,</span> <span class="n">pdb_ref_filename</span><span class="p">)</span>
+    <span class="n">pdbs_sample</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">pdbs_sample_filenames</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s">&quot;:&quot;</span> <span class="ow">in</span> <span class="n">sample</span><span class="p">:</span>
+            <span class="n">fields</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;:&quot;</span><span class="p">)</span>
+            <span class="n">pdbs_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">extract_pdb</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">RNAPrediction</span><span class="o">.</span><span class="n">get_models</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">fields</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">fields</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pdbs_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+
+    <span class="n">pdbs_sample</span> <span class="o">=</span> <span class="p">[</span><span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">pdbs_sample</span><span class="p">]</span>
+    <span class="k">print</span> <span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;sequence&quot;</span><span class="p">]</span>
+    <span class="k">print</span> <span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;secstruc&quot;</span><span class="p">]</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;GDT Plot </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">]))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;Percent of Residues&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">u&quot;Distance Cutoff / Å&quot;</span><span class="p">)</span>
+
+    <span class="n">x_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">x_max</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">])</span>
+
+    <span class="n">y_min</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">y_max</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c"># y limits will be set later when we know the final size</span>
+
+    <span class="k">for</span> <span class="n">pdb_sample</span> <span class="ow">in</span> <span class="n">pdbs_sample</span><span class="p">:</span>
+        <span class="n">dists_res</span><span class="p">,</span> <span class="n">dists_atom</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">,</span> <span class="n">rotran</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">align_structure</span><span class="p">(</span><span class="n">pdb_ref</span><span class="p">,</span> <span class="n">pdb_sample</span><span class="p">,</span> <span class="n">assign_b_factors</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">dists_res</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dists_res</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dists_res</span><span class="p">)</span>
+
+        <span class="n">x_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">y_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+            <span class="n">x_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">count</span><span class="p">)</span>
+            <span class="n">y_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dists_res</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">y_values</span><span class="p">,</span> <span class="s">&quot;-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">pdb_sample</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">((</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">),</span> <span class="p">(</span><span class="n">rmsd</span><span class="p">,</span> <span class="n">rmsd</span><span class="p">),</span> <span class="s">&quot;--&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get_color</span><span class="p">())</span>
+        <span class="n">y_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_max</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">dists_res</span><span class="p">))</span>
+
+    <span class="n">y_max</span> <span class="o">*=</span> <span class="mf">1.025</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">])</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">},</span> <span class="n">loc</span><span class="o">=</span><span class="s">&quot;upper left&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;/tmp/rna_tools_gdtplot_</span><span class="si">%s</span><span class="s">.png&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&quot;tight&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="plot_tp_rate"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_tp_rate">[docs]</a><span class="k">def</span> <span class="nf">plot_tp_rate</span><span class="p">(</span><span class="n">pdb_ref_filename</span><span class="p">,</span> <span class="n">dca_filenames</span><span class="p">,</span> <span class="n">tp_cutoff</span><span class="o">=</span><span class="mf">8.0</span><span class="p">):</span>
+    <span class="n">pdb_ref</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="s">&quot;foo&quot;</span><span class="p">,</span> <span class="n">pdb_ref_filename</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">pdb_ref</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">dca_filename</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dca_filenames</span><span class="p">):</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">tp</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">dca</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">parse_dca_data</span><span class="p">(</span><span class="n">dca_filename</span><span class="p">)</span>
+        <span class="n">x_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">y_values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dca</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="n">average_heavy</span><span class="p">,</span> <span class="n">minimum_heavy</span><span class="p">,</span> <span class="n">minimum_pair</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">get_contact_information_in_pdb_chain</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="n">heavy_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">minimum_heavy</span> <span class="o">&lt;</span> <span class="n">tp_cutoff</span><span class="p">:</span>
+                <span class="n">tp</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">print</span> <span class="n">d</span><span class="o">.</span><span class="n">res1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res2</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">*</span> <span class="n">tp</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span> <span class="n">minimum_heavy</span>
+            <span class="n">x_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+            <span class="n">y_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">tp</span> <span class="o">/</span> <span class="n">count</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">count</span><span class="p">,</span> <span class="n">tp</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">y_values</span><span class="p">,</span> <span class="s">&quot;-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">dca_filename</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;TP-Rate </span><span class="si">%s</span><span class="s">, Cutoff = </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">tp_cutoff</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;Rank&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;TP-Rate / Rank&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s">&quot;log&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;/tmp/rna_predict_tprate_</span><span class="si">%s</span><span class="s">.png&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="plot_contact_map"><a class="viewcode-back" href="../../rna_predict.html#rna_predict.tools.plot_contact_map">[docs]</a><span class="k">def</span> <span class="nf">plot_contact_map</span><span class="p">(</span><span class="n">native_filename</span><span class="o">=</span><span class="s">&quot;native.pdb&quot;</span><span class="p">,</span> <span class="n">first_filename</span><span class="o">=</span><span class="s">&quot;dca/dca.txt&quot;</span><span class="p">,</span> <span class="n">second_filename</span><span class="o">=</span><span class="s">&quot;dca/mi.txt&quot;</span><span class="p">,</span> <span class="n">native_cutoff</span><span class="o">=</span><span class="mf">8.0</span><span class="p">):</span>
+    <span class="c"># get native pairs</span>
+    <span class="k">print</span> <span class="s">&quot;Calculating native contacts...&quot;</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">pdbtools</span><span class="o">.</span><span class="n">parse_pdb</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">native_filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">native</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">res1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">res2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">minimum</span> <span class="o">=</span> <span class="mi">9999</span>
+            <span class="k">for</span> <span class="n">atom1</span> <span class="ow">in</span> <span class="n">res1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">atom2</span> <span class="ow">in</span> <span class="n">res2</span><span class="p">:</span>
+                    <span class="n">dist</span> <span class="o">=</span> <span class="n">atom1</span> <span class="o">-</span> <span class="n">atom2</span>
+                    <span class="k">if</span> <span class="n">dist</span> <span class="o">&lt;</span> <span class="n">minimum</span><span class="p">:</span>
+                        <span class="n">minimum</span> <span class="o">=</span> <span class="n">dist</span>
+            <span class="k">if</span> <span class="n">minimum</span> <span class="o">&lt;</span> <span class="n">native_cutoff</span><span class="p">:</span>
+                <span class="n">native</span> <span class="o">+=</span> <span class="p">[[(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">minimum</span><span class="p">]]</span>
+
+    <span class="n">dca_first</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">parse_dca_data</span><span class="p">(</span><span class="n">first_filename</span><span class="p">)</span>
+    <span class="n">dca_second</span> <span class="o">=</span> <span class="n">dcatools</span><span class="o">.</span><span class="n">parse_dca_data</span><span class="p">(</span><span class="n">second_filename</span><span class="p">)</span>
+
+    <span class="n">first</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="o">.</span><span class="n">res1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res2</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dca_first</span><span class="p">]</span>
+    <span class="n">second</span> <span class="o">=</span> <span class="p">[[</span><span class="n">d</span><span class="o">.</span><span class="n">res1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">res2</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dca_second</span><span class="p">]</span>
+
+    <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">first</span><span class="p">)</span> <span class="o">-</span> <span class="mi">5</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">first</span><span class="p">)</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">],</span> <span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">],</span> <span class="n">ls</span><span class="o">=</span><span class="s">&quot;--&quot;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s">&quot;.3&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">native</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">native</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s">&quot;s&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;grey&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">native</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">native</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s">&quot;s&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;grey&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">first</span><span class="p">[:</span><span class="mi">25</span><span class="p">]],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">first</span><span class="p">[:</span><span class="mi">25</span><span class="p">]],</span> <span class="n">marker</span><span class="o">=</span><span class="s">&quot;s&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;green&quot;</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">first</span><span class="p">[</span><span class="mi">25</span><span class="p">:</span><span class="mi">100</span><span class="p">]],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">first</span><span class="p">[</span><span class="mi">25</span><span class="p">:</span><span class="mi">100</span><span class="p">]],</span> <span class="n">marker</span><span class="o">=</span><span class="s">&quot;s&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;red&quot;</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">second</span><span class="p">[:</span><span class="mi">25</span><span class="p">]],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">second</span><span class="p">[:</span><span class="mi">25</span><span class="p">]],</span> <span class="n">marker</span><span class="o">=</span><span class="s">&quot;s&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;green&quot;</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">second</span><span class="p">[</span><span class="mi">25</span><span class="p">:</span><span class="mi">100</span><span class="p">]],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">second</span><span class="p">[</span><span class="mi">25</span><span class="p">:</span><span class="mi">100</span><span class="p">]],</span> <span class="n">marker</span><span class="o">=</span><span class="s">&quot;s&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&quot;red&quot;</span><span class="p">,</span> <span class="n">facecolors</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s">&#39;equal&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;Contact map </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;Residuue (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">first_filename</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&quot;Residuue (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">second_filename</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;/tmp/rna_predict_cm_</span><span class="si">%s</span><span class="s">.pdf&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&quot;tight&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">rna_predict 0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

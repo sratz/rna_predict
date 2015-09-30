@@ -1,0 +1,516 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Usage &mdash; rna_predict 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rna_predict 0.1 documentation" href="index.html" />
+    <link rel="next" title="Residue-residue to atom-atom mapping" href="atom-mapping.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="atom-mapping.html" title="Residue-residue to atom-atom mapping"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="configuration.html" title="Configuration"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p><tt class="docutils literal"><span class="pre">rna_predict</span></tt> comes with a command line interface. To see all available
+options run:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">rna_predict</span> <span class="o">--</span><span class="n">help</span>
+</pre></div>
+</div>
+<div class="section" id="peparation-workflow">
+<h2>Peparation workflow<a class="headerlink" href="#peparation-workflow" title="Permalink to this headline">¶</a></h2>
+<p>These steps need to be run only once for every structure.</p>
+<div class="section" id="directory-preparation">
+<h3>1. Directory Preparation<a class="headerlink" href="#directory-preparation" title="Permalink to this headline">¶</a></h3>
+<p>The first step is to prepare a dedicated prediction directory. You need to have
+at least a fasta file containing the sequence and another file containing the
+secondary structure (in dot-bracket notation). Additionally, if available, you
+can supply a PDB file containing the native crystal structure. To prepare the
+directory, run the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict prepare \
+    --name &lt;name&gt; \
+    --sequence &lt;fasta_file&gt; \
+    --secstruct &lt;secstruct_file&gt; \
+    --native &lt;native_pdb_file&gt;
+</pre></div>
+</div>
+<p>All the options are optional and default values are used if not given.
+See the output of <tt class="docutils literal"><span class="pre">rna_predict</span> <span class="pre">prepare</span> <span class="pre">--help</span></tt> for additional information.</p>
+<p>This will parse out stems and motifs into the <tt class="docutils literal"><span class="pre">preparation</span></tt> subdirectory.</p>
+<p>Note: When using the <tt class="docutils literal"><span class="pre">--native</span></tt> option, make sure the PDB file has neen adjusted
+to work with rosetta. This means that the residues have to be reordered starting
+at 1, so that Rosetta&#8217;s <tt class="docutils literal"><span class="pre">pdbslice.py</span></tt> program uses the corrent ones. To achieve
+this, prepare the file using the Rosetta tool:</p>
+<div class="highlight-python"><div class="highlight"><pre>make_rna_rosetta_ready.py &lt;native_pdb&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-ideal-helix-models">
+<h3>2. Create ideal helix models<a class="headerlink" href="#create-ideal-helix-models" title="Permalink to this headline">¶</a></h3>
+<p>For each helical part of the structure, an ideal helix model needs to be
+generated:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict create-helices
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="main-workflow">
+<h2>Main workflow<a class="headerlink" href="#main-workflow" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="constraints-creation">
+<h3>1. Constraints creation<a class="headerlink" href="#constraints-creation" title="Permalink to this headline">¶</a></h3>
+<p>When tertiary constraints are to be used, <tt class="docutils literal"><span class="pre">.cst</span></tt> file should be created and put
+int the <tt class="docutils literal"><span class="pre">constraints</span></tt> subdirectory. The syntax is explained in the
+<a class="reference external" href="https://www.rosettacommons.org/docs/latest/constraint-file.html">Rosetta documentation</a>.</p>
+<p>The file can be created by hand or using the following tools:</p>
+<div class="section" id="a-generation-from-dca-files">
+<h4>1a. Generation from DCA files<a class="headerlink" href="#a-generation-from-dca-files" title="Permalink to this headline">¶</a></h4>
+<p>To create a tertiary constraints from DCA predictions, use the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict make-constraints \
+    --dca-file &lt;dca.dat&gt; \
+    --mapping-mode &lt;mapping_mode&gt; \
+    --dca-count &lt;count&gt; \
+    --cst-function &lt;function&gt; \
+    --cst-out-file &lt;output_name&gt; \
+    --filter &lt;filter&gt;
+</pre></div>
+</div>
+<p>The input dca file should contain at least two columns containing the residue
+numbers of the contact. The file should be sorted by DCA score. Optionally, the
+first line of the file may contain a comment specifying a PDB-mapping such as the
+following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># pdb-mapping: 10-12,44,80-90</span>
+</pre></div>
+</div>
+<p>This defines how the residue numbers in the DCA file are to be mapped. Rosetta
+always uses 1,2,3,... internally, so the mapping above would, for example, result
+in the residue number 12 in the DCA file to be mapped to prediction residue 3.</p>
+<p>The <tt class="docutils literal"><span class="pre">--mapping-mode</span></tt> parameter specifies the method to map residue-residue contacts
+to atom-atom contacts. Options are:</p>
+<ul class="simple">
+<li>minAtom</li>
+<li>pOnly</li>
+</ul>
+<p>For details about the mapping, see <a class="reference internal" href="atom-mapping.html#atom-mapping"><em>Residue-residue to atom-atom mapping</em></a>.</p>
+<p>The <tt class="docutils literal"><span class="pre">--dca-count</span></tt> option limits the number of predictions in the DCA input file.</p>
+<p>The <tt class="docutils literal"><span class="pre">--cst-function</span></tt> sets the Rosetta function to use. See
+<a class="reference external" href="https://www.rosettacommons.org/docs/latest/constraint-file.html#Function-Types">https://www.rosettacommons.org/docs/latest/constraint-file.html#Function-Types</a>
+for details. The default function for constraints creation (<tt class="docutils literal"><span class="pre">FADE</span> <span class="pre">-100</span> <span class="pre">26</span> <span class="pre">20</span> <span class="pre">-2</span> <span class="pre">2</span></tt>)
+uses a spline smoothed square well potential (represented by the &#8220;FADE&#8221; function)
+and a default parameter set. After the generation of the cst file, it can of
+course be fine-tuned by further modification in any text editor.</p>
+<p>The <tt class="docutils literal"><span class="pre">--cst-out-file</span></tt> option specifies an output filename.</p>
+<p>The <tt class="docutils literal"><span class="pre">--filter</span></tt> option allows the DCA contacts to be passed through a chain of
+filters first. For the filter documentation see <a class="reference internal" href="filters.html#filters"><em>DCA Filtering Syntax</em></a>.</p>
+</div>
+<div class="section" id="b-editing-existing-file">
+<h4>1b. Editing existing file<a class="headerlink" href="#b-editing-existing-file" title="Permalink to this headline">¶</a></h4>
+<p>To simply replace the Rosetta function in an existing <tt class="docutils literal"><span class="pre">.cst</span></tt> file you can use:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict edit-constraints \
+    --cst &lt;input_cst&gt; \
+    --cst-function &lt;function&gt; \
+    --cst-out-file &lt;output_name&gt;
+</pre></div>
+</div>
+<p>For option explanation see above.</p>
+<p>This is pretty much the same as using search-and-replace in any text editor.</p>
+</div>
+</div>
+<div class="section" id="prepare-constraints">
+<h3>2. Prepare constraints<a class="headerlink" href="#prepare-constraints" title="Permalink to this headline">¶</a></h3>
+<p>To run a simulation with a specific set of constraints (or none), another
+preparation step needs to be run:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict prepare-cst \
+    --cst &lt;cst&gt; \
+    --override-motifs-cst &lt;motif_cst&gt;
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">--cst</span></tt> option selects the constraints from the <tt class="docutils literal"><span class="pre">constraints</span></tt> directory
+to be prepared. If not given, a prediction called &#8216;none&#8217; for no tertiary
+constraints is created.</p>
+<p>Optionally, it is possible to use a different set of motifs for the assembly.
+For example you can create a common set of motif models and use this in all
+future assemblies. To do this, specify the <tt class="docutils literal"><span class="pre">--override-motifs-cst</span></tt> option.</p>
+</div>
+<div class="section" id="motif-creation">
+<h3>3. Motif creation<a class="headerlink" href="#motif-creation" title="Permalink to this headline">¶</a></h3>
+<p>For all non-helical parts (loop regions, etc.) multiple models need to be
+created. To do this, run the following:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict create-motifs \
+    --cst &lt;cst&gt; \
+    --cycles &lt;cycles&gt; \
+    --nstruct &lt;nstruct&gt; \
+    --seed &lt;random_seed&gt; \
+    --use-native
+</pre></div>
+</div>
+<p>As always, <tt class="docutils literal"><span class="pre">--cst</span></tt> selects the constraints.</p>
+<p>The <tt class="docutils literal"><span class="pre">--cycles</span></tt> option sets the number of monte-carlo cycles to run for
+generating each model.</p>
+<p>The <tt class="docutils literal"><span class="pre">--nstruct</span></tt> option sets the number of models created for each motif.</p>
+<p>To override the initial random seed, you can specify <tt class="docutils literal"><span class="pre">--seed</span></tt>.</p>
+<p>And to have Rosetta automatically calculate RMSD values to a native structure
+you can supply the <tt class="docutils literal"><span class="pre">--use-native</span></tt> option.</p>
+</div>
+<div class="section" id="assembly">
+<h3>4. Assembly<a class="headerlink" href="#assembly" title="Permalink to this headline">¶</a></h3>
+<p>To combine helix and motif models an assembly simulation is run:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict assemble \
+    --cst &lt;cst&gt; \
+    --cycles &lt;cycles&gt; \
+    --nstruct &lt;nstruct&gt; \
+    --seed &lt;random_seed&gt; \
+    --use-native
+</pre></div>
+</div>
+<p>The options are the same as the ones for <tt class="docutils literal"><span class="pre">create-motifs</span></tt>, but their default
+values vary.</p>
+<p>Note: The assembly step does not check how many models have already been
+created so far.</p>
+</div>
+<div class="section" id="evaluation">
+<h3>5. Evaluation<a class="headerlink" href="#evaluation" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="a-evaluation-using-rosetta-clustering-and-scoring">
+<h4>5a. Evaluation using Rosetta clustering and scoring<a class="headerlink" href="#a-evaluation-using-rosetta-clustering-and-scoring" title="Permalink to this headline">¶</a></h4>
+<p>When the assembly has finished, you can evaluate the simulation. This means:</p>
+<ul class="simple">
+<li>Cluster the models</li>
+<li>Calculate RMSD values to the native structure, if available, and to
+the model with the best score.</li>
+</ul>
+<p>Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict evaluate \
+    --cst &lt;cst&gt; \
+    --cluster-cutoff &lt;cutoff&gt; \
+    --cluster-limit &lt;limit&gt; \
+    --full-eval
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">--cluster-cutoff</span></tt> option specifies the RMSD radius in angstrom after
+which to create a new cluster.</p>
+<p>The <tt class="docutils literal"><span class="pre">--cluster-limit</span></tt> option limits the maximum number of clusters to be
+created.</p>
+<p>The <tt class="docutils literal"><span class="pre">--full-eval</span></tt> option forces the whole evaluation to be run again, and
+ignore any previous results stored.</p>
+</div>
+<div class="section" id="b-custom-scoring">
+<h4>5b. Custom scoring<a class="headerlink" href="#b-custom-scoring" title="Permalink to this headline">¶</a></h4>
+<p>Due to the fact that DCA predictions are not perfect, a custom scoring method
+was created. For each DCA prediction neighboring residues are included and if
+the distance between any of these residue paris are in contact the score
+is increased. Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict evaluate-custom \
+    --cst &lt;cst&gt; \
+    --dca-file &lt;dca_file&gt; \
+    --dca-count &lt;count&gt; \
+    --radius &lt;radius&gt; \
+    --threshold &lt;threshold&gt; \
+    --full-eval
+</pre></div>
+</div>
+<p>For the <tt class="docutils literal"><span class="pre">--dca-file</span></tt> and <tt class="docutils literal"><span class="pre">--dca-count</span></tt> options see <tt class="docutils literal"><span class="pre">make-constraints</span></tt>.</p>
+<p>The <tt class="docutils literal"><span class="pre">--radius</span></tt> option sets the number of neighboring residues to take into
+account.</p>
+<p>The <tt class="docutils literal"><span class="pre">--threshold</span></tt> option sets the distance threshold under which a residue
+pair is treated as in-contact.</p>
+</div>
+</div>
+</div>
+<div class="section" id="utilities">
+<h2>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="status-information">
+<h3>Status information<a class="headerlink" href="#status-information" title="Permalink to this headline">¶</a></h3>
+<p>To print a summary of all predictions and their current state, run:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict status \
+    [--compare] \
+    [cst [cst ...]
+</pre></div>
+</div>
+<p>The output table contains the following columns:</p>
+<ul class="simple">
+<li>P: preparation step</li>
+<li>M: motif generation:</li>
+<li>A: assembly:</li>
+<li>E: evaluation</li>
+</ul>
+<p>If a step is completed, <em>X</em> is shown, <em>-</em> otherwise.
+For motif generation a * * * may be shown to indicate that models from a different
+set of constraints are used.</p>
+<p>When the <tt class="docutils literal"><span class="pre">--compare</span></tt> option is given, comparison to the native structure
+is performed and the output is extended with the following columns:</p>
+<ul class="simple">
+<li>1: Native RMSD score of the first cluster</li>
+<li>5: Lowest native RMSD score of the first 5 clusters</li>
+<li>10: Lowest native RMSD score of the first 10 clusters</li>
+<li>n: Number of models</li>
+</ul>
+</div>
+<div class="section" id="model-information-and-extraction">
+<h3>Model information and extraction<a class="headerlink" href="#model-information-and-extraction" title="Permalink to this headline">¶</a></h3>
+<p>To print model information or extract PDB files use the following subcommands:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict print-models|extract-models \
+    --cst &lt;cst&gt; \
+    --mode &lt;selection_mode&gt; \
+    model [model ...]
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">--mode</span></tt> option selects the way to look up models:</p>
+<ul class="simple">
+<li>cluster: Cluster number to reference the cluster primary model</li>
+<li>cluster_ntop: Clusters sorted by the RMSDs of their representatives</li>
+<li>ntop: Models sorted by RMSD to native structure</li>
+<li>tag: Internal model name</li>
+<li>top: Models sorted by Rosetta score</li>
+</ul>
+<p>The <tt class="docutils literal"><span class="pre">model</span></tt> options may be string (if <tt class="docutils literal"><span class="pre">mode</span></tt> is &#8216;tag&#8217;), or numbers. For <tt class="docutils literal"><span class="pre">mode=cluster_ntop</span></tt>
+it may also be in the form of <tt class="docutils literal"><span class="pre">n/m</span></tt>, meaning the <tt class="docutils literal"><span class="pre">n``th</span> <span class="pre">best</span> <span class="pre">cluster</span> <span class="pre">out</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">first</span> <span class="pre">``m</span></tt>
+clusters.</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict extract-models --mode=tag S_000289 S_000100  # extract two models by tag
+rna_predict extract-models --mode=top 1 2 3 4 5  # extract the two best-scoring models
+rna_predict extract-models --mode=ntop 1  # extract the model with the lowest native RMSD
+rna_predict extract-models --mode=cluster 1 2 3 4 5  # extract the cluster primaries of the first 5 clusters
+rna_predict extract-models --mode=cluster_ntop 1/5  # extract the lowest native RMSD cluster out of the first 5 clusters
+</pre></div>
+</div>
+</div>
+<div class="section" id="evaluation-tools">
+<h3>Evaluation tools<a class="headerlink" href="#evaluation-tools" title="Permalink to this headline">¶</a></h3>
+<p>Plot generation and other tools can be accessed using:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict tools &lt;tool&gt; ...
+</pre></div>
+</div>
+<div class="section" id="plot-clusters">
+<h4>plot-clusters<a class="headerlink" href="#plot-clusters" title="Permalink to this headline">¶</a></h4>
+<p>Plot score over native RMSD. Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict tools plot-clusters \
+    --score-weights &lt;score:weight,score:weight,...&gt; \
+    --max-models &lt;max&gt; \
+    cst
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">--score-weights</span></tt> options allows to calculate a different total model score
+using the individual Rosetta scores. The score name &#8220;default&#8221; can be given to
+set a default value for all other, non-specified scores.</p>
+<p>For example, to only visualize the score of additional constraints, use:</p>
+<div class="highlight-python"><div class="highlight"><pre>--score-weights default:0,atom_pair_constraint:1
+</pre></div>
+</div>
+<p>For a list of score names, refer to the Rosetta documentation or use the
+<tt class="docutils literal"><span class="pre">print-models</span></tt> command.</p>
+<p>The <tt class="docutils literal"><span class="pre">--max-models</span></tt> option limits the number of models by either specifying a
+number (greater than 1) or a fraction (smaller than or equal to 1.0).</p>
+</div>
+<div class="section" id="plot-constraint-quality">
+<h4>plot-constraint-quality<a class="headerlink" href="#plot-constraint-quality" title="Permalink to this headline">¶</a></h4>
+<p>This visualizes the distances of constraints by comparing it to a reference
+(native) PDB structure. Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict tools plot-constraint-quality \
+    --dca-mode \
+    reference-pdb \
+    cst|dca|filter [cst|dca|filter ...]
+</pre></div>
+</div>
+<p>When <tt class="docutils literal"><span class="pre">--dca-mode</span></tt> is given, residue-residue distances are plotted, atom-atom
+contacts otherwise.</p>
+<p>For the <tt class="docutils literal"><span class="pre">filter</span></tt>-syntax see <a class="reference internal" href="filters.html#filters"><em>DCA Filtering Syntax</em></a>.</p>
+</div>
+<div class="section" id="plot-contact-atoms">
+<h4>plot-contact-atoms<a class="headerlink" href="#plot-contact-atoms" title="Permalink to this headline">¶</a></h4>
+<p>Plots atoms involved in forming nucleotide contacts that satisfy the cutoff
+condition in the contact database. Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict tools plot-contact-atoms \
+    --mean-cutoff &lt;cutoff&gt; \
+    --std-cutoff &lt;cutoff&gt;
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">--mean-cutoff</span></tt> and <tt class="docutils literal"><span class="pre">--std-cutoff</span></tt> options select the limits for the
+average contact distances standard deviations.</p>
+</div>
+<div class="section" id="plot-contact-distances">
+<h4>plot-contact-distances<a class="headerlink" href="#plot-contact-distances" title="Permalink to this headline">¶</a></h4>
+<p>Plots histogram for each nucleotide pair contact containing the distances of
+the atoms involved. Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict tools plot-contact-distances
+</pre></div>
+</div>
+</div>
+<div class="section" id="plot-dca-contacts-in-pdb">
+<h4>plot-dca-contacts-in-pdb<a class="headerlink" href="#plot-dca-contacts-in-pdb" title="Permalink to this headline">¶</a></h4>
+<p>Visualizes how well DCA contacts are fullfiled in PDB files. Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict tools plot-dca-contacts-in-pdb \
+    dca-file \
+    pdb-file [pdb-file -..]
+</pre></div>
+</div>
+</div>
+<div class="section" id="plot-pdb-comparison">
+<h4>plot-pdb-comparison<a class="headerlink" href="#plot-pdb-comparison" title="Permalink to this headline">¶</a></h4>
+<p>Compare PDB files by plotting the distances of the residues. Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict tools plot-pdb-comparison \
+    ref-pdb \
+    sample-pdb [sample-pdb ...]
+</pre></div>
+</div>
+</div>
+<div class="section" id="plot-gdt">
+<h4>plot-gdt<a class="headerlink" href="#plot-gdt" title="Permalink to this headline">¶</a></h4>
+<p>Create a GDT (gloabl distance test) plot.</p>
+<p>This plots a distance cutoff on the y-axis and the percent of residues which
+are below the cutoff on the x-axis.</p>
+<p>Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre>rna_predict tools plot-gdt \
+    ref-pdb \
+    sample-pdb [sample-pdb ...]
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Usage</a><ul>
+<li><a class="reference internal" href="#peparation-workflow">Peparation workflow</a><ul>
+<li><a class="reference internal" href="#directory-preparation">1. Directory Preparation</a></li>
+<li><a class="reference internal" href="#create-ideal-helix-models">2. Create ideal helix models</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#main-workflow">Main workflow</a><ul>
+<li><a class="reference internal" href="#constraints-creation">1. Constraints creation</a><ul>
+<li><a class="reference internal" href="#a-generation-from-dca-files">1a. Generation from DCA files</a></li>
+<li><a class="reference internal" href="#b-editing-existing-file">1b. Editing existing file</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prepare-constraints">2. Prepare constraints</a></li>
+<li><a class="reference internal" href="#motif-creation">3. Motif creation</a></li>
+<li><a class="reference internal" href="#assembly">4. Assembly</a></li>
+<li><a class="reference internal" href="#evaluation">5. Evaluation</a><ul>
+<li><a class="reference internal" href="#a-evaluation-using-rosetta-clustering-and-scoring">5a. Evaluation using Rosetta clustering and scoring</a></li>
+<li><a class="reference internal" href="#b-custom-scoring">5b. Custom scoring</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#utilities">Utilities</a><ul>
+<li><a class="reference internal" href="#status-information">Status information</a></li>
+<li><a class="reference internal" href="#model-information-and-extraction">Model information and extraction</a></li>
+<li><a class="reference internal" href="#evaluation-tools">Evaluation tools</a><ul>
+<li><a class="reference internal" href="#plot-clusters">plot-clusters</a></li>
+<li><a class="reference internal" href="#plot-constraint-quality">plot-constraint-quality</a></li>
+<li><a class="reference internal" href="#plot-contact-atoms">plot-contact-atoms</a></li>
+<li><a class="reference internal" href="#plot-contact-distances">plot-contact-distances</a></li>
+<li><a class="reference internal" href="#plot-dca-contacts-in-pdb">plot-dca-contacts-in-pdb</a></li>
+<li><a class="reference internal" href="#plot-pdb-comparison">plot-pdb-comparison</a></li>
+<li><a class="reference internal" href="#plot-gdt">plot-gdt</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="configuration.html"
+                        title="previous chapter">Configuration</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="atom-mapping.html"
+                        title="next chapter">Residue-residue to atom-atom mapping</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/usage.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="atom-mapping.html" title="Residue-residue to atom-atom mapping"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="configuration.html" title="Configuration"
+             >previous</a> |</li>
+        <li><a href="index.html">rna_predict 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Sebastian Ratz.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
