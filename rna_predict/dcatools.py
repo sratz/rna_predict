@@ -327,10 +327,10 @@ def build_cst_info_from_dca_contacts(dca_data, sequence, mapping_mode, cst_funct
     :return: list of constraint information
     """
     mapping_mode = mapping_mode.lower()
-    if mapping_mode not in ["minAtom", "ponly"]:
+    if mapping_mode not in ["minatom", "ponly"]:
         raise DcaException("build_cst_info: Invalid mapping mode given: %s" % mapping_mode)
 
-    if mapping_mode == "minAtom":
+    if mapping_mode == "minatom":
         # load contact map for atom-atom contacts
         distance_map = get_contact_distance_map()
         distance_map_mean = get_contact_distance_map_mean(distance_map, mean_cutoff=6.0, std_cutoff=3.0)
@@ -372,7 +372,7 @@ def build_cst_info_from_dca_contacts(dca_data, sequence, mapping_mode, cst_funct
             print "  Dca contact used (%d)." % predictions_used
 
         # build atom-atom constraints
-        if mapping_mode == "minAtom":
+        if mapping_mode == "minatom":
             for atom1 in res1[1]:
                 for atom2 in res2[1]:
                     atom_contact_key = atom1 + '-' + atom2
